@@ -1,0 +1,192 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and financial data",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string", "format": "url" },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "balance": { "type": "number" },
+        "profit": { "type": "number" },
+        "kycStatus": { "type": "string", "enum": ["pending", "approved", "rejected", "none"] },
+        "referralCode": { "type": "string" },
+        "referredBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "balance", "profit", "kycStatus", "createdAt"]
+    },
+    "Bot": {
+      "title": "Bot",
+      "description": "Automated trading bot configuration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["forex", "crypto", "stock", "commodity"] },
+        "strategy": { "type": "string" },
+        "profitRate": { "type": "number" },
+        "riskLevel": { "type": "string", "enum": ["low", "medium", "high"] },
+        "minInvestment": { "type": "number" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "name", "type", "profitRate", "riskLevel", "minInvestment"]
+    },
+    "Investment": {
+      "title": "Investment",
+      "description": "User investment in a bot or plan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "botId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "completed", "cancelled"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "totalRoi": { "type": "number" },
+        "currentProfit": { "type": "number" }
+      },
+      "required": ["id", "userId", "botId", "amount", "status", "startDate"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "profit", "referral"] },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "method": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "amount", "status", "timestamp"]
+    },
+    "Trader": {
+      "title": "Trader",
+      "description": "Professional trader for copy trading",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "performance": { "type": "number" },
+        "followersCount": { "type": "integer" },
+        "assetFocus": { "type": "string" },
+        "photoURL": { "type": "string", "format": "url" },
+        "description": { "type": "string" }
+      },
+      "required": ["id", "name", "performance", "followersCount", "assetFocus"]
+    },
+    "CopyTrade": {
+      "title": "CopyTrade",
+      "description": "Copy trading relationship",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "followerId": { "type": "string" },
+        "traderId": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "paused", "stopped"] },
+        "startDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "followerId", "traderId", "amount", "status", "startDate"]
+    },
+    "PlanInvestment": {
+      "title": "PlanInvestment",
+      "description": "User investment in a specific plan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "planId": { "type": "integer" },
+        "planName": { "type": "string" },
+        "amount": { "type": "number" },
+        "returnRate": { "type": "number" },
+        "returnType": { "type": "string" },
+        "duration": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "completed", "expired"] },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "totalEarned": { "type": "number" },
+        "lastPayoutDate": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "planId", "planName", "amount", "status", "startDate"]
+    },
+    "Trade": {
+      "title": "Trade",
+      "description": "Trading activity record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "asset": { "type": "string" },
+        "type": { "type": "string", "enum": ["Buy", "Sell"] },
+        "amount": { "type": "number" },
+        "entryPrice": { "type": "number" },
+        "exitPrice": { "type": "number" },
+        "status": { "type": "string", "enum": ["WIN", "LOSE", "PENDING"] },
+        "profit": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "asset", "type", "amount", "entryPrice", "status", "profit", "timestamp"]
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "Manual deposit request",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "receipt": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userName", "amount", "currency", "date", "receipt", "status", "createdAt"]
+    },
+    "KycRequest": {
+      "title": "KycRequest",
+      "description": "User KYC verification request",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string", "format": "email" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "phone": { "type": "string" },
+        "dob": { "type": "string" },
+        "address": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "country": { "type": "string" },
+        "documentType": { "type": "string" },
+        "frontImage": { "type": "string" },
+        "backImage": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "userEmail", "firstName", "lastName", "documentType", "frontImage", "backImage", "status", "submittedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/bots/{botId}": { "schema": "Bot", "description": "Trading bots" },
+    "/investments/{investmentId}": { "schema": "Investment", "description": "User investments" },
+    "/planInvestments/{planInvestmentId}": { "schema": "PlanInvestment", "description": "User plan investments" },
+    "/trades/{tradeId}": { "schema": "Trade", "description": "User trading history" },
+    "/transactions/{transactionId}": { "schema": "Transaction", "description": "Financial history" },
+    "/traders/{traderId}": { "schema": "Trader", "description": "Professional traders" },
+    "/copyTrades/{copyTradeId}": { "schema": "CopyTrade", "description": "Copy trading links" },
+    "/deposits/{depositId}": { "schema": "Deposit", "description": "Manual deposit requests" },
+    "/kyc_requests/{requestId}": { "schema": "KycRequest", "description": "KYC verification requests" },
+    "/settings/{settingId}": { "schema": "object", "description": "Global application settings" }
+  }
+}

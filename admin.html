@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - ViserLab Style</title>
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --primary-color: #3c50e0;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --purple: #7c3aed;
+            --green: #10b981;
+            --red: #ef4444;
+            --orange: #f59e0b;
+            --blue: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .cron-btn {
+            background-color: #7c3aed;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Alert Box */
+        .alert-warning {
+            background-color: #ff9800;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Grid Layouts */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .card-title {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--text-main);
+        }
+
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-arrow {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Icon Colors */
+        .bg-purple-light { background-color: rgba(124, 58, 237, 0.1); color: var(--purple); }
+        .bg-green-light { background-color: rgba(16, 185, 129, 0.1); color: var(--green); }
+        .bg-red-light { background-color: rgba(239, 68, 68, 0.1); color: var(--red); }
+        .bg-orange-light { background-color: rgba(245, 158, 11, 0.1); color: var(--orange); }
+        .bg-blue-light { background-color: rgba(59, 130, 246, 0.1); color: var(--blue); }
+
+        /* Section Titles */
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-muted);
+        }
+
+        /* Deposit/Withdraw Grid */
+        .finance-section {
+            margin-bottom: 40px;
+        }
+
+        .finance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .finance-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .finance-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .finance-info {
+            flex: 1;
+        }
+
+        .finance-value {
+            font-size: 16px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .finance-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Profit Control Styles */
+        .profit-control-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        .admin-table th, .admin-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+
+        .admin-table th {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 5px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-action:hover {
+            opacity: 0.8;
+        }
+
+        .btn-win { background-color: var(--green); color: white; }
+        .btn-loss { background-color: var(--red); color: white; }
+        .btn-draw { background-color: var(--orange); color: white; }
+
+        .profit-settings {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            outline: none;
+            width: 200px;
+        }
+
+        .btn-save {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 5px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Chart Section */
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .chart-date {
+            background: #f1f5f9;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chart-placeholder {
+            height: 300px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 20px;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 200px;
+            border-left: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            padding: 0 10px;
+        }
+
+        .bar-group {
+            display: flex;
+            gap: 4px;
+            align-items: flex-end;
+            height: 100%;
+        }
+
+        .bar {
+            width: 15px;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .bar.deposit { background-color: var(--primary-color); }
+        .bar.withdraw { background-color: #ff9800; }
+
+        .chart-labels {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid, .finance-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1>لوحة التحكم</h1>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <span id="admin-email" style="font-size: 14px; color: var(--text-muted); font-weight: 600;"></span>
+            <button id="login-btn" class="cron-btn" style="background-color: var(--primary-color); border: none; cursor: pointer; display: none;" onclick="handleAdminLogin()">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </button>
+            <a href="#" class="cron-btn"><i class="fas fa-cog"></i> إعداد Cron</a>
+        </div>
+    </div>
+
+    <!-- Alert -->
+    <div class="alert-warning">
+        <i class="fas fa-exclamation-triangle"></i>
+        إذا كنت بحاجة إلى مساعدة في ترقية البريد الإلكتروني api@coinmarketcap.com لقد تجاوزت الحد الائتماني الشهري لمفتاح API الخاص بك. يرجى التواصل معنا عبر خطتك.
+    </div>
+
+    <!-- Top Stats Section (8 Cards) -->
+    <div class="stats-grid">
+        <!-- Card 1 -->
+        <div class="card">
+            <div class="card-icon bg-purple-light">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">إجمالي المستخدمين</span>
+                <span id="stat-total-users" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 2 -->
+        <div class="card">
+            <div class="card-icon bg-green-light">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">المستخدمون النشطون</span>
+                <span id="stat-active-users" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 3 -->
+        <div class="card">
+            <div class="card-icon bg-red-light">
+                <i class="fas fa-envelope"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">إرسال بريد إلكتروني إلى المستخدمين غير الموثقين</span>
+                <span id="stat-unverified-email" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 4 -->
+        <div class="card">
+            <div class="card-icon bg-orange-light">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">مستخدمو الهواتف المحمولة غير الموثقين</span>
+                <span id="stat-unverified-mobile" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 5 -->
+        <div class="card">
+            <div class="card-icon bg-blue-light">
+                <i class="fas fa-briefcase"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">إجمالي الصفقات</span>
+                <span id="stat-total-trades" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 6 -->
+        <div class="card">
+            <div class="card-icon bg-green-light">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">صفقات رابحة</span>
+                <span id="stat-winning-trades" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 7 -->
+        <div class="card">
+            <div class="card-icon bg-red-light">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">صفقات الخسارة</span>
+                <span id="stat-losing-trades" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Card 8 -->
+        <div class="card">
+            <div class="card-icon bg-orange-light">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">عمليات السحب</span>
+                <span id="stat-total-withdrawals" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+    </div>
+
+    <!-- Deposit Stats Section -->
+    <div class="stats-grid">
+        <!-- Pending Deposits -->
+        <div class="card">
+            <div class="card-icon bg-orange-light">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">إيداعات قيد الانتظار</span>
+                <span id="stat-pending-deposits" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Rejected Deposits -->
+        <div class="card">
+            <div class="card-icon bg-red-light">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">إيداعات مرفوضة</span>
+                <span id="stat-rejected-deposits" class="card-value">0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <!-- Total Deposit Amount -->
+        <div class="card">
+            <div class="card-icon bg-green-light">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="card-content">
+                <span class="card-title">إجمالي المبالغ المودعة</span>
+                <span id="stat-total-deposit-amount" class="card-value">$0</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+    </div>
+
+    <!-- Additional Training Stats (Optional based on image) -->
+    <div class="stats-grid">
+        <div class="card">
+            <div class="card-icon bg-blue-light"><i class="fas fa-graduation-cap"></i></div>
+            <div class="card-content">
+                <span class="card-title">إجمالي عمليات التداول التدريبية</span>
+                <span class="card-value">5137</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <div class="card">
+            <div class="card-icon bg-green-light"><i class="fas fa-trophy"></i></div>
+            <div class="card-content">
+                <span class="card-title">أرباح صفقات تدريبية</span>
+                <span class="card-value">2310</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <div class="card">
+            <div class="card-icon bg-red-light"><i class="fas fa-times-circle"></i></div>
+            <div class="card-content">
+                <span class="card-title">تداولات تجريبية للخسارة</span>
+                <span class="card-value">2400</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+        <div class="card">
+            <div class="card-icon bg-orange-light"><i class="fas fa-hand-holding-usd"></i></div>
+            <div class="card-content">
+                <span class="card-title">ارسم صفقات تدريبية</span>
+                <span class="card-value">427</span>
+            </div>
+            <i class="fas fa-chevron-left card-arrow"></i>
+        </div>
+    </div>
+
+    <!-- Deposits Section -->
+    <div class="finance-section">
+        <h2 class="section-title">الودائع</h2>
+        <div class="finance-grid">
+            <div class="finance-card">
+                <div class="finance-icon bg-green-light"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="finance-info">
+                    <span id="stat-total-deposit-amount" class="finance-value">0.00 دولار أمريكي</span>
+                    <span class="finance-label">إجمالي الإيداع</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+            <div class="finance-card">
+                <div class="finance-icon bg-orange-light"><i class="fas fa-spinner"></i></div>
+                <div class="finance-info">
+                    <span id="stat-pending-deposits" class="finance-value">0</span>
+                    <span class="finance-label">الودائع المعلقة</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+            <div class="finance-card">
+                <div class="finance-icon bg-red-light"><i class="fas fa-ban"></i></div>
+                <div class="finance-info">
+                    <span id="stat-rejected-deposits" class="finance-value">0</span>
+                    <span class="finance-label">الودائع المرفوضة</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+            <div class="finance-card">
+                <div class="finance-icon bg-purple-light"><i class="fas fa-percentage"></i></div>
+                <div class="finance-info">
+                    <span class="finance-value">0.00 دولار أمريكي</span>
+                    <span class="finance-label">الرسوم المودعة</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdrawals Section -->
+    <div class="finance-section">
+        <h2 class="section-title">عمليات السحب</h2>
+        <div class="finance-grid">
+            <div class="finance-card">
+                <div class="finance-icon bg-green-light"><i class="fas fa-hand-holding-usd"></i></div>
+                <div class="finance-info">
+                    <span class="finance-value">0.00 دولار أمريكي</span>
+                    <span class="finance-label">إجمالي المبالغ المسحوبة</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+            <div class="finance-card">
+                <div class="finance-icon bg-orange-light"><i class="fas fa-clock"></i></div>
+                <div class="finance-info">
+                    <span class="finance-value">24</span>
+                    <span class="finance-label">عمليات السحب المعلقة</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+            <div class="finance-card">
+                <div class="finance-icon bg-red-light"><i class="fas fa-times-circle"></i></div>
+                <div class="finance-info">
+                    <span class="finance-value">0</span>
+                    <span class="finance-label">عمليات السحب المرفوضة</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+            <div class="finance-card">
+                <div class="finance-icon bg-purple-light"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="finance-info">
+                    <span class="finance-value">0.00 دولار أمريكي</span>
+                    <span class="finance-label">رسوم السحب</span>
+                </div>
+                <i class="fas fa-chevron-left card-arrow"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit Control Section -->
+    <div class="finance-section">
+        <h2 class="section-title">التحكم في الأرباح والصفقات</h2>
+        <div class="profit-control-card">
+            <div class="profit-settings">
+                <div class="form-group">
+                    <label>نسبة الربح الافتراضية (%)</label>
+                    <input type="number" id="profit-rate" class="form-control" value="85">
+                </div>
+                <div class="form-group">
+                    <label>التحكم التلقائي</label>
+                    <select id="auto-control" class="form-control">
+                        <option value="random">عشوائي</option>
+                        <option value="win">دائماً ربح</option>
+                        <option value="loss">دائماً خسارة</option>
+                    </select>
+                </div>
+                <button id="btn-save-settings" class="btn-save">حفظ الإعدادات</button>
+            </div>
+
+            <h3 class="section-title" style="margin-top: 20px; font-size: 14px;">الصفقات النشطة حالياً</h3>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>الزوج</th>
+                            <th>المبلغ</th>
+                            <th>النوع</th>
+                            <th>الحالة</th>
+                            <th>التحكم في النتيجة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trades-table-body">
+                        <!-- Trades will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Deposits Section (Simulation) -->
+    <div class="finance-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 class="section-title" style="margin-bottom: 0;">طلبات الإيداع اليدوي (قيد المراجعة)</h2>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="loadDeposits()" class="btn-action btn-win" style="background-color: var(--blue);"><i class="fas fa-sync"></i> تحديث</button>
+                <button onclick="clearAllDeposits()" class="btn-action btn-loss"><i class="fas fa-trash"></i> مسح الكل</button>
+            </div>
+        </div>
+        <div class="profit-control-card">
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>المبلغ</th>
+                            <th>التاريخ</th>
+                            <th>الإيصال</th>
+                            <th>الحالة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-deposits-body">
+                        <!-- Simulated data will appear here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- KYC Requests Section -->
+    <div class="finance-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 class="section-title" style="margin-bottom: 0;">طلبات التحقق من الهوية (KYC)</h2>
+        </div>
+        <div class="profit-control-card">
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>نوع المستند</th>
+                            <th>البلد</th>
+                            <th>الحالة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kyc-requests-body">
+                        <!-- KYC requests will appear here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="finance-section">
+        <h2 class="section-title">إدارة أرصدة المستخدمين</h2>
+        <div class="profit-control-card">
+            <div class="profit-settings">
+                <div class="form-group">
+                    <label>اختر المستخدم</label>
+                    <select id="manual-user-select" class="form-control" style="width: 300px;">
+                        <option value="">جاري تحميل المستخدمين...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>المبلغ المراد إضافته ($)</label>
+                    <input type="number" id="manual-amount" class="form-control" placeholder="0.00">
+                </div>
+                <button class="btn-save" id="btn-add-balance">إضافة رصيد</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الهاتف</th>
+                            <th>البلد</th>
+                            <th>حالة التوثيق</th>
+                            <th>الرصيد الحالي</th>
+                            <th>الأرباح</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-balance-body">
+                        <!-- User balances will appear here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, increment, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+        let db, auth, currentUser;
+        let currentDeposits = [];
+
+        window.handleAdminLogin = async function() {
+            try {
+                const { GoogleAuthProvider, signInWithPopup } = await import("https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js");
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert("فشل تسجيل الدخول: " + error.message);
+            }
+        };
+
+        async function initAdmin() {
+            try {
+                const response = await fetch('/firebase-applet-config.json');
+                const firebaseConfig = await response.json();
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+                auth = getAuth(app);
+
+                let unsubUsers = null;
+                let unsubDeposits = null;
+                let unsubTrades = null;
+                let unsubWithdrawals = null;
+                let unsubKyc = null;
+
+                onAuthStateChanged(auth, (user) => {
+                    // Cleanup previous listeners if any
+                    if (unsubUsers) unsubUsers();
+                    if (unsubDeposits) unsubDeposits();
+                    if (unsubTrades) unsubTrades();
+                    if (unsubWithdrawals) unsubWithdrawals();
+                    if (unsubKyc) unsubKyc();
+
+                    if (!user) {
+                        console.log("Admin: No user logged in. Waiting for auth...");
+                        document.getElementById('login-btn').style.display = 'block';
+                        document.getElementById('admin-email').textContent = 'يرجى تسجيل الدخول';
+                        return;
+                    }
+
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('admin-email').textContent = user.email;
+                    console.log("Admin: User logged in, starting listeners...");
+                    
+                    // Ensure admin document exists
+                    (async () => {
+                        const userDocRef = doc(db, 'users', user.uid);
+                        const userDoc = await getDoc(userDocRef);
+                        if (!userDoc.exists()) {
+                            console.log("Creating admin document...");
+                            await setDoc(userDocRef, {
+                                uid: user.uid,
+                                email: user.email,
+                                displayName: user.displayName || 'Admin',
+                                photoURL: user.photoURL || '',
+                                role: user.email === 'wasemwasemm4@gmail.com' ? 'admin' : 'user',
+                                balance: 0,
+                                profit: 0,
+                                kycStatus: 'none',
+                                createdAt: new Date().toISOString()
+                            });
+                        }
+                    })();
+
+                    // --- Real-time Listeners ---
+
+                    // 1. Listen to Users
+                    unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+                        const users = [];
+                        let totalBalance = 0;
+                        let activeCount = 0;
+                        let unverifiedEmail = 0;
+
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            users.push({ id: doc.id, ...data });
+                            totalBalance += (data.balance || 0);
+                            activeCount++;
+                            if (data.kycStatus === 'none' || !data.kycStatus) unverifiedEmail++;
+                        });
+
+                        document.getElementById('stat-total-users').innerText = users.length;
+                        document.getElementById('stat-active-users').innerText = activeCount;
+                        document.getElementById('stat-unverified-email').innerText = unverifiedEmail;
+                        
+                        renderUsersTable(users);
+                        updateUserSelect(users);
+                    }, (error) => {
+                        console.error("Admin: Error listening to users:", error);
+                        if (error.message.includes("permissions")) {
+                            alert("عذراً، ليس لديك صلاحيات كافية للوصول إلى لوحة التحكم.");
+                        }
+                    });
+
+                    // 2. Listen to Deposits
+                    unsubDeposits = onSnapshot(query(collection(db, 'deposits'), orderBy('createdAt', 'desc')), (snapshot) => {
+                        const deposits = [];
+                        let pendingCount = 0;
+                        let rejectedCount = 0;
+                        let totalApprovedAmount = 0;
+
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            deposits.push({ id: doc.id, ...data });
+                            if (data.status === 'pending') pendingCount++;
+                            if (data.status === 'rejected') rejectedCount++;
+                            if (data.status === 'approved') totalApprovedAmount += (data.amount || 0);
+                        });
+
+                        currentDeposits = deposits;
+                        updateDepositStats(pendingCount, rejectedCount, totalApprovedAmount);
+                        renderDepositsTable(deposits);
+                    }, (error) => {
+                        console.error("Admin: Error listening to deposits:", error);
+                    });
+
+                    // 3. Listen to Trades
+                    unsubTrades = onSnapshot(query(collection(db, 'trades'), orderBy('timestamp', 'desc')), (snapshot) => {
+                        document.getElementById('stat-total-trades').innerText = snapshot.size;
+                        let wins = 0;
+                        let losses = 0;
+                        const trades = [];
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            trades.push({ id: doc.id, ...data });
+                            if (data.status === 'WIN') wins++;
+                            if (data.status === 'LOSE') losses++;
+                        });
+                        document.getElementById('stat-winning-trades').innerText = wins;
+                        document.getElementById('stat-losing-trades').innerText = losses;
+                        renderTradesTable(trades.filter(t => t.status === 'PENDING').slice(0, 10));
+                    }, (error) => {
+                        console.error("Admin: Error listening to trades:", error);
+                    });
+
+                    // 4. Listen to Withdrawals
+                    unsubWithdrawals = onSnapshot(collection(db, 'withdrawals'), (snapshot) => {
+                        document.getElementById('stat-total-withdrawals').innerText = snapshot.size;
+                    }, (error) => {
+                        console.error("Admin: Error listening to withdrawals:", error);
+                    });
+
+                    // 5. Listen to KYC Requests
+                    unsubKyc = onSnapshot(query(collection(db, 'kyc_requests'), orderBy('submittedAt', 'desc')), (snapshot) => {
+                        const requests = [];
+                        snapshot.forEach(doc => {
+                            requests.push({ id: doc.id, ...doc.data() });
+                        });
+                        renderKycTable(requests);
+                    }, (error) => {
+                        console.error("Admin: Error listening to KYC requests:", error);
+                    });
+
+                    // 6. Listen to Global Settings
+                    onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
+                        if (docSnap.exists()) {
+                            const data = docSnap.data();
+                            document.getElementById('profit-rate').value = data.profitRate || 85;
+                            document.getElementById('auto-control').value = data.autoControl || 'random';
+                        }
+                    });
+                });
+
+                // --- Action Handlers ---
+
+                window.saveGlobalSettings = async () => {
+                    const profitRate = parseFloat(document.getElementById('profit-rate').value);
+                    const autoControl = document.getElementById('auto-control').value;
+
+                    try {
+                        await setDoc(doc(db, 'settings', 'global'), {
+                            profitRate,
+                            autoControl,
+                            updatedAt: new Date().toISOString()
+                        });
+                        alert('تم حفظ الإعدادات بنجاح');
+                    } catch (error) {
+                        console.error("Error saving settings:", error);
+                        alert('حدث خطأ أثناء حفظ الإعدادات');
+                    }
+                };
+                document.getElementById('btn-save-settings').onclick = window.saveGlobalSettings;
+
+                function renderTradesTable(trades) {
+                    const tbody = document.getElementById('trades-table-body');
+                    tbody.innerHTML = '';
+                    trades.forEach(trade => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${trade.userId.substring(0, 8)}...</td>
+                            <td>${trade.asset}</td>
+                            <td><span class="badge badge-${trade.type === 'Buy' ? 'success' : 'danger'}">${trade.type === 'Buy' ? 'شراء' : 'بيع'}</span></td>
+                            <td>$${trade.amount}</td>
+                            <td class="${trade.profit >= 0 ? 'text-success' : 'text-danger'}">${trade.profit >= 0 ? '+' : ''}$${trade.profit}</td>
+                            <td><span class="badge badge-warning">نشط</span></td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn-action btn-win" onclick="handleTradeResult('${trade.id}', '${trade.userId}', ${trade.amount}, 'WIN')">ربح</button>
+                                    <button class="btn-action btn-loss" onclick="handleTradeResult('${trade.id}', '${trade.userId}', ${trade.amount}, 'LOSE')">خسارة</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                window.handleTradeResult = async (tradeId, userId, amount, status) => {
+                    try {
+                        const tradeRef = doc(db, 'trades', tradeId);
+                        const tradeSnap = await getDoc(tradeRef);
+                        const tradeData = tradeSnap.data();
+                        
+                        if (tradeData.status !== 'PENDING') return;
+
+                        const profit = status === 'WIN' ? Math.abs(tradeData.profit || amount * 0.1) : -Math.abs(tradeData.profit || amount * 0.4); // Increased manual loss to 40%
+
+                        await updateDoc(tradeRef, {
+                            status,
+                            profit,
+                            exitPrice: tradeData.entryPrice
+                        });
+
+                        const userRef = doc(db, 'users', userId);
+                        await updateDoc(userRef, {
+                            balance: increment(amount + profit)
+                        });
+
+                        alert('تم تحديث نتيجة الصفقة بنجاح');
+                    } catch (error) {
+                        console.error("Error handling trade result:", error);
+                        alert('حدث خطأ أثناء معالجة الصفقة');
+                    }
+                };
+
+                window.handleKyc = async (requestId, userId, status) => {
+                    try {
+                        const requestRef = doc(db, 'kyc_requests', requestId);
+                        await updateDoc(requestRef, { status });
+
+                        const userRef = doc(db, 'users', userId);
+                        await updateDoc(userRef, { kycStatus: status });
+
+                        alert(`تم ${status === 'approved' ? 'قبول' : 'رفض'} طلب التحقق بنجاح`);
+                    } catch (error) {
+                        console.error("Error handling KYC:", error);
+                        alert('حدث خطأ أثناء معالجة الطلب');
+                    }
+                };
+
+                window.addManualBalance = async () => {
+                    const userId = document.getElementById('manual-user-select').value;
+                    const amount = parseFloat(document.getElementById('manual-amount').value);
+
+                    if (!userId || isNaN(amount)) {
+                        alert('يرجى اختيار مستخدم وإدخال مبلغ صحيح');
+                        return;
+                    }
+
+                    try {
+                        const userRef = doc(db, 'users', userId);
+                        await updateDoc(userRef, {
+                            balance: increment(amount)
+                        });
+                        alert('تم تحديث الرصيد بنجاح');
+                        document.getElementById('manual-amount').value = '';
+                    } catch (error) {
+                        console.error("Error updating balance:", error);
+                        alert('حدث خطأ أثناء تحديث الرصيد');
+                    }
+                };
+                document.getElementById('btn-add-balance').onclick = window.addManualBalance;
+
+                window.handleDeposit = async (depositId, userId, amount, status) => {
+                    try {
+                        const depositRef = doc(db, 'deposits', depositId);
+                        const depositSnap = await getDoc(depositRef);
+                        const depositData = depositSnap.data();
+
+                        await updateDoc(depositRef, { status });
+
+                        // Update transaction status for user history
+                        if (depositData && depositData.transactionId) {
+                            const transRef = doc(db, 'transactions', depositData.transactionId);
+                            await updateDoc(transRef, { status });
+                        }
+
+                        if (status === 'approved') {
+                            const userRef = doc(db, 'users', userId);
+                            await updateDoc(userRef, {
+                                balance: increment(amount)
+                            });
+                        }
+
+                        alert(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح`);
+                    } catch (error) {
+                        console.error("Error handling deposit:", error);
+                        alert('حدث خطأ أثناء معالجة الطلب');
+                    }
+                };
+
+                window.deleteUser = async (userId) => {
+                    if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                        try {
+                            await deleteDoc(doc(db, 'users', userId));
+                            alert('تم حذف المستخدم بنجاح');
+                        } catch (error) {
+                            console.error("Error deleting user:", error);
+                            alert('حدث خطأ أثناء حذف المستخدم');
+                        }
+                    }
+                };
+
+                window.viewReceipt = (depositId) => {
+                    const deposit = currentDeposits.find(d => d.id === depositId);
+                    if (!deposit || !deposit.receipt) {
+                        alert('الإيصال غير متوفر');
+                        return;
+                    }
+                    const win = window.open();
+                    if (win) {
+                        win.document.write('<img src="' + deposit.receipt + '" style="max-width: 100%; height: auto;" />');
+                    } else {
+                        alert('يرجى السماح بالنوافذ المنبثقة لعرض الإيصال');
+                    }
+                };
+
+                window.viewKycDocument = async (requestId) => {
+                    try {
+                        const requestRef = doc(db, 'kyc_requests', requestId);
+                        const requestSnap = await getDoc(requestRef);
+                        if (requestSnap.exists()) {
+                            const data = requestSnap.data();
+                            const win = window.open();
+                            if (win) {
+                                win.document.write(`
+                                    <html dir="rtl">
+                                    <head><title>مستندات KYC - ${data.firstName} ${data.lastName}</title></head>
+                                    <body style="font-family: sans-serif; padding: 20px; background: #f0f0f0;">
+                                        <h2>مستندات التحقق - ${data.firstName} ${data.lastName}</h2>
+                                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <h3>الجهة الأمامية</h3>
+                                                ${data.frontImage ? `<img src="${data.frontImage}" style="max-width: 500px; height: auto;" />` : '<p>لا توجد صورة</p>'}
+                                            </div>
+                                            <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                                <h3>الجهة الخلفية</h3>
+                                                ${data.backImage ? `<img src="${data.backImage}" style="max-width: 500px; height: auto;" />` : '<p>لا توجد صورة</p>'}
+                                            </div>
+                                        </div>
+                                    </body>
+                                    </html>
+                                `);
+                            } else {
+                                alert('يرجى السماح بالنوافذ المنبثقة لعرض المستندات');
+                            }
+                        } else {
+                            alert('لم يتم العثور على الطلب');
+                        }
+                    } catch(error) {
+                        console.error("Error fetching KYC document:", error);
+                        alert('حدث خطأ أثناء جلب المستندات');
+                    }
+                };
+
+            } catch (error) {
+                console.error("Firebase Init Error:", error);
+                alert("فشل الاتصال بقاعدة البيانات. يرجى التأكد من إعدادات Firebase.");
+            }
+        }
+
+        function updateUserStats(total, active) {
+            document.getElementById('stat-total-users').innerText = total;
+            document.getElementById('stat-active-users').innerText = active;
+        }
+
+        function updateDepositStats(pending, rejected, totalAmount) {
+            document.getElementById('stat-pending-deposits').innerText = pending;
+            document.getElementById('stat-rejected-deposits').innerText = rejected;
+            document.getElementById('stat-total-deposit-amount').innerText = totalAmount.toLocaleString() + " دولار أمريكي";
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('users-balance-body');
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 20px; color: var(--text-muted);">لا يوجد مستخدمون حالياً</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(u => {
+                const name = u.displayName || (u.firstName ? u.firstName + ' ' + (u.lastName || '') : 'بدون اسم');
+                let kycBadge = '';
+                if (u.kycStatus === 'approved') kycBadge = '<span class="status-badge status-completed">موثق</span>';
+                else if (u.kycStatus === 'pending') kycBadge = '<span class="status-badge status-pending">قيد المراجعة</span>';
+                else if (u.kycStatus === 'rejected') kycBadge = '<span class="status-badge status-failed">مرفوض</span>';
+                else kycBadge = '<span class="status-badge" style="background: #e2e8f0; color: #475569;">غير موثق</span>';
+
+                return `
+                <tr>
+                    <td>${name}</td>
+                    <td>${u.email || '-'}</td>
+                    <td>${u.phone || '-'}</td>
+                    <td>${u.country || '-'}</td>
+                    <td>${kycBadge}</td>
+                    <td style="font-weight: 700; color: var(--green);">${(u.balance || 0).toFixed(2)}$</td>
+                    <td style="font-weight: 700; color: var(--blue);">${(u.profit || 0).toFixed(2)}$</td>
+                    <td>
+                        <button class="btn-action btn-loss" onclick="deleteUser('${u.id}')">حذف</button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function updateUserSelect(users) {
+            const select = document.getElementById('manual-user-select');
+            const currentVal = select.value;
+            select.innerHTML = '<option value="">اختر مستخدم...</option>' + 
+                users.map(u => `<option value="${u.id}">${u.displayName || u.email} (${(u.balance || 0).toFixed(2)}$)</option>`).join('');
+            select.value = currentVal;
+        }
+
+        function renderDepositsTable(deposits) {
+            const tbody = document.getElementById('pending-deposits-body');
+            if (deposits.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">لا توجد طلبات إيداع حالياً</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = deposits.map(d => `
+                <tr>
+                    <td>${d.userName}</td>
+                    <td>${d.amount}$</td>
+                    <td>${new Date(d.date).toLocaleString('ar-EG')}</td>
+                    <td>
+                        <button onclick="viewReceipt('${d.id}')" style="background: none; border: none; color: var(--primary-color); font-weight: 700; cursor: pointer; font-family: 'Cairo';">
+                            <i class="fas fa-image"></i> عرض الإيصال
+                        </button>
+                    </td>
+                    <td>
+                        <span style="color: ${d.status === 'pending' ? 'var(--orange)' : d.status === 'approved' ? 'var(--green)' : 'var(--red)'}; font-weight: 700;">
+                            ${d.status === 'pending' ? 'قيد المراجعة' : d.status === 'approved' ? 'مقبول' : 'مرفوض'}
+                        </span>
+                    </td>
+                    <td>
+                        ${d.status === 'pending' ? `
+                            <button class="btn-action btn-win" onclick="handleDeposit('${d.id}', '${d.userId}', ${d.amount}, 'approved')">قبول</button>
+                            <button class="btn-action btn-loss" onclick="handleDeposit('${d.id}', '${d.userId}', ${d.amount}, 'rejected')">رفض</button>
+                        ` : '<span style="color: var(--text-muted);">مكتمل</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function renderKycTable(requests) {
+            const tbody = document.getElementById('kyc-requests-body');
+            if (requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px; color: var(--text-muted);">لا توجد طلبات تحقق حالياً</td></tr>';
+                return;
+            }
+
+            const docTypes = {
+                'passport': 'جواز سفر',
+                'national_id': 'بطاقة هوية',
+                'drivers_license': 'رخصة قيادة'
+            };
+
+            tbody.innerHTML = requests.map(r => `
+                <tr>
+                    <td>${r.firstName} ${r.lastName}</td>
+                    <td>${r.userEmail}</td>
+                    <td>
+                        ${docTypes[r.documentType] || r.documentType}
+                        <br/>
+                        <button onclick="viewKycDocument('${r.id}')" style="background: none; border: none; color: var(--primary-color); font-weight: 700; cursor: pointer; font-family: 'Cairo'; font-size: 12px; margin-top: 5px;">
+                            <i class="fas fa-image"></i> عرض المستند
+                        </button>
+                    </td>
+                    <td>${r.country}</td>
+                    <td>
+                        <span style="color: ${r.status === 'pending' ? 'var(--orange)' : r.status === 'approved' ? 'var(--green)' : 'var(--red)'}; font-weight: 700;">
+                            ${r.status === 'pending' ? 'قيد المراجعة' : r.status === 'approved' ? 'مقبول' : 'مرفوض'}
+                        </span>
+                    </td>
+                    <td>
+                        ${r.status === 'pending' ? `
+                            <button class="btn-action btn-win" onclick="handleKyc('${r.id}', '${r.userId}', 'approved')">قبول</button>
+                            <button class="btn-action btn-loss" onclick="handleKyc('${r.id}', '${r.userId}', 'rejected')">رفض</button>
+                        ` : '<span style="color: var(--text-muted);">مكتمل</span>'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        initAdmin();
+    </script>
+
+    <!-- Chart Section -->
+    <div class="chart-container">
+        <div class="chart-header">
+            <h2 class="chart-title">تقرير الإيداع والسحب</h2>
+            <div class="chart-date">
+                <i class="fas fa-calendar-alt"></i>
+                16 مارس 2026 - 30 مارس 2026
+            </div>
+        </div>
+        <div class="chart-placeholder">
+            <div class="chart-bars">
+                <!-- Mock Bars -->
+                <div class="bar-group"><div class="bar deposit" style="height: 40%;"></div><div class="bar withdraw" style="height: 20%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 60%;"></div><div class="bar withdraw" style="height: 30%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 80%;"></div><div class="bar withdraw" style="height: 45%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 50%;"></div><div class="bar withdraw" style="height: 25%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 90%;"></div><div class="bar withdraw" style="height: 55%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 70%;"></div><div class="bar withdraw" style="height: 40%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 30%;"></div><div class="bar withdraw" style="height: 15%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 55%;"></div><div class="bar withdraw" style="height: 35%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 85%;"></div><div class="bar withdraw" style="height: 60%;"></div></div>
+                <div class="bar-group"><div class="bar deposit" style="height: 45%;"></div><div class="bar withdraw" style="height: 20%;"></div></div>
+            </div>
+            <div class="chart-labels">
+                <span>16 مارس</span>
+                <span>18 مارس</span>
+                <span>20 مارس</span>
+                <span>22 مارس</span>
+                <span>24 مارس</span>
+                <span>26 مارس</span>
+                <span>28 مارس</span>
+                <span>30 مارس</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

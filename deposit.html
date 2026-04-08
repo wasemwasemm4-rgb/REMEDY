@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيداع يدوي - Manual Deposit</title>
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --primary: #3c50e0;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --green: #10b981;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .deposit-card {
+            background: var(--card-dark);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        /* Amount Selection */
+        .amount-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .amount-option {
+            position: relative;
+        }
+
+        .amount-option input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .amount-label {
+            display: block;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .amount-option input:checked + .amount-label {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .custom-amount {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
+            outline: none;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        /* Wallet Info */
+        .wallet-info {
+            background: rgba(60, 80, 224, 0.1);
+            border: 1px dashed var(--primary);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .wallet-address {
+            display: block;
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--text-main);
+            word-break: break-all;
+            margin-top: 5px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary);
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* File Upload */
+        .upload-area {
+            border: 2px dashed var(--border);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-bottom: 25px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(60, 80, 224, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 30px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        #receipt-preview {
+            width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            margin-top: 15px;
+            display: none;
+            border-radius: 8px;
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+
+        #receipt-preview:hover {
+            transform: scale(1.02);
+        }
+
+        /* Modal for Zoom */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .submit-btn:hover {
+            background: #2d3eb3;
+            transform: translateY(-2px);
+        }
+
+        .success-msg {
+            display: none;
+            background: var(--green);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="deposit-card">
+    <div class="header">
+        <h1>إيداع يدوي</h1>
+        <p>قم بتحويل المبلغ وإرفاق صورة الإيصال للمراجعة</p>
+        <div id="user-info" style="margin-top: 10px; font-size: 12px; color: var(--primary); font-weight: 700;">
+            جاري التحقق من الحساب...
+        </div>
+    </div>
+
+    <div class="section-title">
+        <i class="fas fa-dollar-sign"></i>
+        <span>اختر مبلغ الإيداع</span>
+    </div>
+
+    <div class="amount-grid">
+        <label class="amount-option">
+            <input type="radio" name="amount" value="100" onclick="updateAmount(100)">
+            <span class="amount-label">$100</span>
+        </label>
+        <label class="amount-option">
+            <input type="radio" name="amount" value="500" onclick="updateAmount(500)">
+            <span class="amount-label">$500</span>
+        </label>
+        <label class="amount-option">
+            <input type="radio" name="amount" value="1000" onclick="updateAmount(1000)">
+            <span class="amount-label">$1000</span>
+        </label>
+    </div>
+
+    <input type="number" id="custom-amount" class="custom-amount" placeholder="أو أدخل مبلغاً آخر" oninput="clearRadios()">
+
+    <div class="section-title">
+        <i class="fas fa-wallet"></i>
+        <span>طريقة التحويل (USDT TRC20)</span>
+    </div>
+
+    <div class="wallet-info">
+        <span class="wallet-label">عنوان المحفظة:</span>
+        <span class="wallet-address" id="wallet-addr">TXYZ7894561230QWERTYUIOPASDFGHJKLZ</span>
+        <button class="copy-btn" onclick="copyWallet()">نسخ</button>
+    </div>
+
+    <div class="section-title">
+        <i class="fas fa-camera"></i>
+        <span>إرفاق إيصال التحويل</span>
+    </div>
+
+    <div class="upload-area" id="upload-container">
+        <div onclick="document.getElementById('file-input').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p id="upload-text">اضغط هنا لرفع الصورة</p>
+        </div>
+        <input type="file" id="file-input" hidden accept="image/*" onchange="previewImage(event)">
+        <img id="receipt-preview" src="" alt="Preview" onclick="openModal(this.src)">
+    </div>
+
+    <button class="submit-btn" onclick="submitRequest()">
+        <i class="fas fa-paper-plane"></i>
+        إرسال الطلب
+    </button>
+
+    <div id="success-msg" class="success-msg">
+        <i class="fas fa-check-circle"></i>
+        تم إرسال طلبك بنجاح، يرجى انتظار مراجعة الإدارة
+    </div>
+</div>
+
+<!-- Modal for Zoom -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content" id="modalImg">
+</div>
+
+<script>
+    function updateAmount(val) {
+        document.getElementById('custom-amount').value = val;
+    }
+
+    function clearRadios() {
+        const radios = document.getElementsByName('amount');
+        radios.forEach(r => r.checked = false);
+    }
+
+    function openModal(src) {
+        document.getElementById('imageModal').style.display = 'flex';
+        document.getElementById('modalImg').src = src;
+    }
+
+    function closeModal() {
+        document.getElementById('imageModal').style.display = 'none';
+    }
+
+    function copyWallet() {
+        const addr = document.getElementById('wallet-addr').innerText;
+        navigator.clipboard.writeText(addr);
+        alert('تم نسخ العنوان بنجاح');
+    }
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height *= MAX_WIDTH / width;
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width *= MAX_HEIGHT / height;
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                const output = document.getElementById('receipt-preview');
+                output.src = compressedDataUrl;
+                output.style.display = 'block';
+                document.getElementById('upload-text').style.display = 'none';
+                
+                // Store the compressed result in a global variable for submission
+                window.compressedReceipt = compressedDataUrl;
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+        let db, auth, currentUser;
+
+        async function init() {
+            try {
+                const response = await fetch('/firebase-applet-config.json');
+                const config = await response.json();
+                const app = initializeApp(config);
+                db = getFirestore(app, config.firestoreDatabaseId);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, (user) => {
+                    currentUser = user;
+                    const userInfo = document.getElementById('user-info');
+                    if (user) {
+                        userInfo.textContent = `الحساب الحالي: ${user.email}`;
+                        userInfo.style.color = 'var(--green)';
+                    } else {
+                        userInfo.innerHTML = 'يرجى تسجيل الدخول من <a href="/" style="color: var(--primary); text-decoration: underline;">الصفحة الرئيسية</a> أولاً';
+                        userInfo.style.color = 'var(--red)';
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase Init Error:", error);
+            }
+        }
+
+        window.submitRequest = async function() {
+            const amount = document.getElementById('custom-amount').value;
+            const receipt = window.compressedReceipt;
+            
+            if (!amount || amount <= 0) {
+                alert('يرجى إدخال مبلغ صحيح');
+                return;
+            }
+            if (!receipt) {
+                alert('يرجى إرفاق صورة الإيصال');
+                return;
+            }
+            if (!currentUser) {
+                alert('يرجى تسجيل الدخول أولاً لإرسال الطلب');
+                return;
+            }
+
+            const btn = document.querySelector('.submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+
+            try {
+                // Create transaction first
+                const transRef = await addDoc(collection(db, 'transactions'), {
+                    userId: currentUser.uid,
+                    type: 'deposit',
+                    amount: parseFloat(amount),
+                    status: 'pending',
+                    timestamp: new Date().toISOString(),
+                    details: 'إيداع يدوي - قيد المراجعة'
+                });
+
+                const depositData = {
+                    userId: currentUser.uid,
+                    userName: currentUser.displayName || currentUser.email,
+                    amount: parseFloat(amount),
+                    currency: 'USD',
+                    date: new Date().toISOString(),
+                    receipt: receipt,
+                    status: 'pending',
+                    transactionId: transRef.id,
+                    createdAt: new Date().toISOString()
+                };
+
+                await addDoc(collection(db, 'deposits'), depositData);
+
+                document.getElementById('success-msg').style.display = 'block';
+                setTimeout(() => {
+                    window.location.href = '/'; 
+                }, 2000);
+            } catch (e) {
+                console.error(e);
+                alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
