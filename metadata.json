@@ -1,5 +1,5 @@
 {
-  "name": "met6",
+  "name": "Met6 Trading Platform",
   "description": "منصة تداول واستثمار متكاملة مع روبوتات آلية، نسخ التداول، وتحليلات السوق المباشرة.",
   "requestFramePermissions": [
     "camera"

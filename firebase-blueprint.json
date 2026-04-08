@@ -15,7 +15,8 @@
         "kycStatus": { "type": "string", "enum": ["pending", "approved", "rejected", "none"] },
         "referralCode": { "type": "string" },
         "referredBy": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role", "balance", "profit", "kycStatus", "createdAt"]
     },

@@ -71,17 +71,39 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   };
 
-  const jsonString = JSON.stringify(errInfo);
-  console.error('Firestore Error: ', jsonString);
-  throw new Error(jsonString);
+  // Safe stringify to avoid circular structure errors
+  const safeStringify = (obj: any) => {
+    const cache = new Set();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (cache.has(value)) {
+          return '[Circular]';
+        }
+        cache.add(value);
+      }
+      return value;
+    });
+  };
+
+  try {
+    const jsonString = safeStringify(errInfo);
+    console.error('Firestore Error: ', jsonString);
+    throw new Error(jsonString);
+  } catch (e) {
+    console.error('Firestore Error (serialization failed):', errorMessage);
+    throw new Error(errorMessage);
+  }
 }
 
 export async function testConnection() {
   try {
+    console.log("Testing Firestore connection...");
     await getDocFromServer(doc(db, 'test', 'connection'));
+    console.log("Firestore connection successful.");
   } catch (error) {
-    if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. ");
+    console.error("Firestore connection test failed:", error);
+    if(error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('Could not reach Cloud Firestore backend'))) {
+      console.error("Please check your Firebase configuration. The backend is unreachable.");
     }
   }
 }

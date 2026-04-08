@@ -10,6 +10,9 @@ export interface User {
   referralCode?: string;
   referredBy?: string;
   createdAt: string;
+  lastLogin?: string;
+  phone?: string;
+  country?: string;
 }
 
 export interface Bot {

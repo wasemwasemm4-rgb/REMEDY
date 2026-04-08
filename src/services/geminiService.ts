@@ -1,9 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
+
+function getAI() {
+  if (!aiInstance) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not set. Please configure it in the settings.");
+    }
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+}
 
 export async function getMarketAnalysis(query: string) {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: `Analyze the following market query and provide insights: ${query}`,
@@ -18,9 +30,23 @@ export async function getMarketAnalysis(query: string) {
   }
 }
 
+export async function getTechnicalAnalysis(asset: string, currentPrice: number) {
+  const prompt = `Provide a detailed technical analysis for ${asset} currently trading at ${currentPrice}. 
+  Include:
+  1. Current Trend (Bullish/Bearish/Neutral)
+  2. Key Support and Resistance levels
+  3. Technical Indicators (RSI, MACD, Moving Averages)
+  4. A clear "Buy", "Sell", or "Hold" recommendation with a confidence score (0-100%).
+  5. Short-term price target.
+  Keep the tone professional and concise. Use Markdown for formatting. Respond in Arabic as the primary language, but keep technical terms in English if appropriate.`;
+  
+  return getMarketAnalysis(prompt);
+}
+
 export async function getTradeSignals() {
   try {
-    const response = await ai.models.generateContent({
+    const ai = getAI();
+    const response = await (ai as any).models.generateContent({
       model: "gemini-3-flash-preview",
       contents: "Generate 3 high-probability trading signals for Crypto, Forex, and Stocks. Include entry price, stop-loss, and take-profit.",
       config: {
@@ -36,7 +62,8 @@ export async function getTradeSignals() {
 
 export async function textToSpeech(text: string) {
   try {
-    const response = await ai.models.generateContent({
+    const ai = getAI();
+    const response = await (ai as any).models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],
       config: {

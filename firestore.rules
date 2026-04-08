@@ -20,6 +20,7 @@ service cloud.firestore {
     //   - referralCode: string (optional)
     //   - referredBy: string (optional)
     //   - createdAt: string (required, date-time format)
+    //   - lastLogin: string (optional, date-time format)
     //
     // Collection: bots
     // Document ID: botId
@@ -139,18 +140,18 @@ service cloud.firestore {
       return isAuthenticated() && (
         request.auth.token.email == "wasemwasemm4@gmail.com" ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin')
       );
     }
 
     function isValidEmail(email) {
       return email is string &&
-        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+        (email == "" || email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"));
     }
 
     function isValidUrl(url) {
       return url is string &&
-        (url.matches("^https://.*") || url.matches("^http://.*"));
+        (url == "" || url.matches("^https://.*") || url.matches("^http://.*"));
     }
 
     function isValidDateString(dateStr) {
@@ -171,9 +172,8 @@ service cloud.firestore {
 
     function isValidUser(data, userId) {
       return hasRequiredFields(['uid', 'email', 'role', 'balance', 'profit', 'kycStatus', 'createdAt']) &&
-             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'balance', 'profit', 'kycStatus', 'referralCode', 'referredBy', 'createdAt', 'phone', 'country', 'firstName', 'lastName', 'address', 'city', 'state', 'dob', 'documentType']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'balance', 'profit', 'kycStatus', 'referralCode', 'referredBy', 'referralCount', 'createdAt', 'lastLogin', 'phone', 'country', 'firstName', 'lastName', 'address', 'city', 'state', 'dob', 'documentType', 'frontImage', 'backImage', 'zipCode', 'idNumber']) &&
              data.uid == userId &&
-             (data.email == '' || isValidEmail(data.email)) &&
              data.role in ['user', 'admin'] &&
              data.balance is number &&
              data.profit is number &&
@@ -273,7 +273,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && isValidUser(request.resource.data, userId) && (request.resource.data.role == 'user' || isAdmin());
-      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data, userId) && (request.resource.data.role == resource.data.role || isAdmin());
+      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data, userId) && (request.resource.data.get('role', 'user') == resource.data.get('role', 'user') || isAdmin());
       allow delete: if isAdmin();
     }
 
@@ -346,6 +346,10 @@ service cloud.firestore {
     match /settings/{settingId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+
+    match /test/connection {
+      allow read: if true;
     }
 
     // Default deny

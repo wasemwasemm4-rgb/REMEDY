@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, collection, query, where, addDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, collection, query, where, addDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { User, PlanInvestment, Transaction, Trade } from './types';
 import { ReferralView } from './components/ReferralView';
 import { SupportView } from './components/SupportView';
@@ -95,7 +95,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from './lib/utils';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { getMarketAnalysis, textToSpeech } from './services/geminiService';
+import { getMarketAnalysis, textToSpeech, getTechnicalAnalysis } from './services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import LandingPage from './components/LandingPage';
 
@@ -401,6 +401,24 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: 
   const [duration, setDuration] = useState('5 دقائق');
   const [stopLoss, setStopLoss] = useState<string>('');
   const [isTrading, setIsTrading] = useState(false);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [analysisContent, setAnalysisContent] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleGetAIAnalysis = async () => {
+    setIsAnalyzing(true);
+    setIsAnalysisModalOpen(true);
+    setAnalysisContent(null);
+    try {
+      const analysis = await getTechnicalAnalysis(selectedAsset.symbol, currentPrice || 0);
+      setAnalysisContent(analysis);
+    } catch (error) {
+      console.error("Analysis Error:", error);
+      setAnalysisContent("عذراً، حدث خطأ أثناء جلب التحليل. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const activeTradesCount = trades.filter((t: any) => t.status === 'PENDING').length;
   const todayTradesCount = trades.filter((t: any) => {
@@ -625,7 +643,12 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: 
             <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">تحليل الذكاء الاصطناعي</div>
             <h4 className="text-sm font-black text-gray-900 dark:text-white mb-4">توصية اليوم</h4>
           </div>
-          <button className="w-full py-3 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-700 transition-colors">عرض التحليل</button>
+          <button 
+            onClick={handleGetAIAnalysis}
+            className="w-full py-3 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-700 transition-colors"
+          >
+            عرض التحليل
+          </button>
         </div>
 
         {/* Quick Deposit Card */}
@@ -1000,6 +1023,87 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: 
           ))}
         </div>
       </div>
+
+      {/* AI Analysis Modal */}
+      <AnimatePresence>
+        {isAnalysisModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsAnalysisModalOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-white dark:bg-gray-900 rounded-[2.5rem] border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-purple-600/10 to-blue-600/10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                    <BotIcon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-gray-900 dark:text-white">تحليل الذكاء الاصطناعي</h3>
+                    <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest">تحليل فني مباشر لـ {selectedAsset.symbol}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsAnalysisModalOpen(false)}
+                  className="w-10 h-10 flex items-center justify-center bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                {isAnalyzing ? (
+                  <div className="flex flex-col items-center justify-center py-20 space-y-6">
+                    <div className="relative">
+                      <div className="w-20 h-20 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+                      <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 text-purple-500 animate-pulse" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-black text-gray-900 dark:text-white">جاري تحليل البيانات...</p>
+                      <p className="text-sm text-gray-500 mt-1">نقوم بفحص المؤشرات الفنية واتجاهات السوق</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-headings:font-black prose-headings:text-gray-900 dark:prose-headings:text-white">
+                    <ReactMarkdown>{analysisContent || ''}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                  <span>تحليل مدعوم بـ Gemini 3.0 Pro</span>
+                </div>
+                <div className="flex gap-3 w-full sm:w-auto">
+                  <button 
+                    onClick={() => setIsAnalysisModalOpen(false)}
+                    className="flex-1 sm:flex-none px-6 py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors"
+                  >
+                    إغلاق
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsAnalysisModalOpen(false);
+                    }}
+                    className="flex-1 sm:flex-none px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-purple-600/20 transition-all active:scale-95"
+                  >
+                    بدء التداول الآن
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Latest Trades Table */}
       <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none">
@@ -3386,6 +3490,28 @@ const PlansView = ({ onSubscribe, isSubscribing }: { onSubscribe: (plan: any, am
 
 const SettingsView = ({ user }: { user: User }) => {
   const [activeSection, setActiveSection] = useState('profile');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveProfile = async () => {
+    const displayName = (document.getElementById('display-name') as HTMLInputElement)?.value;
+    const phone = (document.getElementById('phone') as HTMLInputElement)?.value;
+    const country = (document.getElementById('country-select') as HTMLSelectElement)?.value;
+
+    setIsSaving(true);
+    try {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        displayName: displayName || user.displayName,
+        phone: phone || user.phone || '',
+        country: country || user.country || '',
+      });
+      alert('تم تحديث الملف الشخصي بنجاح');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'users');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <motion.div 
@@ -3456,6 +3582,7 @@ const SettingsView = ({ user }: { user: User }) => {
                   <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-2">الاسم الكامل</label>
                   <input 
                     type="text" 
+                    id="display-name"
                     defaultValue={user.displayName}
                     className="w-full bg-gray-50 dark:bg-gray-900 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 px-6 font-bold text-gray-900 dark:text-white transition-all"
                   />
@@ -3473,13 +3600,19 @@ const SettingsView = ({ user }: { user: User }) => {
                   <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-2">رقم الهاتف</label>
                   <input 
                     type="tel" 
+                    id="phone"
+                    defaultValue={user.phone}
                     placeholder="+966 50 000 0000"
                     className="w-full bg-gray-50 dark:bg-gray-900 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 px-6 font-bold text-gray-900 dark:text-white transition-all"
                   />
                 </div>
                 <div className="space-y-3">
                   <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-2">الدولة</label>
-                  <select className="w-full bg-gray-50 dark:bg-gray-900 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 px-6 font-bold text-gray-900 dark:text-white appearance-none">
+                  <select 
+                    id="country-select"
+                    defaultValue={user.country || "المملكة العربية السعودية"}
+                    className="w-full bg-gray-50 dark:bg-gray-900 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 px-6 font-bold text-gray-900 dark:text-white appearance-none"
+                  >
                     <option>المملكة العربية السعودية</option>
                     <option>الإمارات العربية المتحدة</option>
                     <option>الكويت</option>
@@ -3490,8 +3623,12 @@ const SettingsView = ({ user }: { user: User }) => {
               </div>
 
               <div className="pt-6">
-                <button className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95">
-                  حفظ التغييرات
+                <button 
+                  onClick={handleSaveProfile}
+                  disabled={isSaving}
+                  className="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSaving ? 'جاري الحفظ...' : 'حفظ التغييرات'}
                 </button>
               </div>
             </div>
@@ -4255,6 +4392,11 @@ export default function App() {
           let profit = pips * (trade.lotSize || 0.01) * 10;
           if (trade.type === 'Sell') profit = -profit;
 
+          // Calculate time-based multiplier for losses
+          const tradeTime = trade.timestamp ? new Date(trade.timestamp).getTime() : new Date().getTime();
+          const elapsedMinutes = (new Date().getTime() - tradeTime) / (1000 * 60);
+          const timeMultiplier = Math.min(50, 1 + (elapsedMinutes * 0.5)); // 50% increase in loss per minute, capped at 50x
+
           let status = trade.status;
 
           // Apply Admin Auto-Control
@@ -4271,7 +4413,19 @@ export default function App() {
             // Force loss
             if (profit >= 0) {
               profit = -Math.max(1, Math.abs(profit)) * (2.0 + Math.random() * 3); // Increased loss magnitude (2x to 5x)
-              // Adjust simulated price to match loss
+            }
+            // Apply time multiplier to forced loss
+            profit *= timeMultiplier;
+            
+            // Adjust simulated price to match loss
+            const targetPips = profit / ((trade.lotSize || 0.01) * 10);
+            const targetPriceDiff = targetPips / pipMultiplier;
+            simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+          } else {
+            // Natural simulation: if it's a loss, apply time multiplier
+            if (profit < 0) {
+              profit *= timeMultiplier;
+              // Adjust simulated price to match increased loss
               const targetPips = profit / ((trade.lotSize || 0.01) * 10);
               const targetPriceDiff = targetPips / pipMultiplier;
               simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
@@ -4389,6 +4543,56 @@ export default function App() {
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         
+        // Sync user profile on login
+        const syncUser = async () => {
+          try {
+            const docSnap = await getDoc(userDocRef);
+            if (docSnap.exists()) {
+              const existingData = docSnap.data();
+              // Update existing user
+              const updateData: any = {
+                lastLogin: new Date().toISOString(),
+              };
+              
+              if (firebaseUser.displayName) updateData.displayName = firebaseUser.displayName;
+              if (firebaseUser.photoURL) updateData.photoURL = firebaseUser.photoURL;
+              if (firebaseUser.email) updateData.email = firebaseUser.email;
+              
+              // Ensure required fields exist for legacy documents to pass security rules
+              if (existingData.balance === undefined) updateData.balance = 0;
+              if (existingData.profit === undefined) updateData.profit = 0;
+              if (existingData.role === undefined) updateData.role = 'user';
+              if (existingData.kycStatus === undefined) updateData.kycStatus = 'none';
+              if (existingData.createdAt === undefined) updateData.createdAt = new Date().toISOString();
+              if (existingData.uid === undefined) updateData.uid = firebaseUser.uid;
+              if (existingData.email === undefined && !updateData.email) updateData.email = firebaseUser.email || '';
+
+              console.log('Syncing existing user:', firebaseUser.uid, updateData);
+              await updateDoc(userDocRef, updateData);
+            } else {
+              // Create new user profile
+              const newUser: User = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                displayName: firebaseUser.displayName || '',
+                photoURL: firebaseUser.photoURL || '',
+                role: firebaseUser.email === 'wasemwasemm4@gmail.com' ? 'admin' : 'user',
+                balance: 0,
+                profit: 0,
+                kycStatus: 'none',
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+              };
+              console.log('Creating new user:', firebaseUser.uid, newUser);
+              await setDoc(userDocRef, newUser);
+            }
+          } catch (err) {
+            console.error('SyncUser Error:', err);
+            handleFirestoreError(err, OperationType.WRITE, 'users');
+          }
+        };
+        syncUser();
+
         // Listen for user data changes
         unsubUser = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -4398,20 +4602,6 @@ export default function App() {
               updateDoc(userDocRef, { role: 'admin' }).catch(console.error);
             }
             setUser(userData);
-          } else {
-            // Create new user profile if it doesn't exist
-            const newUser: User = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              displayName: firebaseUser.displayName || '',
-              photoURL: firebaseUser.photoURL || '',
-              role: firebaseUser.email === 'wasemwasemm4@gmail.com' ? 'admin' : 'user',
-              balance: 0,
-              profit: 0,
-              kycStatus: 'none',
-              createdAt: new Date().toISOString(),
-            };
-            setDoc(userDocRef, newUser).catch(err => handleFirestoreError(err, OperationType.CREATE, 'users'));
           }
           setLoading(false);
         }, (err) => handleFirestoreError(err, OperationType.GET, 'users'));
