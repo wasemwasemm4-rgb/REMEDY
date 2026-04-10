@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
 import { doc, onSnapshot, setDoc, getDoc, collection, query, where, addDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
-import { User, PlanInvestment, Transaction, Trade } from './types';
+import { User, PlanInvestment, Transaction, Trade, Notification } from './types';
 import { ReferralView } from './components/ReferralView';
 import { SupportView } from './components/SupportView';
 import { 
@@ -460,6 +460,15 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
       };
 
       await addDoc(collection(db, 'trades'), tradeData);
+      
+      await addDoc(collection(db, 'notifications'), {
+        userId: auth.currentUser?.uid,
+        title: 'فتح صفقة جديدة',
+        message: `لقد قمت بفتح صفقة ${type === 'Buy' ? 'شراء' : 'بيع'} على ${selectedAsset.symbol} بمبلغ $${Number(amount).toFixed(2)}.`,
+        type: 'info',
+        read: false,
+        timestamp: new Date().toISOString()
+      });
       
       const userRef = doc(db, 'users', auth.currentUser!.uid);
       await updateDoc(userRef, {
@@ -1281,7 +1290,8 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
         amount: parseFloat(amount),
         status: 'pending',
         timestamp: new Date().toISOString(),
-        details: 'إيداع يدوي - قيد المراجعة'
+        details: 'إيداع يدوي - قيد المراجعة',
+        method: method // Added method field
       };
       const transRef = await addDoc(collection(db, 'transactions'), transactionData);
 
@@ -1300,6 +1310,15 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
       };
 
       await addDoc(collection(db, 'deposits'), depositData);
+
+      await addDoc(collection(db, 'notifications'), {
+        userId: user.uid,
+        title: 'طلب إيداع قيد المراجعة',
+        message: `لقد تم استلام طلب الإيداع الخاص بك بقيمة $${parseFloat(amount).toFixed(2)}. سيتم مراجعته من قبل الإدارة قريباً.`,
+        type: 'info',
+        read: false,
+        timestamp: new Date().toISOString()
+      });
 
       setIsSubmitting(false);
       setIsSuccess(true);
@@ -1650,7 +1669,8 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
         amount: parseFloat(amount),
         status: 'pending',
         timestamp: new Date().toISOString(),
-        details: `سحب عبر ${method.toUpperCase()} - ${address}`
+        details: `سحب عبر ${method.toUpperCase()} - ${address}`,
+        method: method // Added method field
       };
       const transRef = await addDoc(collection(db, 'transactions'), transactionData);
 
@@ -2072,6 +2092,15 @@ const KYCFormView = ({ user, onBack, showToast }: { user: User, onBack: () => vo
         backImage: formData.backImage,
         status: 'pending',
         submittedAt: new Date().toISOString()
+      });
+
+      await addDoc(collection(db, 'notifications'), {
+        userId: user.uid,
+        title: 'طلب توثيق قيد المراجعة',
+        message: 'لقد تم استلام طلب توثيق هويتك بنجاح. سيتم مراجعته من قبل الفريق المختص خلال 24-48 ساعة.',
+        type: 'info',
+        read: false,
+        timestamp: new Date().toISOString()
       });
 
       // Update user's kycStatus and info
@@ -4428,8 +4457,17 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    if (ref) {
+      localStorage.setItem('referredBy', ref);
+    }
+  }, []);
+
   const [planInvestments, setPlanInvestments] = useState<PlanInvestment[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState<{ profitRate: number, autoControl: string }>({ profitRate: 85, autoControl: 'random' });
 
@@ -4601,6 +4639,7 @@ export default function App() {
     let unsubUser: (() => void) | null = null;
     let unsubInvestments: (() => void) | null = null;
     let unsubTrades: (() => void) | null = null;
+    let unsubNotifications: (() => void) | null = null;
     let unsubSettings: (() => void) | null = null;
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -4608,6 +4647,7 @@ export default function App() {
       if (unsubUser) unsubUser();
       if (unsubInvestments) unsubInvestments();
       if (unsubTrades) unsubTrades();
+      if (unsubNotifications) unsubNotifications();
       if (unsubSettings) unsubSettings();
 
       if (firebaseUser) {
@@ -4652,9 +4692,12 @@ export default function App() {
                 kycStatus: 'none',
                 createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
+                referredBy: localStorage.getItem('referredBy') || undefined,
               };
               console.log('Creating new user:', firebaseUser.uid, newUser);
               await setDoc(userDocRef, newUser);
+              // Clear referral after use
+              localStorage.removeItem('referredBy');
             }
           } catch (err) {
             console.error('SyncUser Error:', err);
@@ -4689,6 +4732,18 @@ export default function App() {
           const tradesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trade));
           setTrades(tradesList);
         }, (err) => handleFirestoreError(err, OperationType.LIST, 'trades'));
+
+        // Listen for notifications
+        const notificationsQuery = query(
+          collection(db, 'notifications'), 
+          where('userId', '==', firebaseUser.uid)
+        );
+        unsubNotifications = onSnapshot(notificationsQuery, (snapshot) => {
+          const notificationsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+          // Sort by timestamp descending
+          notificationsList.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          setNotifications(notificationsList);
+        }, (err) => handleFirestoreError(err, OperationType.LIST, 'notifications'));
 
         // Listen for global settings
         unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
@@ -4942,7 +4997,11 @@ export default function App() {
                   className="relative p-2 sm:p-2.5 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all"
                 >
                   <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] text-[10px] font-black text-white bg-red-500 rounded-full px-1 border-2 border-white dark:border-gray-900">12</span>
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <span className="absolute top-1 right-1 flex items-center justify-center min-w-[18px] h-[18px] text-[10px] font-black text-white bg-red-500 rounded-full px-1 border-2 border-white dark:border-gray-900">
+                      {notifications.filter(n => !n.read).length}
+                    </span>
+                  )}
                 </button>
                 <AnimatePresence>
                   {notificationsOpen && (
@@ -4954,23 +5013,66 @@ export default function App() {
                     >
                       <div className="px-4 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                         <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">الإشعارات</h3>
-                        <span className="px-2 py-1 bg-red-500 text-white text-[10px] font-black rounded-full">12 جديد</span>
+                        {notifications.filter(n => !n.read).length > 0 && (
+                          <span className="px-2 py-1 bg-red-500 text-white text-[10px] font-black rounded-full">
+                            {notifications.filter(n => !n.read).length} جديد
+                          </span>
+                        )}
                       </div>
                       <div className="max-h-[400px] overflow-y-auto">
-                        {[1, 2, 3, 4].map(i => (
-                          <div key={i} className="p-4 border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer">
-                            <div className="flex gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
-                                <Info className="w-4 h-4" />
-                              </div>
-                              <div className="flex-1">
-                                <p className="text-xs font-bold text-gray-900 dark:text-white mb-1">تمت الموافقة على إيداعك</p>
-                                <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">لقد تمت معالجة إيداعك بقيمة $500 بنجاح وإضافته إلى رصيدك.</p>
-                                <p className="text-[9px] text-gray-400 mt-2 font-bold uppercase tracking-tighter">منذ {i * 10} دقائق</p>
+                        {notifications.length > 0 ? (
+                          notifications.map(notification => (
+                            <div 
+                              key={notification.id} 
+                              onClick={async () => {
+                                if (!notification.read) {
+                                  try {
+                                    await updateDoc(doc(db, 'notifications', notification.id), { read: true });
+                                  } catch (err) {
+                                    console.error('Error marking notification as read:', err);
+                                  }
+                                }
+                              }}
+                              className={cn(
+                                "p-4 border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer",
+                                !notification.read && "bg-blue-50/50 dark:bg-blue-900/10"
+                              )}
+                            >
+                              <div className="flex gap-3">
+                                <div className={cn(
+                                  "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                                  notification.type === 'success' ? "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" :
+                                  notification.type === 'error' ? "bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400" :
+                                  notification.type === 'warning' ? "bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" :
+                                  "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                                )}>
+                                  {notification.type === 'success' ? <CheckCircle className="w-4 h-4" /> :
+                                   notification.type === 'error' ? <AlertCircle className="w-4 h-4" /> :
+                                   notification.type === 'warning' ? <AlertTriangle className="w-4 h-4" /> :
+                                   <Info className="w-4 h-4" />}
+                                </div>
+                                <div className="flex-1">
+                                  <p className="text-xs font-bold text-gray-900 dark:text-white mb-1">{notification.title}</p>
+                                  <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">{notification.message}</p>
+                                  <p className="text-[9px] text-gray-400 mt-2 font-bold uppercase tracking-tighter">
+                                    {new Date(notification.timestamp).toLocaleString('ar-EG', { 
+                                      hour: 'numeric', 
+                                      minute: 'numeric', 
+                                      hour12: true,
+                                      day: 'numeric',
+                                      month: 'short'
+                                    })}
+                                  </p>
+                                </div>
                               </div>
                             </div>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center">
+                            <Bell className="w-8 h-8 text-gray-300 mx-auto mb-2 opacity-50" />
+                            <p className="text-xs text-gray-500 font-bold">لا توجد إشعارات حالياً</p>
                           </div>
-                        ))}
+                        )}
                       </div>
                     </motion.div>
                   )}

@@ -122,6 +122,16 @@ service cloud.firestore {
     //   - status: string (required, enum: ["pending", "approved", "rejected"])
     //   - createdAt: string (required, date-time format)
     //
+    // Collection: notifications
+    // Document ID: notificationId
+    // Fields:
+    //   - userId: string (required)
+    //   - title: string (required)
+    //   - message: string (required)
+    //   - type: string (required, enum: ["info", "success", "warning", "error"])
+    //   - read: bool (required)
+    //   - timestamp: string (required, date-time format)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -249,11 +259,20 @@ service cloud.firestore {
 
     function isValidDeposit(data) {
       return hasRequiredFields(['userId', 'userName', 'amount', 'currency', 'date', 'receipt', 'status', 'createdAt']) &&
-             hasOnlyAllowedFields(['userId', 'userName', 'amount', 'currency', 'date', 'receipt', 'status', 'transactionId', 'createdAt']) &&
+             hasOnlyAllowedFields(['userId', 'userName', 'amount', 'currency', 'method', 'date', 'receipt', 'status', 'transactionId', 'createdAt']) &&
              (data.userId == request.auth.uid || isAdmin()) &&
              data.amount is number && data.amount > 0 &&
              data.status in ['pending', 'approved', 'rejected'] &&
              isValidDateString(data.date) &&
+             isValidDateString(data.createdAt);
+    }
+
+    function isValidWithdrawal(data) {
+      return hasRequiredFields(['userId', 'userName', 'amount', 'method', 'address', 'status', 'createdAt']) &&
+             hasOnlyAllowedFields(['userId', 'userName', 'amount', 'method', 'address', 'status', 'transactionId', 'createdAt']) &&
+             (data.userId == request.auth.uid || isAdmin()) &&
+             data.amount is number && data.amount > 0 &&
+             data.status in ['pending', 'completed', 'failed'] &&
              isValidDateString(data.createdAt);
     }
 
@@ -264,6 +283,15 @@ service cloud.firestore {
              (data.userEmail == '' || isValidEmail(data.userEmail)) &&
              data.status in ['pending', 'approved', 'rejected'] &&
              isValidDateString(data.submittedAt);
+    }
+
+    function isValidNotification(data) {
+      return hasRequiredFields(['userId', 'title', 'message', 'type', 'read', 'timestamp']) &&
+             hasOnlyAllowedFields(['userId', 'title', 'message', 'type', 'read', 'timestamp']) &&
+             (data.userId == request.auth.uid || isAdmin()) &&
+             data.type in ['info', 'success', 'warning', 'error'] &&
+             data.read is bool &&
+             isValidDateString(data.timestamp);
     }
 
     // ===============================================================
@@ -331,8 +359,8 @@ service cloud.firestore {
 
     match /withdrawals/{withdrawalId} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin();
+      allow create: if isAuthenticated() && isValidWithdrawal(request.resource.data) && request.resource.data.status == 'pending';
+      allow update: if isAdmin() && isValidWithdrawal(request.resource.data);
       allow delete: if isAdmin();
     }
 
@@ -341,6 +369,13 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidKycRequest(request.resource.data) && request.resource.data.status == 'pending';
       allow update: if isAdmin() && isValidKycRequest(request.resource.data);
       allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+      allow update: if (isOwner(resource.data.userId) || isAdmin()) && isValidNotification(request.resource.data);
+      allow delete: if (isOwner(resource.data.userId) || isAdmin());
     }
 
     match /settings/{settingId} {

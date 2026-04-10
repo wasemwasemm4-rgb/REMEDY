@@ -779,7 +779,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, increment, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, increment, query, orderBy, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
         let db, auth, currentUser;
@@ -791,6 +791,21 @@
             toast.style.backgroundColor = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--blue)';
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        };
+
+        window.createNotification = async function(userId, title, message, type = 'info') {
+            try {
+                await addDoc(collection(db, 'notifications'), {
+                    userId,
+                    title,
+                    message,
+                    type,
+                    read: false,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                console.error("Error creating notification:", error);
+            }
         };
 
         window.handleAdminLogin = async function() {
@@ -1021,6 +1036,13 @@
                             balance: increment(amount + profit)
                         });
 
+                        await createNotification(
+                            userId, 
+                            status === 'WIN' ? 'صفقة رابحة' : 'صفقة خاسرة', 
+                            `تم إغلاق صفقتك على ${tradeData.asset} بنتيجة ${status === 'WIN' ? 'ربح' : 'خسارة'}. الربح/الخسارة: $${profit.toFixed(2)}`,
+                            status === 'WIN' ? 'success' : 'error'
+                        );
+
                         showToast('تم تحديث نتيجة الصفقة بنجاح', 'success');
                     } catch (error) {
                         console.error("Error handling trade result:", error);
@@ -1035,6 +1057,13 @@
 
                         const userRef = doc(db, 'users', userId);
                         await updateDoc(userRef, { kycStatus: status });
+
+                        await createNotification(
+                            userId,
+                            status === 'approved' ? 'تم توثيق الحساب' : 'تم رفض توثيق الحساب',
+                            status === 'approved' ? 'تهانينا! لقد تمت الموافقة على طلب توثيق هويتك بنجاح.' : 'عذراً، لقد تم رفض طلب توثيق هويتك. يرجى التواصل مع الدعم للمزيد من التفاصيل.',
+                            status === 'approved' ? 'success' : 'error'
+                        );
 
                         showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} طلب التحقق بنجاح`, 'success');
                     } catch (error) {
@@ -1057,6 +1086,14 @@
                         await updateDoc(userRef, {
                             balance: increment(amount)
                         });
+
+                        await createNotification(
+                            userId,
+                            'تحديث الرصيد',
+                            `تمت إضافة مبلغ $${amount.toFixed(2)} إلى رصيدك من قبل الإدارة.`,
+                            'success'
+                        );
+
                         showToast('تم تحديث الرصيد بنجاح', 'success');
                         document.getElementById('manual-amount').value = '';
                     } catch (error) {
@@ -1086,6 +1123,13 @@
                                 balance: increment(amount)
                             });
                         }
+
+                        await createNotification(
+                            userId,
+                            status === 'approved' ? 'تمت الموافقة على إيداعك' : 'تم رفض إيداعك',
+                            status === 'approved' ? `لقد تمت معالجة إيداعك بقيمة $${amount.toFixed(2)} بنجاح وإضافته إلى رصيدك.` : `عذراً، لقد تم رفض طلب الإيداع الخاص بك بقيمة $${amount.toFixed(2)}. يرجى التواصل مع الدعم.`,
+                            status === 'approved' ? 'success' : 'error'
+                        );
 
                         showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح`, 'success');
                     } catch (error) {

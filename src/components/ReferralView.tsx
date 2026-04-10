@@ -14,8 +14,8 @@ export function ReferralView({ user }: ReferralViewProps) {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  const referralLink = `https://proinvestment.com/ref/${user?.uid?.substring(0, 8) || 'user123'}`;
   const referralId = user?.uid?.substring(0, 8) || 'user123';
+  const referralLink = `https://remedy-sage.vercel.app/?ref=${referralId}`;
 
   const showToast = (message: string) => {
     setToastMessage(message);
