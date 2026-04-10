@@ -390,6 +390,12 @@
         إذا كنت بحاجة إلى مساعدة في ترقية البريد الإلكتروني api@coinmarketcap.com لقد تجاوزت الحد الائتماني الشهري لمفتاح API الخاص بك. يرجى التواصل معنا عبر خطتك.
     </div>
 
+    <!-- Toast Notification -->
+    <div id="admin-toast" style="display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px; padding: 15px 25px; border-radius: 8px; color: white; font-weight: bold; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideDown 0.3s ease;"></div>
+    <style>
+        @keyframes slideDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+    </style>
+
     <!-- Top Stats Section (8 Cards) -->
     <div class="stats-grid">
         <!-- Card 1 -->
@@ -779,6 +785,14 @@
         let db, auth, currentUser;
         let currentDeposits = [];
 
+        window.showToast = function(msg, type = 'success') {
+            const toast = document.getElementById('admin-toast');
+            toast.innerText = msg;
+            toast.style.backgroundColor = type === 'success' ? 'var(--green)' : type === 'error' ? 'var(--red)' : 'var(--blue)';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        };
+
         window.handleAdminLogin = async function() {
             try {
                 const { GoogleAuthProvider, signInWithPopup } = await import("https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js");
@@ -786,7 +800,7 @@
                 await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Login Error:", error);
-                alert("فشل تسجيل الدخول: " + error.message);
+                showToast("فشل تسجيل الدخول: " + error.message, 'error');
             }
         };
 
@@ -870,7 +884,7 @@
                     }, (error) => {
                         console.error("Admin: Error listening to users:", error);
                         if (error.message.includes("permissions")) {
-                            alert("عذراً، ليس لديك صلاحيات كافية للوصول إلى لوحة التحكم.");
+                            showToast("عذراً، ليس لديك صلاحيات كافية للوصول إلى لوحة التحكم.", 'error');
                         }
                     });
 
@@ -955,10 +969,10 @@
                             autoControl,
                             updatedAt: new Date().toISOString()
                         });
-                        alert('تم حفظ الإعدادات بنجاح');
+                        showToast('تم حفظ الإعدادات بنجاح', 'success');
                     } catch (error) {
                         console.error("Error saving settings:", error);
-                        alert('حدث خطأ أثناء حفظ الإعدادات');
+                        showToast('حدث خطأ أثناء حفظ الإعدادات', 'error');
                     }
                 };
                 document.getElementById('btn-save-settings').onclick = window.saveGlobalSettings;
@@ -1007,10 +1021,10 @@
                             balance: increment(amount + profit)
                         });
 
-                        alert('تم تحديث نتيجة الصفقة بنجاح');
+                        showToast('تم تحديث نتيجة الصفقة بنجاح', 'success');
                     } catch (error) {
                         console.error("Error handling trade result:", error);
-                        alert('حدث خطأ أثناء معالجة الصفقة');
+                        showToast('حدث خطأ أثناء معالجة الصفقة', 'error');
                     }
                 };
 
@@ -1022,10 +1036,10 @@
                         const userRef = doc(db, 'users', userId);
                         await updateDoc(userRef, { kycStatus: status });
 
-                        alert(`تم ${status === 'approved' ? 'قبول' : 'رفض'} طلب التحقق بنجاح`);
+                        showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} طلب التحقق بنجاح`, 'success');
                     } catch (error) {
                         console.error("Error handling KYC:", error);
-                        alert('حدث خطأ أثناء معالجة الطلب');
+                        showToast('حدث خطأ أثناء معالجة الطلب', 'error');
                     }
                 };
 
@@ -1034,7 +1048,7 @@
                     const amount = parseFloat(document.getElementById('manual-amount').value);
 
                     if (!userId || isNaN(amount)) {
-                        alert('يرجى اختيار مستخدم وإدخال مبلغ صحيح');
+                        showToast('يرجى اختيار مستخدم وإدخال مبلغ صحيح', 'error');
                         return;
                     }
 
@@ -1043,11 +1057,11 @@
                         await updateDoc(userRef, {
                             balance: increment(amount)
                         });
-                        alert('تم تحديث الرصيد بنجاح');
+                        showToast('تم تحديث الرصيد بنجاح', 'success');
                         document.getElementById('manual-amount').value = '';
                     } catch (error) {
                         console.error("Error updating balance:", error);
-                        alert('حدث خطأ أثناء تحديث الرصيد');
+                        showToast('حدث خطأ أثناء تحديث الرصيد', 'error');
                     }
                 };
                 document.getElementById('btn-add-balance').onclick = window.addManualBalance;
@@ -1073,10 +1087,10 @@
                             });
                         }
 
-                        alert(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح`);
+                        showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح`, 'success');
                     } catch (error) {
                         console.error("Error handling deposit:", error);
-                        alert('حدث خطأ أثناء معالجة الطلب');
+                        showToast('حدث خطأ أثناء معالجة الطلب', 'error');
                     }
                 };
 
@@ -1084,10 +1098,10 @@
                     if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
                         try {
                             await deleteDoc(doc(db, 'users', userId));
-                            alert('تم حذف المستخدم بنجاح');
+                            showToast('تم حذف المستخدم بنجاح', 'success');
                         } catch (error) {
                             console.error("Error deleting user:", error);
-                            alert('حدث خطأ أثناء حذف المستخدم');
+                            showToast('حدث خطأ أثناء حذف المستخدم', 'error');
                         }
                     }
                 };
@@ -1095,14 +1109,14 @@
                 window.viewReceipt = (depositId) => {
                     const deposit = currentDeposits.find(d => d.id === depositId);
                     if (!deposit || !deposit.receipt) {
-                        alert('الإيصال غير متوفر');
+                        showToast('الإيصال غير متوفر', 'error');
                         return;
                     }
                     const win = window.open();
                     if (win) {
                         win.document.write('<img src="' + deposit.receipt + '" style="max-width: 100%; height: auto;" />');
                     } else {
-                        alert('يرجى السماح بالنوافذ المنبثقة لعرض الإيصال');
+                        showToast('يرجى السماح بالنوافذ المنبثقة لعرض الإيصال', 'info');
                     }
                 };
 
@@ -1133,20 +1147,20 @@
                                     </html>
                                 `);
                             } else {
-                                alert('يرجى السماح بالنوافذ المنبثقة لعرض المستندات');
+                                showToast('يرجى السماح بالنوافذ المنبثقة لعرض المستندات', 'info');
                             }
                         } else {
-                            alert('لم يتم العثور على الطلب');
+                            showToast('لم يتم العثور على الطلب', 'error');
                         }
                     } catch(error) {
                         console.error("Error fetching KYC document:", error);
-                        alert('حدث خطأ أثناء جلب المستندات');
+                        showToast('حدث خطأ أثناء جلب المستندات', 'error');
                     }
                 };
 
             } catch (error) {
                 console.error("Firebase Init Error:", error);
-                alert("فشل الاتصال بقاعدة البيانات. يرجى التأكد من إعدادات Firebase.");
+                showToast("فشل الاتصال بقاعدة البيانات.", 'error');
             }
         }
 

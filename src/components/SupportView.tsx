@@ -5,9 +5,10 @@ import { User as UserType } from '../types';
 
 interface SupportViewProps {
   user: UserType | null;
+  showToast?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-export function SupportView({ user }: SupportViewProps) {
+export function SupportView({ user, showToast }: SupportViewProps) {
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -18,7 +19,9 @@ export function SupportView({ user }: SupportViewProps) {
     setTimeout(() => {
       setIsSubmitting(false);
       setMessage('');
-      alert('تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.');
+      if (showToast) {
+        showToast('تم إرسال رسالتك بنجاح. سنتواصل معك قريباً.', 'success');
+      }
     }, 1500);
   };
 

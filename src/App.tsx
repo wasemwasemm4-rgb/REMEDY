@@ -389,7 +389,7 @@ const MarketNewsTicker = () => {
 
 // --- Views ---
 
-const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: any) => {
+const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trades = [] }: any) => {
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [priceDirection, setPriceDirection] = useState<'up' | 'down' | 'neutral'>('neutral');
@@ -429,15 +429,15 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: 
 
   const handleTrade = async (type: 'Buy' | 'Sell') => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      alert('الرجاء إدخال مبلغ صحيح');
+      showToast?.('الرجاء إدخال مبلغ صحيح', 'error');
       return;
     }
     if (!lotSize || isNaN(Number(lotSize)) || Number(lotSize) <= 0) {
-      alert('الرجاء إدخال حجم عقد صحيح');
+      showToast?.('الرجاء إدخال حجم عقد صحيح', 'error');
       return;
     }
     if (Number(amount) > user.balance) {
-      alert('رصيد غير كافٍ');
+      showToast?.('رصيد غير كافٍ', 'error');
       return;
     }
     if (!currentPrice) return;
@@ -469,7 +469,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: 
       setAmount('');
       setLotSize('0.01');
       setStopLoss('');
-      alert('تم تسجيل الصفقة بنجاح');
+      showToast?.('تم تسجيل الصفقة بنجاح', 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'trades');
     } finally {
@@ -1176,7 +1176,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, trades = [] }: 
   );
 };
 
-const DepositPaymentView = ({ user, onBack }: { user: User | null, onBack?: () => void }) => {
+const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, onBack?: () => void, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
   const [fileName, setFileName] = useState('');
   const [fileSize, setFileSize] = useState('');
   const [filePreview, setFilePreview] = useState<string | null>(null);
@@ -1306,7 +1306,7 @@ const DepositPaymentView = ({ user, onBack }: { user: User | null, onBack?: () =
     } catch (error) {
       console.error("Firestore Deposit Error:", error);
       setIsSubmitting(false);
-      alert("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.");
+      showToast?.("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.", 'error');
     }
   };
 
@@ -1619,18 +1619,91 @@ const DepositPaymentView = ({ user, onBack }: { user: User | null, onBack?: () =
   );
 };
 
-const WithdrawView = ({ user, onBack }: { user: User, onBack: () => void }) => {
-  const [code, setCode] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
+const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => void, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
+  const [amount, setAmount] = useState('');
+  const [method, setMethod] = useState('usdt');
+  const [address, setAddress] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const handleVerify = () => {
-    setIsVerifying(true);
-    // Simulate verification delay
-    setTimeout(() => {
-      setIsVerifying(false);
-      alert('رمز التحقق غير صحيح. يرجى التواصل مع الدعم الفني.');
-    }, 1500);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || !address) {
+      showToast?.('يرجى ملء جميع الحقول', 'error');
+      return;
+    }
+    if (parseFloat(amount) > user.balance) {
+      showToast?.('رصيد غير كافٍ', 'error');
+      return;
+    }
+    if (parseFloat(amount) < 10) {
+      showToast?.('الحد الأدنى للسحب هو 10 دولار', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Create transaction
+      const transactionData = {
+        userId: user.uid,
+        type: 'withdrawal',
+        amount: parseFloat(amount),
+        status: 'pending',
+        timestamp: new Date().toISOString(),
+        details: `سحب عبر ${method.toUpperCase()} - ${address}`
+      };
+      const transRef = await addDoc(collection(db, 'transactions'), transactionData);
+
+      // Create withdrawal request
+      const withdrawalData = {
+        userId: user.uid,
+        userName: user.displayName || user.email,
+        amount: parseFloat(amount),
+        method: method,
+        address: address,
+        status: 'pending',
+        transactionId: transRef.id,
+        createdAt: new Date().toISOString()
+      };
+      await addDoc(collection(db, 'withdrawals'), withdrawalData);
+
+      // Deduct balance
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        balance: increment(-parseFloat(amount))
+      });
+
+      setIsSuccess(true);
+      showToast?.('تم إرسال طلب السحب بنجاح', 'success');
+    } catch (error) {
+      console.error("Withdraw Error:", error);
+      showToast?.('حدث خطأ أثناء معالجة طلبك', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (isSuccess) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        className="max-w-md mx-auto text-center space-y-6 py-20"
+      >
+        <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto">
+          <CheckCircle className="w-12 h-12 text-green-500" />
+        </div>
+        <h2 className="text-3xl font-black text-gray-900 dark:text-white">تم إرسال الطلب!</h2>
+        <p className="text-gray-500">تم استلام طلب السحب الخاص بك وهو قيد المراجعة الآن. سيتم تحويل الأموال خلال 24-48 ساعة.</p>
+        <button 
+          onClick={onBack} 
+          className="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all"
+        >
+          العودة للمحفظة
+        </button>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -1641,93 +1714,84 @@ const WithdrawView = ({ user, onBack }: { user: User, onBack: () => void }) => {
     >
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black tracking-tighter text-blue-600 dark:text-blue-400">عمليات سحب الأموال</h2>
-          <p className="text-gray-500 font-medium mt-1">اسحب أموالك بأمان باستخدام طرق دفع متنوعة</p>
+          <h2 className="text-3xl font-black tracking-tighter text-blue-600 dark:text-blue-400">سحب الأموال</h2>
+          <p className="text-gray-500 font-medium mt-1">اسحب أرباحك إلى محفظتك الخارجية بأمان</p>
         </div>
         <button 
           onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-bold text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          العودة إلى لوحة التحكم
+          العودة
         </button>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-gray-500 font-medium">
-        <Home className="w-4 h-4" />
-        <span>بيت</span>
-        <ChevronLeft className="w-4 h-4" />
-        <span className="text-gray-900 dark:text-white">عمليات السحب</span>
-      </div>
-
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-xl">
-        <div className="p-8 border-b border-gray-100 dark:border-white/5">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
-              <ShieldCheck className="w-6 h-6 text-yellow-600 dark:text-yellow-500" />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-gray-900 dark:text-white">التحقق الأمني مطلوب</h3>
-              <p className="text-gray-500 text-sm mt-1">يلزم إجراء تحقق إضافي لمعالجة عملية السحب الخاصة بك</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-8 space-y-8">
-          <div className="bg-yellow-50 dark:bg-yellow-500/5 border border-yellow-200 dark:border-yellow-500/20 rounded-2xl p-6">
-            <div className="flex gap-4">
-              <AlertCircle className="w-6 h-6 text-yellow-600 dark:text-yellow-500 flex-shrink-0" />
-              <div className="space-y-2">
-                <h4 className="font-bold text-yellow-800 dark:text-yellow-500">رمز السحب مطلوب</h4>
-                <p className="text-sm text-yellow-700 dark:text-yellow-600/80 leading-relaxed">
-                  لضمان أمانك، يتطلب هذا السحب رمز تحقق. يرجى التواصل مع فريق دعم العملاء عبر الدردشة المباشرة أو البريد الإلكتروني على <a href="mailto:support@remedycodes.site" className="font-bold underline">support@remedycodes.site</a> للحصول على رمز التحقق الخاص بك.
-                </p>
-                <button className="text-yellow-800 dark:text-yellow-500 text-sm font-bold flex items-center gap-1 mt-2 hover:underline">
-                  تعرف على إجراءات أمان عمليات السحب <ChevronDown className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 dark:bg-[#111] rounded-2xl p-6 space-y-6 border border-gray-100 dark:border-white/5">
-            <div className="space-y-2">
-              <label className="block text-sm font-bold text-gray-900 dark:text-white">أدخل رمز التحقق من السحب</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <Shield className="w-5 h-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="أدخل رمز التحقق الخاص بك هنا"
-                  className="w-full bg-white dark:bg-black border border-gray-200 dark:border-white/10 rounded-xl py-4 pr-12 pl-4 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-2">تم توفير هذا الرمز من قبل فريق دعم العملاء لدينا</p>
-            </div>
-
-            <button
-              onClick={handleVerify}
-              disabled={!code || isVerifying}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 disabled:cursor-not-allowed text-white rounded-xl font-black flex items-center justify-center gap-2 transition-colors"
+      <div className="bg-white dark:bg-[#0a0a0a] rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-xl p-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-900 dark:text-white">طريقة السحب</label>
+            <select 
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-white/10 rounded-xl py-4 px-4 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
             >
-              {isVerifying ? (
-                <RefreshCcw className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  تحقق وتابع <CheckCircle className="w-5 h-5" />
-                </>
-              )}
-            </button>
+              <option value="usdt">USDT (TRC20)</option>
+              <option value="bitcoin">Bitcoin (BTC)</option>
+              <option value="ethereum">Ethereum (ERC20)</option>
+            </select>
           </div>
-        </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-900 dark:text-white">المبلغ المراد سحبه (USD)</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <DollarSign className="w-5 h-5 text-gray-400" />
+              </div>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-white/10 rounded-xl py-4 pr-12 pl-4 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+              />
+            </div>
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-gray-500">الرصيد المتاح: ${user.balance.toLocaleString()}</span>
+              <button type="button" onClick={() => setAmount(user.balance.toString())} className="text-blue-500 font-bold hover:underline">سحب الكل</button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-gray-900 dark:text-white">عنوان المحفظة</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                <Wallet className="w-5 h-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="أدخل عنوان محفظتك هنا"
+                className="w-full bg-gray-50 dark:bg-[#111] border border-gray-200 dark:border-white/10 rounded-xl py-4 pr-12 pl-4 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium"
+              />
+            </div>
+            <p className="text-[10px] text-gray-500 mt-1">تأكد من صحة العنوان، لا يمكن استرداد الأموال المرسلة إلى عنوان خاطئ.</p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-600/50 text-white rounded-xl font-black flex items-center justify-center gap-2 transition-all active:scale-95 shadow-xl shadow-blue-500/20"
+          >
+            {isSubmitting ? <RefreshCcw className="w-5 h-5 animate-spin" /> : <>تأكيد السحب <Send className="w-5 h-5" /></>}
+          </button>
+        </form>
       </div>
     </motion.div>
   );
 };
 
-const WalletView = ({ user, activeTab }: { user: User, activeTab: string }) => {
+const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: string, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
   const [view, setView] = useState<'overview' | 'deposit' | 'withdraw'>(
     activeTab === 'deposit' ? 'deposit' : activeTab === 'withdraw' ? 'withdraw' : 'overview'
   );
@@ -1739,11 +1803,11 @@ const WalletView = ({ user, activeTab }: { user: User, activeTab: string }) => {
   }, [activeTab]);
 
   if (view === 'deposit') {
-    return <DepositPaymentView user={user} onBack={() => setView('overview')} />;
+    return <DepositPaymentView user={user} onBack={() => setView('overview')} showToast={showToast} />;
   }
 
   if (view === 'withdraw') {
-    return <WithdrawView user={user} onBack={() => setView('overview')} />;
+    return <WithdrawView user={user} onBack={() => setView('overview')} showToast={showToast} />;
   }
 
   return (
@@ -1910,7 +1974,7 @@ const WalletView = ({ user, activeTab }: { user: User, activeTab: string }) => {
   );
 };
 
-const KYCFormView = ({ user, onBack }: { user: User, onBack: () => void }) => {
+const KYCFormView = ({ user, onBack, showToast }: { user: User, onBack: () => void, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -1981,11 +2045,11 @@ const KYCFormView = ({ user, onBack }: { user: User, onBack: () => void }) => {
 
   const handleSubmit = async () => {
     if (!formData.agreedToTerms) {
-      alert("يجب الموافقة على شروط الخدمة وسياسة الخصوصية");
+      showToast?.("يجب الموافقة على شروط الخدمة وسياسة الخصوصية", 'error');
       return;
     }
     if (!formData.frontImage || !formData.backImage) {
-      alert("يجب تحميل صورتي المستند من الأمام والخلف");
+      showToast?.("يجب تحميل صورتي المستند من الأمام والخلف", 'error');
       return;
     }
     
@@ -2028,7 +2092,7 @@ const KYCFormView = ({ user, onBack }: { user: User, onBack: () => void }) => {
       // The parent component (KYCView) will automatically re-render and show the pending state
     } catch (error) {
       console.error("KYC Submit Error:", error);
-      alert("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.");
+      showToast?.("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.", 'error');
       try {
         handleFirestoreError(error, OperationType.WRITE, 'kyc_requests');
       } catch (e) {
@@ -2392,7 +2456,7 @@ const KYCFormView = ({ user, onBack }: { user: User, onBack: () => void }) => {
   );
 };
 
-const KYCView = ({ user }: { user: User }) => {
+const KYCView = ({ user, showToast }: { user: User, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [step, setStep] = useState<'intro' | 'form'>('intro');
 
@@ -2437,7 +2501,7 @@ const KYCView = ({ user }: { user: User }) => {
   }
 
   if (step === 'form') {
-    return <KYCFormView user={user} onBack={() => setStep('intro')} />;
+    return <KYCFormView user={user} onBack={() => setStep('intro')} showToast={showToast} />;
   }
 
   return (
@@ -2938,7 +3002,7 @@ const BotsView = ({ onSubscribe, isSubscribing }: { onSubscribe: (bot: any, amou
   );
 };
 
-const FeaturedSignalsView = () => {
+const FeaturedSignalsView = ({ showToast }: { showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSignal, setSelectedSignal] = useState({ id: '', name: '', price: '' });
 
@@ -3154,7 +3218,7 @@ const FeaturedSignalsView = () => {
                 </button>
                 <button 
                   onClick={() => {
-                    alert(`تم طلب الاشتراك في ${selectedSignal.name} بنجاح!`);
+                    showToast?.(`تم طلب الاشتراك في ${selectedSignal.name} بنجاح!`, 'success');
                     closeModal();
                   }}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
@@ -3488,7 +3552,7 @@ const PlansView = ({ onSubscribe, isSubscribing }: { onSubscribe: (plan: any, am
   );
 };
 
-const SettingsView = ({ user }: { user: User }) => {
+const SettingsView = ({ user, showToast }: { user: User, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
   const [activeSection, setActiveSection] = useState('profile');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -3505,7 +3569,7 @@ const SettingsView = ({ user }: { user: User }) => {
         phone: phone || user.phone || '',
         country: country || user.country || '',
       });
-      alert('تم تحديث الملف الشخصي بنجاح');
+      showToast?.('تم تحديث الملف الشخصي بنجاح', 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'users');
     } finally {
@@ -4337,6 +4401,12 @@ export default function App() {
   const [btcPrice, setBtcPrice] = useState<number | null>(null);
   const [ethPrice, setEthPrice] = useState<number | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -4646,7 +4716,7 @@ export default function App() {
   const subscribeToBot = async (bot: any, amount: number) => {
     if (!user) return;
     if (user.balance < amount) {
-      alert("رصيدك غير كافٍ للاشتراك في هذا الروبوت.");
+      showToast("رصيدك غير كافٍ للاشتراك في هذا الروبوت.", 'error');
       return;
     }
 
@@ -4689,7 +4759,7 @@ export default function App() {
       };
       await addDoc(collection(db, 'transactions'), transaction);
 
-      alert("تم الاشتراك في الروبوت بنجاح! يمكنك متابعته في قسم أعمالي.");
+      showToast("تم الاشتراك في الروبوت بنجاح!", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'planInvestments');
     } finally {
@@ -4700,7 +4770,7 @@ export default function App() {
   const subscribeToPlan = async (plan: any, amount: number) => {
     if (!user) return;
     if (user.balance < amount) {
-      alert("رصيدك غير كافٍ للاشتراك في هذه الخطة.");
+      showToast("رصيدك غير كافٍ للاشتراك في هذه الخطة.", 'error');
       return;
     }
 
@@ -4744,7 +4814,7 @@ export default function App() {
       };
       await addDoc(collection(db, 'transactions'), transaction);
 
-      alert("تم الاشتراك في الخطة بنجاح!");
+      showToast("تم الاشتراك في الخطة بنجاح!", 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'planInvestments');
     } finally {
@@ -5115,10 +5185,10 @@ export default function App() {
           <main className="flex-1 ml-0 md:ml-72 p-4 pb-24 md:pb-8 overflow-x-hidden pt-20 sm:pt-24">
             <div className="max-w-6xl mx-auto">
               <AnimatePresence mode="wait">
-                {activeTab === 'dashboard' && <DashboardView key="dashboard" user={user} setActiveTab={setActiveTab} trades={trades} />}
+                {activeTab === 'dashboard' && <DashboardView key="dashboard" user={user} setActiveTab={setActiveTab} trades={trades} showToast={showToast} />}
                 {activeTab === 'history' && <AccountHistoryView key="history" />}
-                {(activeTab === 'wallet' || activeTab === 'deposit' || activeTab === 'withdraw') && <WalletView key="wallet" user={user} activeTab={activeTab} />}
-                {activeTab === 'kyc' && <KYCView key="kyc" user={user} />}
+                {(activeTab === 'wallet' || activeTab === 'deposit' || activeTab === 'withdraw') && <WalletView key="wallet" user={user} activeTab={activeTab} showToast={showToast} />}
+                {activeTab === 'kyc' && <KYCView key="kyc" user={user} showToast={showToast} />}
                 {activeTab === 'bots' && <BotsView key="bots" onSubscribe={subscribeToBot} isSubscribing={isSubscribing} />}
                 {activeTab === 'plans' && <PlansView key="plans" onSubscribe={subscribeToPlan} isSubscribing={isSubscribing} />}
                 {activeTab === 'portfolio' && <MyPortfolioView key="portfolio" investments={planInvestments} />}
@@ -5126,10 +5196,10 @@ export default function App() {
                 {activeTab === 'markets' && <MarketsView key="markets" setActiveTab={setActiveTab} />}
                 {activeTab === 'copy' && <CopyTradingView key="copy" setActiveTab={setActiveTab} />}
                 {activeTab === 'copy-experts' && <CopyExpertsView key="copy-experts" setActiveTab={setActiveTab} />}
-                {activeTab === 'settings' && <SettingsView key="settings" user={user} />}
-                {activeTab === 'signals' && <FeaturedSignalsView key="signals" />}
+                {activeTab === 'settings' && <SettingsView key="settings" user={user} showToast={showToast} />}
+                {activeTab === 'signals' && <FeaturedSignalsView key="signals" showToast={showToast} />}
                 {activeTab === 'referral' && <ReferralView key="referral" user={user} />}
-                {activeTab === 'support' && <SupportView key="support" user={user} />}
+                {activeTab === 'support' && <SupportView key="support" user={user} showToast={showToast} />}
                 
                 {/* Fallback for other tabs */}
                 {!['dashboard', 'history', 'wallet', 'deposit', 'withdraw', 'kyc', 'bots', 'plans', 'portfolio', 'performance', 'markets', 'copy', 'copy-experts', 'settings', 'signals', 'referral', 'support'].includes(activeTab) && (
@@ -5209,6 +5279,28 @@ export default function App() {
                 <button onClick={() => setFabOpen(false)} className="absolute top-4 right-4 text-gray-500">
                   <X className="w-5 h-5" />
                 </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Toast Notification */}
+          <AnimatePresence>
+            {toast && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, x: '-50%' }}
+                animate={{ opacity: 1, y: 0, x: '-50%' }}
+                exit={{ opacity: 0, y: 20, x: '-50%' }}
+                className={cn(
+                  "fixed bottom-24 left-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm min-w-[300px]",
+                  toast.type === 'success' ? "bg-emerald-500 text-white" : 
+                  toast.type === 'error' ? "bg-red-500 text-white" : 
+                  "bg-blue-500 text-white"
+                )}
+              >
+                {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
+                 toast.type === 'error' ? <AlertCircle className="w-5 h-5" /> : 
+                 <Info className="w-5 h-5" />}
+                {toast.message}
               </motion.div>
             )}
           </AnimatePresence>

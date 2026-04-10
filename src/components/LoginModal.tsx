@@ -62,10 +62,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         setError('كلمات المرور غير متطابقة');
         return;
       }
-      if (captchaInput.replace(/\s/g, '') !== captchaCode.replace(/\s/g, '')) {
-        setError('رمز التحقق غير صحيح');
-        return;
-      }
       if (!termsAccepted) {
         setError('يجب الموافقة على الشروط والأحكام');
         return;
@@ -173,7 +169,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-lg bg-[#0a0f1e] rounded-[2rem] shadow-2xl border border-gray-800/50 overflow-hidden"
+            className="relative w-full max-w-lg bg-[#0a0f1e] rounded-[2rem] shadow-2xl border border-gray-800/50 overflow-hidden max-h-[90vh] overflow-y-auto"
           >
             {/* Close Button */}
             <button 
@@ -183,7 +179,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
               <X className="w-6 h-6" />
             </button>
 
-            <div className="p-8 sm:p-12">
+            <div className="p-6 sm:p-12">
               {/* Top Line */}
               <div className="w-12 h-0.5 bg-gray-800 mx-auto mb-6 opacity-50" />
 
@@ -517,33 +513,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             placeholder="أكد كلمة مرورك"
                             required
                           />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Captcha Section */}
-                    <div className="space-y-3">
-                      <label className="text-xs font-bold text-gray-400 mr-1">التحقق الأمني <span className="text-red-500">*</span></label>
-                      <div className="p-6 bg-[#1e293b]/30 rounded-2xl border border-gray-800/50 flex flex-col items-center gap-4">
-                        <div className="px-8 py-4 bg-gradient-to-br from-[#3b82f6]/20 to-[#8b5cf6]/20 rounded-xl border border-gray-700/50">
-                          <span className="text-2xl font-black text-yellow-500 tracking-[0.5em] font-mono">{captchaCode}</span>
-                        </div>
-                        <div className="relative w-full">
-                          <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                            <Shield className="h-4 w-4 text-gray-500" />
-                          </div>
-                          <input
-                            type="text"
-                            value={captchaInput}
-                            onChange={(e) => setCaptchaInput(e.target.value)}
-                            className="block w-full pr-12 pl-4 py-3 border border-gray-800 rounded-xl leading-5 bg-[#161b2c] text-white text-center placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-[#3b82f6]/50 transition-all"
-                            placeholder="أدخل الرمز أعلاه"
-                            required
-                          />
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                          <Info className="w-3 h-3" />
-                          <span>يساعدنا هذا في التحقق من أنك شخص حقيقي ويحمي من التسجيلات الآلية.</span>
                         </div>
                       </div>
                     </div>

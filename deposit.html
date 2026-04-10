@@ -335,6 +335,9 @@
     </div>
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.5);"></div>
+
 <!-- Modal for Zoom -->
 <div id="imageModal" class="modal" onclick="closeModal()">
     <span class="close-modal">&times;</span>
@@ -363,7 +366,15 @@
     function copyWallet() {
         const addr = document.getElementById('wallet-addr').innerText;
         navigator.clipboard.writeText(addr);
-        alert('تم نسخ العنوان بنجاح');
+        showToast('تم نسخ العنوان بنجاح', 'success');
+    }
+
+    function showToast(msg, type = 'info') {
+        const toast = document.getElementById('toast');
+        toast.innerText = msg;
+        toast.style.background = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
     }
 
     function previewImage(event) {
@@ -448,15 +459,15 @@
             const receipt = window.compressedReceipt;
             
             if (!amount || amount <= 0) {
-                alert('يرجى إدخال مبلغ صحيح');
+                showToast('يرجى إدخال مبلغ صحيح', 'error');
                 return;
             }
             if (!receipt) {
-                alert('يرجى إرفاق صورة الإيصال');
+                showToast('يرجى إرفاق صورة الإيصال', 'error');
                 return;
             }
             if (!currentUser) {
-                alert('يرجى تسجيل الدخول أولاً لإرسال الطلب');
+                showToast('يرجى تسجيل الدخول أولاً لإرسال الطلب', 'error');
                 return;
             }
 
@@ -495,7 +506,7 @@
                 }, 2000);
             } catch (e) {
                 console.error(e);
-                alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.');
+                showToast('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';
             }
