@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, collection, query, where, addDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, collection, query, where, addDoc, updateDoc, deleteDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { User, PlanInvestment, Transaction, Trade, Notification } from './types';
 import { ReferralView } from './components/ReferralView';
 import { SupportView } from './components/SupportView';
@@ -4468,6 +4468,39 @@ export default function App() {
   const [planInvestments, setPlanInvestments] = useState<PlanInvestment[]>([]);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isNotificationsLoading, setIsNotificationsLoading] = useState(true);
+
+  const markAllAsRead = async () => {
+    const unreadNotifications = notifications.filter(n => !n.read);
+    if (unreadNotifications.length === 0) return;
+
+    try {
+      const batch = unreadNotifications.map(n => 
+        updateDoc(doc(db, 'notifications', n.id), { read: true })
+      );
+      await Promise.all(batch);
+      showToast?.('تم تحديد جميع الإشعارات كمقروءة', 'success');
+    } catch (err) {
+      console.error('Error marking all as read:', err);
+      showToast?.('حدث خطأ أثناء تحديث الإشعارات', 'error');
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    if (notifications.length === 0) return;
+    if (!confirm('هل أنت متأكد من حذف جميع الإشعارات؟')) return;
+
+    try {
+      const batch = notifications.map(n => 
+        deleteDoc(doc(db, 'notifications', n.id))
+      );
+      await Promise.all(batch);
+      showToast?.('تم حذف جميع الإشعارات بنجاح', 'success');
+    } catch (err) {
+      console.error('Error clearing notifications:', err);
+      showToast?.('حدث خطأ أثناء حذف الإشعارات', 'error');
+    }
+  };
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState<{ profitRate: number, autoControl: string }>({ profitRate: 85, autoControl: 'random' });
 
@@ -4692,7 +4725,7 @@ export default function App() {
                 kycStatus: 'none',
                 createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
-                referredBy: localStorage.getItem('referredBy') || undefined,
+                referredBy: localStorage.getItem('referredBy') || null,
               };
               console.log('Creating new user:', firebaseUser.uid, newUser);
               await setDoc(userDocRef, newUser);
@@ -4743,7 +4776,11 @@ export default function App() {
           // Sort by timestamp descending
           notificationsList.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           setNotifications(notificationsList);
-        }, (err) => handleFirestoreError(err, OperationType.LIST, 'notifications'));
+          setIsNotificationsLoading(false);
+        }, (err) => {
+          setIsNotificationsLoading(false);
+          handleFirestoreError(err, OperationType.LIST, 'notifications');
+        });
 
         // Listen for global settings
         unsubSettings = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
@@ -5012,11 +5049,31 @@ export default function App() {
                       className="absolute right-0 mt-2 w-80 max-w-[90vw] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 z-50 overflow-hidden"
                     >
                       <div className="px-4 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                        <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">الإشعارات</h3>
-                        {notifications.filter(n => !n.read).length > 0 && (
-                          <span className="px-2 py-1 bg-red-500 text-white text-[10px] font-black rounded-full">
-                            {notifications.filter(n => !n.read).length} جديد
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-widest">الإشعارات</h3>
+                          {notifications.filter(n => !n.read).length > 0 && (
+                            <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-black rounded-full">
+                              {notifications.filter(n => !n.read).length}
+                            </span>
+                          )}
+                        </div>
+                        {notifications.length > 0 && (
+                          <div className="flex gap-3">
+                            {notifications.filter(n => !n.read).length > 0 && (
+                              <button 
+                                onClick={markAllAsRead}
+                                className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline"
+                              >
+                                تحديد الكل كمقروء
+                              </button>
+                            )}
+                            <button 
+                              onClick={clearAllNotifications}
+                              className="text-[10px] font-bold text-red-600 dark:text-red-400 hover:underline"
+                            >
+                              مسح الكل
+                            </button>
+                          </div>
                         )}
                       </div>
                       <div className="max-h-[400px] overflow-y-auto">

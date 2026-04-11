@@ -74,42 +74,43 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        // We can't easily call updateProfile here without importing it, 
-        // but App.tsx will handle the initial document creation.
-        // To ensure fullName is used, we might need to pass it somehow or handle it in App.tsx
+        await createUserWithEmailAndPassword(auth, email, password);
       }
       onClose();
     } catch (err: any) {
-      console.error(err);
-      switch (err.code) {
+      console.error("Auth Error:", err);
+      const errorCode = err.code || (err.message?.includes('auth/email-already-in-use') ? 'auth/email-already-in-use' : '');
+      
+      switch (errorCode) {
         case 'auth/network-request-failed':
-          setError('فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.');
+          setError(selectedLang.code === 'AR' ? 'فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.' : 'Network request failed. Please check your internet connection.');
           break;
         case 'auth/invalid-email':
-          setError('البريد الإلكتروني غير صالح.');
+          setError(selectedLang.code === 'AR' ? 'البريد الإلكتروني غير صالح.' : 'Invalid email address.');
           break;
         case 'auth/user-disabled':
-          setError('هذا الحساب تم تعطيله.');
+          setError(selectedLang.code === 'AR' ? 'هذا الحساب تم تعطيله.' : 'This account has been disabled.');
           break;
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-          setError('البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+          setError(selectedLang.code === 'AR' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' : 'Invalid email or password.');
           break;
         case 'auth/email-already-in-use':
-          setError('البريد الإلكتروني مستخدم بالفعل.');
+          setError(selectedLang.code === 'AR' ? 'البريد الإلكتروني مستخدم بالفعل. يرجى تسجيل الدخول بدلاً من ذلك.' : 'Email already in use. Please login instead.');
+          setIsLogin(true); // Automatically switch to login mode
+          setStep(1);
           break;
         case 'auth/weak-password':
-          setError('كلمة المرور ضعيفة جداً.');
+          setError(selectedLang.code === 'AR' ? 'كلمة المرور ضعيفة جداً.' : 'Password is too weak.');
           break;
         case 'auth/operation-not-allowed':
-          setError('تسجيل الدخول بالبريد الإلكتروني غير مفعل.');
+          setError(selectedLang.code === 'AR' ? 'تسجيل الدخول بالبريد الإلكتروني غير مفعل.' : 'Email sign-in is not enabled.');
           break;
         default:
-          setError(err.message || 'حدث خطأ أثناء المصادقة');
+          setError(err.message || (selectedLang.code === 'AR' ? 'حدث خطأ أثناء المصادقة' : 'An error occurred during authentication'));
       }
-      if (!isLogin) setStep(1); 
+      if (!isLogin && errorCode !== 'auth/email-already-in-use') setStep(1); 
     } finally {
       setLoading(false);
     }
@@ -121,11 +122,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       await signInWithPopup(auth, provider);
       onClose();
     } catch (err: any) {
-      console.error(err);
+      console.error("Google Auth Error:", err);
       if (err.code === 'auth/network-request-failed') {
-        setError('فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.');
+        setError(selectedLang.code === 'AR' ? 'فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.' : 'Network request failed. Please check your internet connection.');
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+        setError(selectedLang.code === 'AR' ? 'يوجد حساب بالفعل بنفس البريد الإلكتروني ولكن تم إنشاؤه باستخدام طريقة تسجيل دخول مختلفة.' : 'An account already exists with the same email address but was created using a different sign-in method.');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError(selectedLang.code === 'AR' ? 'تم إغلاق نافذة تسجيل الدخول قبل إكمال العملية.' : 'The login popup was closed before completing the process.');
       } else {
-        setError(err.message || 'حدث خطأ أثناء تسجيل الدخول بجوجل');
+        setError(err.message || (selectedLang.code === 'AR' ? 'حدث خطأ أثناء تسجيل الدخول بجوجل' : 'An error occurred during Google login'));
       }
     }
   };

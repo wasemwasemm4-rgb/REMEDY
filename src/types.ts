@@ -1,18 +1,18 @@
 export interface User {
   uid: string;
   email: string;
-  displayName?: string;
-  photoURL?: string;
+  displayName?: string | null;
+  photoURL?: string | null;
   role: 'user' | 'admin';
   balance: number;
   profit: number;
   kycStatus: 'pending' | 'approved' | 'rejected' | 'none';
-  referralCode?: string;
-  referredBy?: string;
+  referralCode?: string | null;
+  referredBy?: string | null;
   createdAt: string;
-  lastLogin?: string;
-  phone?: string;
-  country?: string;
+  lastLogin?: string | null;
+  phone?: string | null;
+  country?: string | null;
 }
 
 export interface Bot {
