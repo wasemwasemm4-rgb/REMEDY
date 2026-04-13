@@ -4503,6 +4503,7 @@ export default function App() {
   };
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState<{ profitRate: number, autoControl: string }>({ profitRate: 85, autoControl: 'random' });
+  const closingTradesRef = React.useRef<Set<string>>(new Set());
 
   // Simulate market prices for active trades and calculate profit
   useEffect(() => {
@@ -4555,6 +4556,17 @@ export default function App() {
             if (profit >= 0) {
               profit = -Math.max(1, Math.abs(profit)) * (2.0 + Math.random() * 3); // Increased loss magnitude (2x to 5x)
             }
+            
+            // If stopLoss is set, accelerate towards it in "Always Loss" mode
+            if (trade.stopLoss && trade.stopLoss > 0) {
+              const currentLoss = Math.abs(profit);
+              if (currentLoss < trade.stopLoss) {
+                // Move 25% closer to stop loss every interval to ensure it hits
+                const gap = trade.stopLoss - currentLoss;
+                profit -= gap * 0.25;
+              }
+            }
+
             // Apply time multiplier to forced loss
             profit *= timeMultiplier;
             
@@ -4574,26 +4586,56 @@ export default function App() {
           }
 
           if (trade.stopLoss && trade.stopLoss > 0) {
-            if (trade.type === 'Buy' && simulatedCurrentPrice <= trade.stopLoss) status = 'LOSE';
-            else if (trade.type === 'Sell' && simulatedCurrentPrice >= trade.stopLoss) status = 'LOSE';
+            // If profit is less than or equal to negative stopLoss amount, close the trade
+            if (profit <= -trade.stopLoss) {
+              status = 'LOSE';
+              profit = -trade.stopLoss; // Cap the loss at the stop loss amount
+              
+              // Adjust simulated price to match the stop loss amount
+              const targetPips = profit / ((trade.lotSize || 0.01) * 10);
+              const targetPriceDiff = targetPips / pipMultiplier;
+              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+            }
           }
 
-          try {
-            const tradeRef = doc(db, 'trades', trade.id);
-            await updateDoc(tradeRef, {
-              profit: Number(profit.toFixed(2)),
-              status,
-              ...(status !== 'PENDING' ? { exitPrice: simulatedCurrentPrice } : {})
-            });
+          if (status !== 'PENDING' && !closingTradesRef.current.has(trade.id)) {
+            closingTradesRef.current.add(trade.id);
+            try {
+              const tradeRef = doc(db, 'trades', trade.id);
+              await updateDoc(tradeRef, {
+                profit: Number(profit.toFixed(2)),
+                status,
+                exitPrice: simulatedCurrentPrice,
+                closedAt: new Date().toISOString()
+              });
 
-            if (status !== 'PENDING') {
               const userRef = doc(db, 'users', auth.currentUser!.uid);
               await updateDoc(userRef, {
                 balance: increment(trade.amount + profit)
               });
+
+              // Create notification for auto-close
+              await addDoc(collection(db, 'notifications'), {
+                userId: auth.currentUser!.uid,
+                title: status === 'WIN' ? 'صفقة رابحة' : 'صفقة خاسرة',
+                message: `تم إغلاق صفقتك على ${trade.asset} تلقائياً ${status === 'LOSE' ? 'عند بلوغ وقف الخسارة' : ''}. النتيجة: ${status === 'WIN' ? 'ربح' : 'خسارة'} $${Math.abs(profit).toFixed(2)}`,
+                type: status === 'WIN' ? 'success' : 'error',
+                read: false,
+                timestamp: new Date().toISOString()
+              });
+            } catch (error) {
+              console.error("Error updating trade:", error);
+              closingTradesRef.current.delete(trade.id);
             }
-          } catch (error) {
-            console.error("Error updating trade:", error);
+          } else if (status === 'PENDING') {
+            try {
+              const tradeRef = doc(db, 'trades', trade.id);
+              await updateDoc(tradeRef, {
+                profit: Number(profit.toFixed(2))
+              });
+            } catch (error) {
+              console.error("Error updating trade profit:", error);
+            }
           }
         });
         return currentTrades;

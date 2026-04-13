@@ -109,6 +109,7 @@ service cloud.firestore {
     //   - status: string (required, enum: ["WIN", "LOSE", "PENDING"])
     //   - profit: number (required)
     //   - timestamp: string (required, date-time format)
+    //   - closedAt: string (optional, date-time format)
     //
     // Collection: deposits
     // Document ID: depositId
@@ -248,7 +249,7 @@ service cloud.firestore {
 
     function isValidTrade(data) {
       return hasRequiredFields(['userId', 'asset', 'type', 'amount', 'entryPrice', 'status', 'profit', 'timestamp']) &&
-             hasOnlyAllowedFields(['userId', 'asset', 'type', 'amount', 'lotSize', 'entryPrice', 'exitPrice', 'leverage', 'duration', 'stopLoss', 'status', 'profit', 'timestamp']) &&
+             hasOnlyAllowedFields(['userId', 'asset', 'type', 'amount', 'lotSize', 'entryPrice', 'exitPrice', 'leverage', 'duration', 'stopLoss', 'status', 'profit', 'timestamp', 'closedAt']) &&
              (data.userId == request.auth.uid || isAdmin()) &&
              data.type in ['Buy', 'Sell'] &&
              data.amount is number &&
