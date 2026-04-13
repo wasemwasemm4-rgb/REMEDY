@@ -93,6 +93,7 @@ export interface Trade {
   lotSize: number;
   entryPrice: number;
   exitPrice?: number;
+  leverage?: string;
   stopLoss?: number;
   status: 'WIN' | 'LOSE' | 'PENDING';
   profit: number;

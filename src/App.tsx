@@ -398,7 +398,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
   const [amount, setAmount] = useState<string>('');
   const [lotSize, setLotSize] = useState<string>('0.01');
   const [leverage, setLeverage] = useState('1:10');
-  const [duration, setDuration] = useState('5 دقائق');
+  const [duration, setDuration] = useState('1 دقيقة');
   const [stopLoss, setStopLoss] = useState<string>('');
   const [isTrading, setIsTrading] = useState(false);
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
@@ -931,6 +931,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                   onChange={(e) => setDuration(e.target.value)}
                   className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-xl py-3 px-4 text-xs font-black text-gray-900 dark:text-white appearance-none"
                 >
+                  <option>1 دقيقة</option>
                   <option>5 دقائق</option>
                   <option>15 دقيقة</option>
                   <option>1 ساعة</option>
@@ -4504,6 +4505,11 @@ export default function App() {
   const [isSubscribing, setIsSubscribing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState<{ profitRate: number, autoControl: string }>({ profitRate: 85, autoControl: 'random' });
   const closingTradesRef = React.useRef<Set<string>>(new Set());
+  const userRef = React.useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   // Simulate market prices for active trades and calculate profit
   useEffect(() => {
@@ -4543,20 +4549,26 @@ export default function App() {
 
           // Apply Admin Auto-Control
           if (globalSettings.autoControl === 'win') {
-            // Force profit
-            if (profit <= 0) {
-              profit = Math.max(1, Math.abs(profit)) * (0.5 + Math.random()); // Ensure positive profit
-              // Adjust simulated price to match profit
-              const targetPips = profit / ((trade.lotSize || 0.01) * 10);
-              const targetPriceDiff = targetPips / pipMultiplier;
-              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
-            }
-          } else if (globalSettings.autoControl === 'loss') {
-            // Force loss
-            if (profit >= 0) {
-              profit = -Math.max(1, Math.abs(profit)) * (2.0 + Math.random() * 3); // Increased loss magnitude (2x to 5x)
-            }
+            // Force profit: between 1 and 10 dollars
+            profit = 1 + Math.random() * 9;
             
+            // Adjust simulated price to match profit
+            const targetPips = profit / ((trade.lotSize || 0.01) * 10);
+            const targetPriceDiff = targetPips / pipMultiplier;
+            simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+          } else if (globalSettings.autoControl === 'loss') {
+            // Force loss: between 50 and 100 units
+            const userBalance = userRef.current?.balance || 100;
+            const targetLoss = 50 + Math.random() * 50;
+            profit = -Math.min(targetLoss, userBalance * 0.9); // Cap at 90% of balance to avoid immediate liquidation if not intended, but still a heavy loss
+            
+            // Adjust simulated price to match profit
+            {
+              const targetPips = Math.abs(profit) / ((trade.lotSize || 0.01) * 10);
+              const targetPriceDiff = targetPips / pipMultiplier;
+              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? -targetPriceDiff : targetPriceDiff);
+            }
+
             // If stopLoss is set, accelerate towards it in "Always Loss" mode
             if (trade.stopLoss && trade.stopLoss > 0) {
               const currentLoss = Math.abs(profit);
@@ -4571,17 +4583,19 @@ export default function App() {
             profit *= timeMultiplier;
             
             // Adjust simulated price to match loss
-            const targetPips = profit / ((trade.lotSize || 0.01) * 10);
-            const targetPriceDiff = targetPips / pipMultiplier;
-            simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+            {
+              const targetPips = profit / ((trade.lotSize || 0.01) * 10);
+              const targetPriceDiff = targetPips / pipMultiplier;
+              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+            }
           } else {
             // Natural simulation: if it's a loss, apply time multiplier
             if (profit < 0) {
               profit *= timeMultiplier;
               // Adjust simulated price to match increased loss
-              const targetPips = profit / ((trade.lotSize || 0.01) * 10);
-              const targetPriceDiff = targetPips / pipMultiplier;
-              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+              const targetPipsNatural = profit / ((trade.lotSize || 0.01) * 10);
+              const targetPriceDiffNatural = targetPipsNatural / pipMultiplier;
+              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiffNatural : -targetPriceDiffNatural);
             }
           }
 
@@ -4598,6 +4612,17 @@ export default function App() {
             }
           }
 
+          // Liquidation logic: if loss exceeds or equals current balance
+          if (status === 'PENDING' && userRef.current && profit <= -userRef.current.balance) {
+            status = 'LOSE';
+            profit = -userRef.current.balance; // Cap loss at current balance
+            
+            // Adjust simulated price to match the liquidation amount
+            const targetPips = profit / ((trade.lotSize || 0.01) * 10);
+            const targetPriceDiff = targetPips / pipMultiplier;
+            simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+          }
+
           if (status !== 'PENDING' && !closingTradesRef.current.has(trade.id)) {
             closingTradesRef.current.add(trade.id);
             try {
@@ -4609,16 +4634,24 @@ export default function App() {
                 closedAt: new Date().toISOString()
               });
 
-              const userRef = doc(db, 'users', auth.currentUser!.uid);
-              await updateDoc(userRef, {
-                balance: increment(trade.amount + profit)
-              });
+              const userRefDoc = doc(db, 'users', auth.currentUser!.uid);
+              const isLiquidation = userRef.current && profit <= -userRef.current.balance;
+              
+              if (isLiquidation) {
+                await updateDoc(userRefDoc, { balance: 0 });
+              } else {
+                await updateDoc(userRefDoc, {
+                  balance: increment(trade.amount + profit)
+                });
+              }
 
               // Create notification for auto-close
               await addDoc(collection(db, 'notifications'), {
                 userId: auth.currentUser!.uid,
                 title: status === 'WIN' ? 'صفقة رابحة' : 'صفقة خاسرة',
-                message: `تم إغلاق صفقتك على ${trade.asset} تلقائياً ${status === 'LOSE' ? 'عند بلوغ وقف الخسارة' : ''}. النتيجة: ${status === 'WIN' ? 'ربح' : 'خسارة'} $${Math.abs(profit).toFixed(2)}`,
+                message: isLiquidation 
+                  ? `تم إغلاق صفقتك على ${trade.asset} تلقائياً بسبب تصفير الرصيد (Liquidation).`
+                  : `تم إغلاق صفقتك على ${trade.asset} تلقائياً ${status === 'LOSE' ? 'عند بلوغ وقف الخسارة' : ''}. النتيجة: ${status === 'WIN' ? 'ربح' : 'خسارة'} $${Math.abs(profit).toFixed(2)}`,
                 type: status === 'WIN' ? 'success' : 'error',
                 read: false,
                 timestamp: new Date().toISOString()
@@ -4640,7 +4673,7 @@ export default function App() {
         });
         return currentTrades;
       });
-    }, 5000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, [auth.currentUser, globalSettings]);
