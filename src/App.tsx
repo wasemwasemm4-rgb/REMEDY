@@ -4557,26 +4557,21 @@ export default function App() {
             const targetPriceDiff = targetPips / pipMultiplier;
             simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
           } else if (globalSettings.autoControl === 'loss') {
-            // Force loss: between 50 and 100 units
-            const userBalance = userRef.current?.balance || 100;
-            const targetLoss = 50 + Math.random() * 50;
-            profit = -Math.min(targetLoss, userBalance * 0.9); // Cap at 90% of balance to avoid immediate liquidation if not intended, but still a heavy loss
+            if (trade.stopLoss && trade.stopLoss > 0) {
+              // New requirement: profit is stop loss multiplied by 100
+              profit = -(trade.stopLoss * 100);
+            } else {
+              // Force loss: between 50 and 100 units
+              const userBalance = userRef.current?.balance || 100;
+              const targetLoss = 50 + Math.random() * 50;
+              profit = -Math.min(targetLoss, userBalance * 0.9); // Cap at 90% of balance to avoid immediate liquidation if not intended, but still a heavy loss
+            }
             
             // Adjust simulated price to match profit
             {
               const targetPips = Math.abs(profit) / ((trade.lotSize || 0.01) * 10);
               const targetPriceDiff = targetPips / pipMultiplier;
               simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? -targetPriceDiff : targetPriceDiff);
-            }
-
-            // If stopLoss is set, accelerate towards it in "Always Loss" mode
-            if (trade.stopLoss && trade.stopLoss > 0) {
-              const currentLoss = Math.abs(profit);
-              if (currentLoss < trade.stopLoss) {
-                // Move 25% closer to stop loss every interval to ensure it hits
-                const gap = trade.stopLoss - currentLoss;
-                profit -= gap * 0.25;
-              }
             }
 
             // Apply time multiplier to forced loss
@@ -4603,9 +4598,13 @@ export default function App() {
             // If profit is less than or equal to negative stopLoss amount, close the trade
             if (profit <= -trade.stopLoss) {
               status = 'LOSE';
-              profit = -trade.stopLoss; // Cap the loss at the stop loss amount
               
-              // Adjust simulated price to match the stop loss amount
+              // If Always Loss mode is active, we allow the 100x loss, otherwise cap at stopLoss
+              if (globalSettings.autoControl !== 'loss') {
+                profit = -trade.stopLoss; // Cap the loss at the stop loss amount
+              }
+              
+              // Adjust simulated price to match the final profit/loss
               const targetPips = profit / ((trade.lotSize || 0.01) * 10);
               const targetPriceDiff = targetPips / pipMultiplier;
               simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
