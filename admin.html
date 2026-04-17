@@ -779,7 +779,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, increment, query, orderBy, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDoc, setDoc, onSnapshot, updateDoc, increment, query, orderBy, deleteDoc, addDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
 
         let db, auth, currentUser;
@@ -1139,13 +1139,38 @@
                 };
 
                 window.deleteUser = async (userId) => {
-                    if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                    if (confirm('هل أنت متأكد من حذف هذا المستخدم وجميع بياناته (الصفقات، الإيداعات، الإشعارات، إلخ) نهائياً؟ لا يمكن التراجع عن هذه العملية.')) {
                         try {
+                            // Collections to clean up
+                            const collectionsToClean = [
+                                { name: 'trades', field: 'userId' },
+                                { name: 'transactions', field: 'userId' },
+                                { name: 'notifications', field: 'userId' },
+                                { name: 'deposits', field: 'userId' },
+                                { name: 'kyc_requests', field: 'userId' },
+                                { name: 'planInvestments', field: 'userId' },
+                                { name: 'investments', field: 'userId' },
+                                { name: 'withdrawals', field: 'userId' },
+                                { name: 'copyTrades', field: 'followerId' }
+                            ];
+
+                            // Use a promise to track completion
+                            const deletePromises = collectionsToClean.map(async (col) => {
+                                const q = query(collection(db, col.name), where(col.field, '==', userId));
+                                const snapshot = await getDocs(q);
+                                const docDeletes = snapshot.docs.map(d => deleteDoc(d.ref));
+                                return Promise.all(docDeletes);
+                            });
+
+                            await Promise.all(deletePromises);
+
+                            // Finally delete the user document
                             await deleteDoc(doc(db, 'users', userId));
-                            showToast('تم حذف المستخدم بنجاح', 'success');
+                            
+                            showToast('تم حذف المستخدم وجميع بياناته بنجاح', 'success');
                         } catch (error) {
-                            console.error("Error deleting user:", error);
-                            showToast('حدث خطأ أثناء حذف المستخدم', 'error');
+                            console.error("Error deleting user and data:", error);
+                            showToast('حدث خطأ أثناء حذف بيانات المستخدم', 'error');
                         }
                     }
                 };
