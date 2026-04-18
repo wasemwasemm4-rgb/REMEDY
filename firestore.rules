@@ -183,13 +183,16 @@ service cloud.firestore {
 
     function isValidUser(data, userId) {
       return hasRequiredFields(['uid', 'email', 'role', 'balance', 'profit', 'kycStatus', 'createdAt']) &&
-             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'balance', 'profit', 'kycStatus', 'referralCode', 'referredBy', 'referralCount', 'createdAt', 'lastLogin', 'phone', 'country', 'firstName', 'lastName', 'address', 'city', 'state', 'dob', 'documentType', 'frontImage', 'backImage', 'zipCode', 'idNumber']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'balance', 'profit', 'kycStatus', 'referralCode', 'referredBy', 'referralCount', 'createdAt', 'lastLogin', 'phone', 'country', 'firstName', 'lastName', 'address', 'city', 'state', 'dob', 'documentType', 'frontImage', 'backImage', 'zipCode', 'idNumber', 'isBlocked', 'aiTrialExpires', 'aegisTrialExpires']) &&
              data.uid == userId &&
              data.role in ['user', 'admin'] &&
              data.balance is number &&
              data.profit is number &&
              data.kycStatus in ['pending', 'approved', 'rejected', 'none'] &&
-             isValidDateString(data.createdAt);
+             isValidDateString(data.createdAt) &&
+             (data.get('isBlocked', false) is bool) &&
+             (data.get('aiTrialExpires', '') == '' || isValidDateString(data.get('aiTrialExpires', ''))) &&
+             (data.get('aegisTrialExpires', '') == '' || isValidDateString(data.get('aegisTrialExpires', '')));
     }
 
     function isValidBot(data) {
@@ -301,9 +304,12 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId) && isValidUser(request.resource.data, userId) && (request.resource.data.role == 'user' || isAdmin());
-      allow update: if (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data, userId) && (request.resource.data.get('role', 'user') == resource.data.get('role', 'user') || isAdmin());
-      allow delete: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data, userId) && (request.resource.data.role == 'user' || isAdmin()) && request.resource.data.get('isBlocked', false) == false;
+      allow update: if (isOwner(userId) || isAdmin()) && 
+                      isValidUser(request.resource.data, userId) && 
+                      (request.resource.data.get('role', 'user') == resource.data.get('role', 'user') || isAdmin()) &&
+                      (request.resource.data.get('isBlocked', false) == resource.data.get('isBlocked', false) || isAdmin());
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     match /bots/{botId} {
@@ -321,7 +327,7 @@ service cloud.firestore {
     match /transactions/{transactionId} {
       allow read: if isOwner(resource.data.userId) || isAdmin();
       allow create: if isAuthenticated() && isValidTransaction(request.resource.data);
-      allow update: if isAdmin();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
 

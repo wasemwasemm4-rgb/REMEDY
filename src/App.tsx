@@ -61,6 +61,7 @@ import {
   X,
   CheckCircle,
   BarChart3,
+  Power,
   ArrowDownRight,
   Sun,
   Moon,
@@ -788,9 +789,9 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
       )}
 
       {/* Trading Overview & Quick Trade */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Chart Card */}
-        <div className="xl:col-span-2 bg-white dark:bg-gray-900 rounded-[2rem] p-6 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none overflow-hidden flex flex-col">
+        <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-[2rem] p-4 sm:p-6 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none overflow-hidden flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -862,15 +863,15 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                   placeholder="0.00" 
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 pl-10 pr-24 text-lg font-black text-gray-900 dark:text-white transition-all"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 pl-10 pr-20 sm:pr-24 text-base sm:text-lg font-black text-gray-900 dark:text-white transition-all"
                 />
-                <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+                <div className="absolute inset-y-0 right-0 pr-1.5 sm:pr-2 flex items-center gap-1">
                   <button 
                     onClick={() => {
                       const current = parseFloat(amount) || 0;
                       setAmount((current * 1.1).toFixed(2));
                     }}
-                    className="px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-colors"
+                    className="px-1.5 py-1 sm:px-2 sm:py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-colors"
                   >
                     +10%
                   </button>
@@ -879,7 +880,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                       const current = parseFloat(amount) || 0;
                       setAmount((current * 0.9).toFixed(2));
                     }}
-                    className="px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-colors"
+                    className="px-1.5 py-1 sm:px-2 sm:py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-colors"
                   >
                     -10%
                   </button>
@@ -910,13 +911,13 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">الرافعة المالية</label>
                 <select 
                   value={leverage}
                   onChange={(e) => setLeverage(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-xl py-3 px-4 text-xs font-black text-gray-900 dark:text-white appearance-none"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-xl py-3 px-3 sm:px-4 text-xs font-black text-gray-900 dark:text-white appearance-none"
                 >
                   <option>1:10</option>
                   <option>1:50</option>
@@ -929,7 +930,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                 <select 
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-xl py-3 px-4 text-xs font-black text-gray-900 dark:text-white appearance-none"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-xl py-3 px-3 sm:px-4 text-xs font-black text-gray-900 dark:text-white appearance-none"
                 >
                   <option>1 دقيقة</option>
                   <option>5 دقائق</option>
@@ -956,27 +957,27 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-4">
               <button 
                 onClick={() => handleTrade('Buy')}
                 disabled={isTrading}
-                className="group relative overflow-hidden bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-4 rounded-2xl font-black shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                className="group relative overflow-hidden bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white py-3.5 sm:py-4 rounded-2xl font-black shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 <div className="relative flex items-center justify-center gap-2">
-                  <ArrowUpRight className="w-5 h-5" />
-                  <span>شراء</span>
+                  <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">شراء</span>
                 </div>
               </button>
               <button 
                 onClick={() => handleTrade('Sell')}
                 disabled={isTrading}
-                className="group relative overflow-hidden bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white py-4 rounded-2xl font-black shadow-lg shadow-red-500/20 transition-all active:scale-95"
+                className="group relative overflow-hidden bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white py-3.5 sm:py-4 rounded-2xl font-black shadow-lg shadow-red-500/20 transition-all active:scale-95"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                 <div className="relative flex items-center justify-center gap-2">
-                  <ArrowDownRight className="w-5 h-5" />
-                  <span>بيع</span>
+                  <ArrowDownRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">بيع</span>
                 </div>
               </button>
             </div>
@@ -2562,98 +2563,7 @@ const KYCView = ({ user, showToast }: { user: User, showToast?: (message: string
               أكمل عملية التحقق من هويتك (KYC) للامتثال للوائح والوصول إلى جميع الميزات.
             </p>
           </div>
-
-          <button 
-            onClick={() => setStep('form')}
-            className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black flex items-center gap-2 transition-colors"
-          >
-            التحقق الكامل <Shield className="w-5 h-5" />
-          </button>
-
-          <button 
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-sm font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center gap-1 transition-colors"
-          >
-            {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            {showDetails ? 'إخفاء التفاصيل' : 'إظهار التفاصيل'}
-          </button>
         </div>
-
-        <AnimatePresence>
-          {showDetails && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden"
-            >
-              <div className="p-8 bg-gray-50 dark:bg-[#222] border-t border-gray-100 dark:border-white/5">
-                <h4 className="font-black text-lg mb-6 text-center">ما هي عملية التحقق من الهوية (KYC)؟</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                      <Unlock className="w-5 h-5 text-blue-600 dark:text-blue-500" />
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-sm">الوصول الكامل</h5>
-                      <p className="text-xs text-gray-500 mt-1">افتح جميع ميزات التداول والاستثمار</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                      <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-sm">الأمن والامتثال</h5>
-                      <p className="text-xs text-gray-500 mt-1">يضمن أمن المنصة والامتثال التنظيمي</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                      <Zap className="w-5 h-5 text-purple-600 dark:text-purple-500" />
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-sm">عملية سريعة</h5>
-                      <p className="text-xs text-gray-500 mt-1">عملية تحقق بسيطة من 3 خطوات</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                      <UserIcon className="w-5 h-5 text-orange-600 dark:text-orange-500" />
-                    </div>
-                    <div>
-                      <h5 className="font-bold text-sm">حماية الهوية</h5>
-                      <p className="text-xs text-gray-500 mt-1">يحمي هويتك ويمنع الاحتيال</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="bg-white dark:bg-[#1a1a1a] rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-xl p-8 text-center space-y-6">
-        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto">
-          <MessageSquare className="w-8 h-8 text-blue-600 dark:text-blue-500" />
-        </div>
-        <div className="space-y-2">
-          <h3 className="text-xl font-black">هل تحتاج إلى مساعدة؟</h3>
-          <p className="text-gray-500 text-sm">فريق الدعم لدينا جاهز لمساعدتك في عملية التحقق.</p>
-        </div>
-        
-        <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-gray-500">
-          <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> متوفر على مدار الساعة طوال أيام الأسبوع</span>
-          <span className="flex items-center gap-1"><Mail className="w-4 h-4" /> دعم عبر البريد الإلكتروني</span>
-          <span className="flex items-center gap-1"><MessageCircle className="w-4 h-4" /> الدردشة المباشرة</span>
-        </div>
-
-        <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black flex items-center gap-2 mx-auto transition-colors">
-          احصل على الدعم <MessageSquare className="w-4 h-4" />
-        </button>
       </div>
     </motion.div>
   );
@@ -2793,6 +2703,978 @@ const BotCard = ({ bot, i, onSubscribe, isSubscribing }: { bot: any, i: number, 
         </button>
       </div>
     </motion.div>
+  );
+};
+
+const AegisRescueTerminal = ({ user, isStopped }: { user: User, isStopped: boolean }) => {
+  const [logs, setLogs] = useState<{ id: number, text: string, type: 'info' | 'success' | 'warn' | 'error' | 'rescue' }[]>([]);
+  const [metrics, setMetrics] = useState({ 
+    balance: user.balance, 
+    equity: user.balance * 1.002, 
+    risk: '0.0001%', 
+    dd: '0.03%', 
+    pnl: 0,
+    trades: 842,
+    direction: 'NEUTRAL',
+    volatility: 'LOW'
+  });
+  const [pnlData, setPnlData] = useState<{ x: number, y: number }[]>([]);
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const logRef = React.useRef<HTMLDivElement>(null);
+
+  // Simulation logic
+  useEffect(() => {
+    if (isStopped) return;
+
+    const initialPnl = Array.from({ length: 40 }, (_, i) => ({ x: i, y: Math.max(0, i * 2 + (Math.random() * 10)) }));
+    setPnlData(initialPnl);
+
+    const logMessages = [
+      'ARB_ENGINE: s1.btc_mkt update...',
+      'BAYESIAN_UPDATE: prior_prob adjusted to 0.642',
+      'KELLY_CRIT: resizing pos to 0.001 (min_risk)',
+      'EXECUTION: buy_limit filled @ btc_spot_01',
+      'ORDER_FLOW: detected micro-imbalance @ SOL/USDT',
+      'ALPHA_SIGNAL: k-reversal detected (p=0.88)',
+      'RECOVERY_LOG: secured +$0.021 profit',
+      'SHIELD_UNIT: anti-spike filter activated',
+      'NETWORK: latency 12ms (ams-node-04)',
+      'SYSTEM: neural_layer_04 synced',
+      'MARKET_DATA: vol_index 0.12 (stable)',
+      'HEDGE_RATIO: 1:1 parity maintained',
+    ];
+
+    const interval = setInterval(() => {
+      const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+      setLogs(prev => [...prev.slice(-100), { id: Date.now(), text: msg, type: 'info' }]);
+      
+      setMetrics(prev => ({
+        ...prev,
+        balance: prev.balance + 0.015,
+        pnl: prev.pnl + 0.015,
+        trades: prev.trades + 1,
+        direction: Math.random() > 0.5 ? 'BULLISH' : 'BEARISH'
+      }));
+
+      setPnlData(prev => {
+        const last = prev[prev.length - 1];
+        return [...prev.slice(-39), { x: last.x + 1, y: last.y + (Math.random() * 4) }];
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isStopped, user.balance]);
+
+  // Particle Animation (The branching "tree")
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let particles: { x: number, y: number, vx: number, vy: number, life: number, opacity: number, color: string, label?: string }[] = [];
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const animate = () => {
+      if (!isStopped) {
+        ctx.fillStyle = '#0a0a0a';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Grid lines
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 0.5;
+        for(let i=0; i<canvas.width; i+=40) {
+          ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+        }
+        for(let j=0; j<canvas.height; j+=40) {
+          ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+        }
+
+        // Origin point
+        const originX = canvas.width * 0.2;
+        const originY = canvas.height * 0.5;
+
+        // Emit
+        if (Math.random() > 0.3) {
+          const isWin = Math.random() > 0.2;
+          particles.push({
+            x: originX,
+            y: originY,
+            vx: Math.random() * 6 + 3,
+            vy: (Math.random() - 0.5) * 5,
+            life: 1,
+            opacity: 0.8,
+            color: isWin ? '#10b981' : '#f43f5e',
+            label: Math.random() > 0.95 ? `${isWin ? '+' : '-'}$${(Math.random() * 0.05).toFixed(3)}` : undefined
+          });
+        }
+
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vx *= 0.997;
+          p.life -= 0.004;
+          p.opacity -= 0.004;
+
+          ctx.beginPath();
+          ctx.moveTo(p.x - p.vx, p.y - p.vy);
+          ctx.lineTo(p.x, p.y);
+          ctx.strokeStyle = p.color;
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          if (p.label && p.opacity > 0.5) {
+             ctx.fillStyle = p.color;
+             ctx.font = '9px Courier New';
+             ctx.fillText(p.label, p.x + 5, p.y);
+          }
+
+          // Branching effect
+          if (p.life > 0.6 && Math.random() > 0.97) {
+            particles.push({
+              ...p,
+              vy: p.vy + (Math.random() - 0.5) * 3,
+              life: p.life * 0.7,
+              label: undefined
+            });
+          }
+        });
+
+        particles = particles.filter(p => p.life > 0);
+
+        // Labels
+        ctx.fillStyle = '#666';
+        ctx.font = '11px Courier New';
+        ctx.globalAlpha = 1;
+        ctx.fillText('late-to-tomorrow', originX - 110, originY + 30);
+        
+        ctx.beginPath();
+        ctx.arc(originX, originY, 5, 0, Math.PI * 2);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(originX, originY, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener('resize', resize);
+    };
+  }, [isStopped]);
+
+  useEffect(() => {
+    if (logRef.current) {
+      logRef.current.scrollTop = logRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  return (
+    <div className="bg-black text-[#888] font-mono h-[800px] rounded-[2rem] border border-zinc-900 shadow-2xl flex flex-col overflow-hidden relative" dir="ltr">
+      {/* Top Header */}
+      <div className="p-3 bg-[#0a0a0a] border-b border-zinc-900 flex justify-between items-center text-[10px] tracking-widest text-[#666]">
+        <div className="flex gap-4">
+          <span className="text-white font-bold">ARB ENGINE // 5-MIN BTC MARKETS</span>
+          <span>BLOCK_HEIGHT: 839402</span>
+        </div>
+        <div className="flex gap-4 items-center">
+           <span className="text-emerald-500 flex items-center gap-1">
+             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+             LIVE FEED ACCESS: ONLINE
+           </span>
+           <span className="bg-rose-600/20 text-rose-500 px-2 py-0.5 rounded text-[8px] font-black">REC</span>
+        </div>
+      </div>
+
+      {/* Top Formulas Section */}
+      <div className="grid grid-cols-3 border-b border-zinc-900 text-[10px] h-[150px] bg-[#050505]">
+        {/* Bayesian Model */}
+        <div className="p-5 border-r border-zinc-900 space-y-2">
+          <div className="text-white font-black uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1 w-fit">BAYESIAN MODEL</div>
+          <div className="opacity-60 space-y-1 leading-relaxed">
+            <p className="text-emerald-400">PRIOR: p(y|x) = p(f|x, t, delta, vol, book)</p>
+            <p>P(H|D) = P(D|H) * P(H) / P(D)</p>
+            <p>μ_n = (σ²_0 * μ_v + n * σ²_v * x) / (σ²_0 + n * σ²_v)</p>
+            <p>λ_t = exp(-κ(t - τ))</p>
+          </div>
+        </div>
+
+        {/* Edge + Spread */}
+        <div className="p-5 border-r border-zinc-900 space-y-2">
+          <div className="text-white font-black uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1 w-fit">EDGE + SPREAD</div>
+          <div className="opacity-60 space-y-1 leading-relaxed">
+            <p>spread_edge = 1 - (p_yes + p_no) - c</p>
+             <p className="text-blue-400">Z-score: Z = (x - μ_s) / σ_s</p>
+            <p>z_imbalance = (V_bid - V_ask) / (V_bid + V_ask)</p>
+            <p>E[x_t] = μ + exp(-κt)(x_0 - μ)</p>
+          </div>
+        </div>
+
+        {/* Execution Layer */}
+        <div className="p-5 space-y-2">
+          <div className="text-white font-black uppercase tracking-widest mb-3 opacity-90 border-b border-white/5 pb-1 w-fit">EXECUTION LAYER</div>
+          <div className="opacity-60 space-y-1 leading-relaxed">
+            <p className="text-white">STRATEGY: RECOVERY_ALPHA_V3</p>
+            <p className="text-orange-400 font-bold">f* = (p * b - q) / b</p>
+            <p>Kelly % = Edge / Odds</p>
+            <p>r = s * q * σ² * (T-t)</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Central Visualizer */}
+      <div className="flex-1 relative overflow-hidden bg-[#0a0a0a]">
+        <canvas ref={canvasRef} className="w-full h-full" />
+        <div className="absolute top-6 right-8 text-[9px] text-[#444] text-right pointer-events-none">
+           CPU Load: 12% <br/>
+           Engine: Aegis_Rescue_v1 <br/>
+           Status: SYNCED
+        </div>
+        {isStopped && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-20">
+            <div className="text-center space-y-4">
+              <ShieldAlert className="w-16 h-16 text-rose-500 mx-auto animate-pulse" />
+              <div className="space-y-1">
+                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">System Offline</h3>
+                <p className="text-rose-500 text-sm font-bold">EMERGENCY SHUTDOWN ENGAGED</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bottom Data Section */}
+      <div className="h-[280px] border-t border-zinc-900 grid grid-cols-12 bg-[#050505]">
+        {/* Trading Stream */}
+        <div className="col-span-4 border-r border-zinc-900 flex flex-col">
+          <div className="p-3 border-b border-zinc-900 text-[10px] font-black text-white uppercase opacity-40 tracking-widest">TRADING STREAM</div>
+          <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-1 text-[9px] custom-scrollbar scroll-smooth">
+            {logs.map(log => (
+              <div key={log.id} className="flex gap-3">
+                <span className="text-[#333] font-bold">{new Date(log.id).toLocaleTimeString([], { hour12: false })}</span>
+                <span className={cn(
+                  log.text.includes('secured') ? 'text-emerald-500' : 'text-[#777]'
+                )}>{log.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bot Metrics */}
+        <div className="col-span-3 border-r border-zinc-900 flex flex-col p-6 space-y-5">
+           <div className="text-[10px] font-black text-white uppercase opacity-40 tracking-widest">BOT METRICS</div>
+           <div className="grid grid-cols-1 gap-3 text-[10px]">
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Balance</span>
+                <span className="text-white font-bold text-xs">${metrics.balance.toFixed(3)}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Equity</span>
+                <span className="text-white font-bold opacity-80">${metrics.equity.toFixed(3)}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Risk</span>
+                <span className="text-emerald-500 font-bold">{metrics.risk}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Drawdown</span>
+                <span className="text-blue-500 font-bold">{metrics.dd}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Trades</span>
+                <span className="text-white font-bold">{metrics.trades}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Direction</span>
+                <span className={cn("font-bold", metrics.direction === 'BULLISH' ? 'text-emerald-500' : 'text-rose-500')}>{metrics.direction}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="opacity-40">Volatility</span>
+                <span className="text-blue-400 font-bold">{metrics.volatility}</span>
+              </div>
+           </div>
+           <div className="pt-3 border-t border-zinc-900">
+             <div className="flex justify-between items-center text-[10px]">
+               <span className="opacity-40">Status</span>
+               <span className={cn("font-black tracking-widest", !isStopped ? "text-emerald-500" : "text-rose-500")}>
+                  {!isStopped ? 'RECOVERY_ACTIVE' : 'SYSTEM_HALTED'}
+               </span>
+             </div>
+           </div>
+        </div>
+
+        {/* PNL Curve */}
+        <div className="col-span-5 flex flex-col">
+          <div className="p-3 border-b border-zinc-900 flex justify-between items-center">
+            <div className="text-[10px] font-black text-white uppercase opacity-40 tracking-widest">PNL CURVE</div>
+            <div className="flex items-baseline gap-2">
+               <span className="text-[9px] opacity-40 uppercase">Total Profit</span>
+               <span className="text-white font-black text-xl">${(user.balance - 10 + metrics.pnl).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+            </div>
+          </div>
+          <div className="flex-1 p-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={pnlData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#111" />
+                <Line 
+                  type="monotone" 
+                  dataKey="y" 
+                  stroke="#fff" 
+                  strokeWidth={2} 
+                  dot={false} 
+                  animationDuration={0}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boolean }) => {
+  const [logs, setLogs] = useState<{ id: number, text: string, type: 'info' | 'success' | 'warn' | 'error' | 'entry' | 'exit' }[]>([]);
+  const [chartData, setChartData] = useState<{ time: string, value: number }[]>([]);
+  const [metrics, setMetrics] = useState({ latency: '24ms', throughput: '1.2 GB/s', accuracy: '98.4%', threads: '128' });
+  const logContainerRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isStopped) {
+       setLogs(prev => [...prev.slice(-100), { id: Date.now(), text: 'TERMINATING CONNECTION TO MARKET EXCHANGES...', type: 'warn' }, { id: Date.now() + 1, text: 'REXCONAL CORE SUSPENDED', type: 'error' }]);
+       setMetrics(prev => ({ ...prev, latency: '---', throughput: '0 GB/s', accuracy: '0%' }));
+       return;
+    }
+
+    // Generate initial logs
+    const initialLogs = [
+      { id: Date.now() - 5000, text: 'REXCONAL v4.2.0 INITIALIZING...', type: 'info' },
+      { id: Date.now() - 4000, text: 'SECURE HANDSHAKE ESTABLISHED WITH BINANCE-API-SECURE', type: 'success' },
+      { id: Date.now() - 3000, text: 'LOADING NEURAL WEIGHTS: model_v9_optimized.h5', type: 'info' },
+      { id: Date.now() - 2000, text: 'MARKET SCANNER ACTIVE: 420 PAIRS DETECTED', type: 'info' },
+      { id: Date.now() - 1000, text: 'AI CORE ONLINE - MONITORING VOLATILITY', type: 'success' },
+    ];
+    // @ts-ignore
+    setLogs(initialLogs);
+
+    // Initial chart data
+    const initialChart = Array.from({ length: 20 }, (_, i) => ({
+      time: i.toString(),
+      value: 50 + Math.random() * 20
+    }));
+    setChartData(initialChart);
+
+    const logMessages = [
+      { text: 'Scanning market signals...', type: 'info' },
+      { text: 'ENTRY BTC/USDT LONG @ 64,231.5', type: 'entry' },
+      { text: 'EXIT ETH/USDT PROFIT +$12.42', type: 'exit' },
+      { text: 'Liquidity thin on GBP/JPY - skipping', type: 'warn' },
+      { text: 'Whale movement detected: 4,200 BTC moved to Binance', type: 'info' },
+      { text: 'Neural network adjusting stop-loss levels...', type: 'info' },
+      { text: 'Whale movement detected: 1,500 ETH moved to Coinbase', type: 'info' },
+      { text: 'ENTRY XAU/USD SHORT @ 2,342.1', type: 'entry' },
+      { text: 'EXIT SOL/USDT PROFIT +$4.88', type: 'exit' },
+      { text: 'Scanning Polkadot ecosystem...', type: 'info' },
+      { text: 'High volatility detected on PEPE - ignoring junk signals', type: 'warn' },
+      { text: 'Scanning Solana network data...', type: 'info' },
+      { text: 'EXIT BTC/USDT PROFIT +$25.12', type: 'exit' },
+    ];
+
+    const logInterval = setInterval(() => {
+      if (isStopped) return;
+      const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
+      setLogs(prev => [...prev.slice(-100), { id: Date.now(), text: msg.text, type: msg.type as any }]);
+      
+      setChartData(prev => {
+        const lastVal = prev[prev.length - 1].value;
+        const nextVal = lastVal + (Math.random() * 4 - 1.8);
+        return [...prev.slice(-19), { time: Date.now().toString(), value: nextVal }];
+      });
+
+      setMetrics({
+        latency: `${Math.floor(20 + Math.random() * 15)}ms`,
+        throughput: `${(0.8 + Math.random() * 0.5).toFixed(1)} GB/s`,
+        accuracy: `${(98 + Math.random() * 1.5).toFixed(1)}%`,
+        threads: `${Math.floor(120 + Math.random() * 20)}`
+      });
+    }, 1500);
+
+    return () => clearInterval(logInterval);
+  }, [isStopped]);
+
+  useEffect(() => {
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [logs]);
+
+  return (
+    <div className="bg-[#05060b] text-[#94a3b8] font-mono rounded-[2rem] border border-blue-500/30 overflow-hidden shadow-[0_0_50px_rgba(59,130,246,0.1)] mb-10 h-[800px] flex flex-col" dir="ltr">
+      {/* HUD Header */}
+      <div className="p-6 border-b border-blue-500/20 bg-[#0a0b14] flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <div className="flex flex-col">
+            <span className="text-[10px] text-blue-500 font-bold tracking-widest uppercase">REXCONAL AI CORE</span>
+            <span className="text-xl font-black text-white tracking-tight">STATUS: ONLINE</span>
+          </div>
+          <div className="h-10 w-px bg-white/10" />
+          <div className="flex flex-col">
+            <span className="text-[10px] text-emerald-500 font-bold tracking-widest uppercase">LIVE $ PROFIT</span>
+            <span className="text-xl font-black text-emerald-400">+$4,885.20</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 text-[11px] font-bold">
+          <div className="flex flex-col items-end">
+            <span className="text-zinc-500">SYSTEM TIME</span>
+            <span className="text-white">{new Date().toLocaleTimeString()}</span>
+          </div>
+          <Cpu className="w-8 h-8 text-blue-500/50 animate-pulse" />
+        </div>
+      </div>
+
+      {/* Main Terminal Grid */}
+      <div className="flex-1 grid grid-cols-12 overflow-hidden">
+        {/* Left Side: Scanning Stream */}
+        <div className="col-span-3 border-r border-blue-500/10 p-4 space-y-4 overflow-hidden hidden md:block">
+          <div className="text-[10px] text-blue-400 font-bold border-b border-blue-500/20 pb-2 flex items-center gap-2">
+            <Activity className="w-3 h-3" /> MARKET SCANNER
+          </div>
+          <div className="space-y-3 opacity-60 overflow-hidden text-[10px]">
+            {['WHALE_TRACKER_01', 'LIQUIDITY_MAP_V2', 'ORDERFLOW_ANALYZER', 'SENTIMENT_ENGINE'].map((id) => (
+              <div key={id} className="space-y-1">
+                <div className="flex justify-between">
+                  <span>{id}</span>
+                  <span className="text-blue-400">SYNCED</span>
+                </div>
+                <div className="w-full h-1 bg-white/5 rounded-full">
+                  <motion.div animate={{ width: ['0%', '100%'] }} transition={{ duration: 2, repeat: Infinity, ease: 'linear' }} className="h-full bg-blue-500" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="pt-4 space-y-2">
+             <div className="text-[10px] text-orange-400 font-bold">WHALE WATCH</div>
+             <div className="text-[9px] space-y-1">
+                <div className="flex justify-between"><span>0x23b...</span> <span className="text-rose-500">-$240k</span></div>
+                <div className="flex justify-between"><span>0xaff...</span> <span className="text-emerald-500">+$1.2M</span></div>
+                <div className="flex justify-between"><span>0x882...</span> <span className="text-rose-500">-$85k</span></div>
+             </div>
+          </div>
+        </div>
+
+        {/* Center: Live Chart and Stats */}
+        <div className="col-span-12 md:col-span-6 flex flex-col">
+          {/* Metrics Bar */}
+          <div className="p-4 grid grid-cols-4 gap-4 border-b border-blue-500/10 text-[10px]">
+            <div><div className="text-zinc-500 uppercase">Latency</div><div className="text-blue-400 font-bold">{metrics.latency}</div></div>
+            <div><div className="text-zinc-500 uppercase">Accuracy</div><div className="text-emerald-400 font-bold">{metrics.accuracy}</div></div>
+            <div><div className="text-zinc-500 uppercase">Threads</div><div className="text-purple-400 font-bold">{metrics.threads}</div></div>
+            <div><div className="text-zinc-500 uppercase">Uptime</div><div className="text-white font-bold">99.9%</div></div>
+          </div>
+
+          {/* Line Chart */}
+          <div className="flex-1 min-h-[300px] p-6 relative">
+            <div className="absolute top-4 right-6 p-2 bg-blue-500/10 rounded-lg text-[9px] text-blue-400 font-black tracking-widest z-10">
+               NEURAL CLOUD COMPUTE
+            </div>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <Area type="monotone" dataKey="value" stroke="#3b82f6" fillOpacity={1} fill="url(#colorVal)" strokeWidth={3} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Terminal Log */}
+          <div 
+            ref={logContainerRef}
+            className="h-[250px] bg-black/40 border-t border-blue-500/10 p-4 font-mono text-[11px] overflow-y-auto custom-scrollbar scroll-smooth"
+          >
+             {logs.map(log => (
+               <div key={log.id} className="mb-1 flex gap-2">
+                 <span className="text-zinc-600">[{new Date(log.id).toLocaleTimeString([], { hour12: false })}]</span>
+                 <span className={cn(
+                   "font-bold",
+                   log.type === 'success' ? 'text-emerald-400' :
+                   log.type === 'entry' ? 'text-blue-400' :
+                   log.type === 'exit' ? 'text-purple-400' :
+                   log.type === 'warn' ? 'text-orange-400' :
+                   log.type === 'error' ? 'text-rose-500' : 'text-zinc-400'
+                 )}>
+                   {log.type === 'entry' ? '>> ' : log.type === 'exit' ? '<< ' : '> '}
+                   {log.text}
+                 </span>
+               </div>
+             ))}
+          </div>
+        </div>
+
+        {/* Right Side: Data Visualization */}
+        <div className="col-span-3 border-l border-blue-500/10 p-4 space-y-6 hidden lg:block overflow-hidden">
+           <div className="space-y-2">
+             <div className="text-[10px] text-purple-400 font-bold uppercase tracking-widest">Global Signals</div>
+             <div className="space-y-3 opacity-70">
+                {[
+                  { pair: 'BTC-SHORT', prob: '84%', color: 'rose' },
+                  { pair: 'ETH-LONG', prob: '92%', color: 'emerald' },
+                  { pair: 'SOL-LONG', prob: '78%', color: 'emerald' },
+                  { pair: 'BNB-MID', prob: '65%', color: 'zinc' },
+                ].map((s, idx) => (
+                  <div key={idx} className="flex flex-col gap-1">
+                    <div className="flex justify-between text-[9px]"><span>{s.pair}</span> <span>{s.prob}</span></div>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div className={cn("h-full", s.color === 'emerald' ? 'bg-emerald-500' : s.color === 'rose' ? 'bg-rose-500' : 'bg-zinc-500')} style={{ width: s.prob }} />
+                    </div>
+                  </div>
+                ))}
+             </div>
+           </div>
+
+           <div className="space-y-3">
+              <div className="text-[10px] text-blue-400 font-bold uppercase tracking-widest">Neural Nodes</div>
+              <div className="grid grid-cols-4 gap-2">
+                 {Array.from({ length: 12 }).map((_, i) => (
+                   <motion.div 
+                    key={i} 
+                    animate={{ opacity: [1, 0.4, 1] }} 
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.1 }}
+                    className="aspect-square bg-blue-500/20 rounded-sm border border-blue-500/30" 
+                   />
+                 ))}
+              </div>
+           </div>
+
+           <div className="p-4 bg-blue-900/10 rounded-2xl border border-blue-500/20 text-center space-y-2">
+              <div className="text-[10px] text-blue-500 font-bold">TOTAL DATA FLOW</div>
+              <div className="text-xl font-black text-white">{metrics.throughput}</div>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AITradingDashboard = ({ user, showToast, initialBot }: { user: User, showToast: (msg: string, type: 'success' | 'error' | 'info') => void, initialBot?: 'rexconal' | 'aegis' | null }) => {
+  const [isActivating, setIsActivating] = useState(false);
+  const [activeBot, setActiveBot] = useState<'rexconal' | 'aegis'>(initialBot || 'rexconal');
+  const [isStopped, setIsStopped] = useState(false);
+
+  const [isBooting, setIsBooting] = useState(false);
+
+  // Removed automatic overriding of activeBot to allow manual selection via FAB
+  useEffect(() => {
+    if (initialBot) {
+      if (initialBot === 'aegis' && activeBot !== 'aegis') {
+        setIsBooting(true);
+        setTimeout(() => setIsBooting(false), 2000);
+      }
+      setActiveBot(initialBot);
+    }
+  }, [initialBot]);
+
+  const handleBotSwitch = (bot: 'rexconal' | 'aegis') => {
+    if (bot === 'aegis' && activeBot !== 'aegis') {
+      setIsBooting(true);
+      setTimeout(() => setIsBooting(false), 2000);
+    }
+    setActiveBot(bot);
+    setIsStopped(false);
+  };
+
+  const handleActivateTrial = async (botType: 'rexconal' | 'aegis') => {
+    if (!user.uid) return;
+    setIsActivating(true);
+    try {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 3);
+      const updateData: any = {};
+      if (botType === 'rexconal') {
+        updateData.aiTrialExpires = expiresAt.toISOString();
+      } else {
+        updateData.aegisTrialExpires = expiresAt.toISOString();
+      }
+      
+      await updateDoc(doc(db, 'users', user.uid), updateData);
+      showToast(`تم تفعيل ${botType === 'rexconal' ? 'Rexconal' : 'Aegis AI'} المجاني لمدة 3 أيام!`, 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('فشل تفعيل التجربة المجانية', 'error');
+    } finally {
+      setIsActivating(false);
+    }
+  };
+
+  const isRexconalActive = user.aiTrialExpires && new Date(user.aiTrialExpires) > new Date();
+  const isAegisActive = user.aegisTrialExpires && new Date(user.aegisTrialExpires) > new Date();
+  const isTrialActive = isRexconalActive || isAegisActive;
+
+  // Mock data for the dashboard (matching Rexconal requirements)
+  const weeklyPerformance = [
+    { week: 'W16/2026', trades: 700, profit: 142.41, progress: 85 },
+    { week: 'W15/2026', trades: 700, profit: 156.64, progress: 92 },
+    { week: 'W14/2026', trades: 700, profit: 128.04, progress: 78 },
+    { week: 'W13/2026', trades: 700, profit: 165.5, progress: 95 },
+    { week: 'W12/2026', trades: 0, profit: 0, progress: 0 },
+    { week: 'W11/2026', trades: 0, profit: 0, progress: 0 },
+  ];
+
+  const dailyPerformance = [
+    { date: '2026-04-16', trades: 100, win: 85, loss: 15, profit: 22.55 },
+    { date: '2026-04-15', trades: 100, win: 82, loss: 18, profit: 18.22 },
+    { date: '2026-04-14', trades: 100, win: 78, loss: 22, profit: 12.10 },
+    { date: '2026-04-13', trades: 100, win: 88, loss: 12, profit: 25.19 },
+    { date: '2026-04-12', trades: 100, win: 84, loss: 16, profit: 21.52 },
+    { date: '2026-04-11', trades: 100, win: 80, loss: 20, profit: 15.77 },
+    { date: '2026-04-10', trades: 100, win: 86, loss: 14, profit: 24.83 },
+  ];
+
+  const [recentTrades, setRecentTrades] = useState([
+    { pair: 'EUR/USD', type: 'BUY', result: 'WIN', amount: '$0.25', time: '14:25:31' },
+    { pair: 'BTC/USDT', type: 'SELL', result: 'WIN', amount: '$0.42', time: '14:24:12' },
+    { pair: 'GBP/JPY', type: 'BUY', result: 'LOSS', amount: '-$0.15', time: '14:22:55' },
+    { pair: 'ETH/USDT', type: 'BUY', result: 'WIN', amount: '$0.31', time: '14:20:01' },
+    { pair: 'XAU/USD', type: 'SELL', result: 'WIN', amount: '$0.88', time: '14:18:45' },
+    { pair: 'AUD/USD', type: 'BUY', result: 'LOSS', amount: '-$0.08', time: '14:15:20' },
+  ]);
+
+  useEffect(() => {
+    if (!isTrialActive) return;
+
+    const pairs = ['BTC/USDT', 'ETH/USDT', 'EUR/USD', 'XAU/USD', 'GBP/JPY', 'SOL/USDT', 'AUD/USD', 'BRENT'];
+    const types = ['BUY', 'SELL'];
+
+    const interval = setInterval(() => {
+      if (isStopped) return;
+      const pair = pairs[Math.floor(Math.random() * pairs.length)];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const result = Math.random() > 0.2 ? 'WIN' : 'LOSS';
+      
+      let amountValue;
+      if (activeBot === 'aegis') {
+        // Micro-trades logic for Aegis - strictly around 0.001 as requested
+        amountValue = result === 'WIN' ? (Math.random() * 0.002 + 0.001).toFixed(3) : (Math.random() * 0.001 + 0.0005).toFixed(4);
+      } else {
+        // Normal trades for Rexconal
+        amountValue = result === 'WIN' ? (Math.random() * 1.5 + 0.1).toFixed(2) : (Math.random() * 0.5 + 0.05).toFixed(2);
+      }
+      
+      const amount = `${result === 'WIN' ? '+' : '-'}$${amountValue}`;
+      const time = new Date().toLocaleTimeString('ar-EG', { hour12: false });
+
+      const newTrade = { pair, type, result, amount, time };
+      setRecentTrades(prev => [newTrade, ...prev.slice(0, 5)]);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isTrialActive, isStopped, activeBot]);
+
+  if (!isTrialActive) {
+    return (
+      <div className="max-w-4xl mx-auto mt-10 space-y-8">
+        <div className="text-center space-y-2">
+          <h2 className="text-4xl font-black text-white">اختر نظام التداول الآلي</h2>
+          <p className="text-zinc-500">ابدأ تجربتك المجانية لمدة 3 أيام مع أنظمة Rexconal المتطورة</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
+          {/* Rexconal Bot Card */}
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="p-8 bg-zinc-900/50 backdrop-blur-xl border border-blue-500/20 rounded-[2.5rem] flex flex-col justify-between"
+          >
+            <div className="space-y-6">
+              <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/20">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white">Rexconal AI</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed">
+                  الروبوت القياسي للتداول اليومي المربح. ينفذ 100 صفقة يومياً بأرباح مستقرة.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg uppercase">100 Trades/Day</span>
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-lg uppercase">$10-$26 Daily Profit</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleActivateTrial('rexconal')}
+              disabled={isActivating}
+              className="mt-8 w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black transition-all disabled:opacity-50"
+            >
+              تفعيل Rexconal
+            </button>
+          </motion.div>
+
+          {/* Aegis AI Bot Card */}
+          <motion.div 
+            whileHover={{ y: -5 }}
+            className="p-8 bg-zinc-900/50 backdrop-blur-xl border border-emerald-500/20 rounded-[2.5rem] flex flex-col justify-between"
+          >
+            <div className="space-y-6">
+              <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/20">
+                <ShieldCheck className="w-8 h-8 text-white" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white">🛡️ Aegis Ai</h3>
+                <p className="text-zinc-500 text-sm leading-relaxed">
+                  روبوت إنقاذ الحسابات الضعيفة (أقل من $10). يقوم بصفقات مجهرية 0.001 للنمو التدريجي حتى $20.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-lg uppercase">Rescue Mode</span>
+                  <span className="px-2 py-1 bg-blue-500/10 text-blue-400 text-[10px] font-bold rounded-lg uppercase">0.001 Lot Size</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleActivateTrial('aegis')}
+              disabled={isActivating}
+              className="mt-8 w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black transition-all disabled:opacity-50"
+            >
+              تفعيل Aegis AI
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 pb-24">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 px-2">
+        <div>
+          <h2 className="text-3xl font-black text-white">
+            {activeBot === 'rexconal' ? 'لوحة تحكم Rexconal AI' : '🛡️ Aegis AI Cyber Terminal'}
+          </h2>
+          <p className="text-zinc-500 font-medium">
+            {activeBot === 'rexconal' 
+              ? 'متابعة أداء خوارزمية التداول الكمي'
+              : 'نظام الاستجابة التكتيكية والنمو المجهري'}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-zinc-900/80 backdrop-blur-md border border-zinc-800 p-1.5 rounded-2xl mr-4 shadow-xl">
+            <button 
+              onClick={() => handleBotSwitch('rexconal')}
+              className={cn(
+                "px-6 py-2 rounded-xl text-xs font-black transition-all duration-300",
+                activeBot === 'rexconal' 
+                  ? "bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]" 
+                  : "text-zinc-500 hover:text-zinc-300"
+              )}
+            >
+              Rexconal
+            </button>
+            <button 
+              onClick={() => handleBotSwitch('aegis')}
+              className={cn(
+                "px-6 py-2 rounded-xl text-xs font-black transition-all duration-300",
+                activeBot === 'aegis' 
+                  ? "bg-emerald-600 text-white shadow-[0_0_15px_rgba(5,150,105,0.4)]" 
+                  : "text-zinc-500 hover:text-zinc-300"
+              )}
+            >
+              🛡️ Aegis
+            </button>
+          </div>
+
+          <button
+            onClick={() => setIsStopped(!isStopped)}
+            className={cn(
+              "p-4 rounded-2xl font-black transition-all active:scale-95 flex items-center gap-2 border shadow-lg",
+              isStopped 
+                ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-500/50" 
+                : "bg-rose-600 text-white hover:bg-rose-700 border-rose-500/50 shadow-[0_0_15px_rgba(225,29,72,0.3)]"
+            )}
+          >
+            <Power className={cn("w-5 h-5", !isStopped && "animate-pulse")} />
+            <span className="hidden sm:inline">{isStopped ? 'تنشيط النظام' : 'إيقاف النظام'}</span>
+          </button>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {isBooting ? (
+          <motion.div
+            key="booting"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="w-full h-[600px] bg-black rounded-[2.5rem] flex flex-col items-center justify-center space-y-8 relative overflow-hidden border border-emerald-500/20"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.1)_0%,transparent_70%)] animate-pulse" />
+            <div className="relative">
+              <ShieldCheck className="w-24 h-24 text-emerald-500 animate-[pulse_2s_infinite]" />
+              <motion.div
+                initial={{ rotate: 0 }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-x-[-20px] inset-y-[-20px] border-2 border-emerald-500/30 border-t-emerald-500 rounded-full"
+              />
+            </div>
+            <div className="text-center space-y-3 relative">
+              <h3 className="text-3xl font-black text-white tracking-[0.2em] animate-pulse">BOOTING AEGIS_v4.2</h3>
+              <div className="flex gap-1 justify-center">
+                {Array.from({ length: 40 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ height: 2, opacity: 0.1 }}
+                    animate={{ 
+                      height: [2, Math.random() * 20 + 5, 2],
+                      opacity: [0.1, 0.8, 0.1]
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      repeat: Infinity,
+                      delay: i * 0.05
+                    }}
+                    className="w-1 bg-emerald-500 rounded-full"
+                  />
+                ))}
+              </div>
+              <p className="text-[10px] text-emerald-500/60 font-mono">NEURAL_SYNC_STATUS: 88% ... ENCRYPTING ...</p>
+            </div>
+          </motion.div>
+        ) : activeBot === 'rexconal' ? (
+          <motion.div
+            key="rexconal"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8"
+          >
+            <RexconalCyberTerminal user={user} isStopped={isStopped} />
+            
+            <div className="bg-[#1a1c2e] rounded-3xl p-6 border border-zinc-800 shadow-2xl" dir="rtl">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-3">
+                  <BarChart3 className="w-6 h-6 text-blue-500" />
+                  <span className="text-zinc-100 font-black text-xl">الأداء الأسبوعي</span>
+                </div>
+                <TrendingUp className="w-5 h-5 text-blue-500/50" />
+              </div>
+              <div className="space-y-6">
+                {weeklyPerformance.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 text-[13px]">
+                    <span className="text-zinc-500 font-bold w-16 text-right">{item.week}</span>
+                    <div className="flex-1 h-[28px] bg-[#24273d] rounded-full overflow-hidden relative border border-white/5">
+                      <div 
+                        className="h-full bg-[#12b362] transition-all duration-1000 shadow-[0_0_15px_rgba(18,179,98,0.3)]" 
+                        style={{ width: `${item.progress}%` }} 
+                      />
+                    </div>
+                    <div className="min-w-[120px] text-left">
+                      {item.profit > 0 && <span className="text-[#12b362] font-black ml-2">+${item.profit.toLocaleString()}</span>}
+                      {item.trades > 0 && <span className="text-zinc-500 font-bold whitespace-nowrap">{item.trades} صفقات</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-[#1a1c2e] rounded-3xl p-6 border border-zinc-800 shadow-2xl overflow-hidden" dir="rtl">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-indigo-500 rounded-full" />
+                  <span className="text-zinc-100 font-black text-xl">الأداء اليومي</span>
+                </div>
+                <Activity className="w-5 h-5 text-indigo-500/50" />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-right border-collapse">
+                  <thead>
+                    <tr className="text-zinc-500 text-xs font-black uppercase tracking-wider">
+                      <th className="pb-6 pr-4 border-b border-zinc-800/50">اليوم</th>
+                      <th className="pb-6 border-b border-zinc-800/50">صفقات</th>
+                      <th className="pb-6 border-b border-zinc-800/50 text-[#12b362]">رابح</th>
+                      <th className="pb-6 border-b border-zinc-800/50 text-rose-500">خاسر</th>
+                      <th className="pb-6 pl-4 border-b border-zinc-800/50">الربح اليومي</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/30">
+                    {dailyPerformance.map((item, idx) => (
+                      <tr key={idx} className="text-[14px] hover:bg-white/[0.02] transition-colors group">
+                        <td className="py-5 pr-4 text-zinc-400 font-bold">{item.date}</td>
+                        <td className="py-5 text-zinc-300 font-black">{item.trades}</td>
+                        <td className="py-5 text-[#12b362] font-black">{item.win}</td>
+                        <td className="py-5 text-rose-500 font-black">{item.loss}</td>
+                        <td className="py-5 pl-4 font-black text-[#12b362] text-left leading-none">
+                          ${item.profit.toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="bg-[#1a1c2e] rounded-3xl p-6 border border-zinc-800 shadow-2xl overflow-hidden" dir="rtl">
+              <div className="flex items-center justify-between mb-8 px-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                  <span className="text-zinc-100 font-black text-xl">أحدث الصفقات</span>
+                </div>
+                <Zap className="w-5 h-5 text-blue-500/50" />
+              </div>
+              <div className="space-y-4">
+                {recentTrades.map((trade, idx) => (
+                  <div key={idx} className="flex items-center justify-between p-4 bg-[#24273d] rounded-2xl border border-white/5">
+                    <div className="flex items-center gap-4">
+                      <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center font-bold",
+                        trade.result === 'WIN' ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
+                      )}>
+                        {trade.result === 'WIN' ? 'W' : 'L'}
+                      </div>
+                      <div>
+                        <div className="font-black text-zinc-100">{trade.pair}</div>
+                        <div className="text-[10px] text-zinc-500 font-bold uppercase">{trade.type} • {trade.time}</div>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "text-lg font-black",
+                      trade.result === 'WIN' ? "text-[#12b362]" : "text-rose-500"
+                    )}>
+                      {trade.amount}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="aegis"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            className="w-full"
+          >
+            <AegisRescueTerminal user={user} isStopped={isStopped} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
@@ -4420,6 +5302,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedAIBot, setSelectedAIBot] = useState<'rexconal' | 'aegis' | null>(null);
   const [marketAnalysis, setMarketAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -5024,6 +5907,31 @@ export default function App() {
     );
   }
 
+  if (user.isBlocked) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-zinc-900 border border-red-500/30 rounded-2xl p-8 text-center space-y-6">
+          <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+            <ShieldAlert className="w-10 h-10 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-black text-white">تم حظر الحساب</h1>
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              عذراً، لقد تم حظر وصولك إلى المنصة من قبل الإدارة لمخالفتك شروط الاستخدام. 
+              إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع الدعم الفني.
+            </p>
+          </div>
+          <button
+            onClick={() => signOut(auth)}
+            className="w-full py-3 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" /> تسجيل الخروج
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <div className={cn("min-h-screen font-sans bg-gray-900 text-gray-100", isDarkMode && "dark")}>
@@ -5433,9 +6341,10 @@ export default function App() {
                 {activeTab === 'signals' && <FeaturedSignalsView key="signals" showToast={showToast} />}
                 {activeTab === 'referral' && <ReferralView key="referral" user={user} />}
                 {activeTab === 'support' && <SupportView key="support" user={user} showToast={showToast} />}
+                {activeTab === 'ai-trading' && <AITradingDashboard key="ai-trading" user={user} showToast={showToast} initialBot={selectedAIBot} />}
                 
                 {/* Fallback for other tabs */}
-                {!['dashboard', 'history', 'wallet', 'deposit', 'withdraw', 'kyc', 'bots', 'plans', 'portfolio', 'performance', 'markets', 'copy', 'copy-experts', 'settings', 'signals', 'referral', 'support'].includes(activeTab) && (
+                {!['dashboard', 'history', 'wallet', 'deposit', 'withdraw', 'kyc', 'bots', 'plans', 'portfolio', 'performance', 'markets', 'copy', 'copy-experts', 'settings', 'signals', 'referral', 'support', 'ai-trading'].includes(activeTab) && (
                   <ComingSoonView key="coming-soon" title={
                     activeTab === 'transfer' ? 'نقل داخلي' :
                     activeTab === 'loan' ? 'تقدم بطلب قرض' :
@@ -5515,6 +6424,46 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Rexconal AI Floating Button (Left) */}
+          <button
+            onClick={() => {
+              setSelectedAIBot('rexconal');
+              setActiveTab('ai-trading');
+            }}
+            className={cn(
+              "fixed bottom-24 left-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              user.aiTrialExpires ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-orange-500 to-amber-500"
+            )}
+          >
+            <div className="bg-[#1a1c2e] rounded-full px-4 py-2 flex items-center gap-2 border border-white/5">
+              <div className={cn("w-2 h-2 rounded-full", user.aiTrialExpires ? "bg-emerald-500 animate-pulse" : "bg-orange-500")} />
+              <span className="text-white text-sm font-black whitespace-nowrap">
+                {user.aiTrialExpires ? "Rexconal AI ⚡" : "تجربة Rexconal 🎁"}
+              </span>
+              <Sparkles className={cn("w-4 h-4 group-hover:rotate-12 transition-transform", user.aiTrialExpires ? "text-blue-400" : "text-orange-400")} />
+            </div>
+          </button>
+
+          {/* Aegis AI Floating Button (Right) */}
+          <button
+            onClick={() => {
+              setSelectedAIBot('aegis');
+              setActiveTab('ai-trading');
+            }}
+            className={cn(
+              "fixed bottom-24 right-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              user.aegisTrialExpires ? "bg-gradient-to-r from-emerald-600 to-teal-600" : "bg-gradient-to-r from-blue-500 to-cyan-500"
+            )}
+          >
+            <div className="bg-[#1a1c2e] rounded-full px-4 py-2 flex items-center gap-2 border border-white/5">
+              <div className={cn("w-2 h-2 rounded-full", user.aegisTrialExpires ? "bg-emerald-500 animate-pulse" : "bg-blue-400")} />
+              <span className="text-white text-sm font-black whitespace-nowrap">
+                {user.aegisTrialExpires ? "🛡️ Aegis AI نشط" : "🛡️ Aegis AI مجاني"}
+              </span>
+              <ShieldCheck className={cn("w-4 h-4 group-hover:scale-110 transition-transform", user.aegisTrialExpires ? "text-emerald-400" : "text-blue-400")} />
+            </div>
+          </button>
 
           {/* Toast Notification */}
           <AnimatePresence>

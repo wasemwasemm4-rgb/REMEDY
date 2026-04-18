@@ -13,6 +13,9 @@ export interface User {
   lastLogin?: string | null;
   phone?: string | null;
   country?: string | null;
+  isBlocked?: boolean;
+  aiTrialExpires?: string | null;
+  aegisTrialExpires?: string | null;
 }
 
 export interface Bot {

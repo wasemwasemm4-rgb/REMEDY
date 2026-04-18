@@ -1175,6 +1175,20 @@
                     }
                 };
 
+                window.toggleBlockUser = async (userId, currentStatus) => {
+                    const action = currentStatus ? 'إلغاء حظر' : 'حظر';
+                    if (confirm(`هل أنت متأكد من ${action} هذا المستخدم؟`)) {
+                        try {
+                            const userRef = doc(db, 'users', userId);
+                            await updateDoc(userRef, { isBlocked: !currentStatus });
+                            showToast(`تم ${action} المستخدم بنجاح`, 'success');
+                        } catch (error) {
+                            console.error("Error toggling block status:", error);
+                            showToast('حدث خطأ أثناء تغيير حالة الحظر', 'error');
+                        }
+                    }
+                };
+
                 window.viewReceipt = (depositId) => {
                     const deposit = currentDeposits.find(d => d.id === depositId);
                     if (!deposit || !deposit.receipt) {
@@ -1259,6 +1273,8 @@
                 else if (u.kycStatus === 'rejected') kycBadge = '<span class="status-badge status-failed">مرفوض</span>';
                 else kycBadge = '<span class="status-badge" style="background: #e2e8f0; color: #475569;">غير موثق</span>';
 
+                if (u.isBlocked) kycBadge += ' <span class="status-badge status-failed">محظور</span>';
+
                 return `
                 <tr>
                     <td>${name}</td>
@@ -1270,6 +1286,9 @@
                     <td style="font-weight: 700; color: var(--blue);">${(u.profit || 0).toFixed(2)}$</td>
                     <td>
                         <button class="btn-action btn-loss" onclick="deleteUser('${u.id}')">حذف</button>
+                        <button class="btn-action ${u.isBlocked ? 'btn-win' : 'btn-draw'}" onclick="toggleBlockUser('${u.id}', ${u.isBlocked || false})">
+                            ${u.isBlocked ? 'إلغاء الحظر' : 'حظر'}
+                        </button>
                     </td>
                 </tr>
             `}).join('');

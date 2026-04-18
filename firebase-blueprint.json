@@ -16,7 +16,9 @@
         "referralCode": { "type": "string" },
         "referredBy": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
-        "lastLogin": { "type": "string", "format": "date-time" }
+        "lastLogin": { "type": "string", "format": "date-time" },
+        "isBlocked": { "type": "boolean" },
+        "aiTrialExpires": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "email", "role", "balance", "profit", "kycStatus", "createdAt"]
     },
