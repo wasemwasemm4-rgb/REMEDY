@@ -6425,40 +6425,40 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          {/* Rexconal AI Floating Button (Left) */}
+          {/* Rexconal AI Floating Button */}
           <button
             onClick={() => {
               setSelectedAIBot('rexconal');
               setActiveTab('ai-trading');
             }}
             className={cn(
-              "fixed bottom-24 left-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              "fixed bottom-[145px] sm:bottom-24 right-6 sm:right-auto sm:left-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
               user.aiTrialExpires ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-orange-500 to-amber-500"
             )}
           >
-            <div className="bg-[#1a1c2e] rounded-full px-4 py-2 flex items-center gap-2 border border-white/5">
+            <div className="bg-[#1a1c2e] rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 border border-white/5">
               <div className={cn("w-2 h-2 rounded-full", user.aiTrialExpires ? "bg-emerald-500 animate-pulse" : "bg-orange-500")} />
-              <span className="text-white text-sm font-black whitespace-nowrap">
+              <span className="text-white text-[10px] sm:text-sm font-black whitespace-nowrap">
                 {user.aiTrialExpires ? "Rexconal AI ⚡" : "تجربة Rexconal 🎁"}
               </span>
               <Sparkles className={cn("w-4 h-4 group-hover:rotate-12 transition-transform", user.aiTrialExpires ? "text-blue-400" : "text-orange-400")} />
             </div>
           </button>
 
-          {/* Aegis AI Floating Button (Right) */}
+          {/* Aegis AI Floating Button */}
           <button
             onClick={() => {
               setSelectedAIBot('aegis');
               setActiveTab('ai-trading');
             }}
             className={cn(
-              "fixed bottom-24 right-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              "fixed bottom-[95px] sm:bottom-24 right-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
               user.aegisTrialExpires ? "bg-gradient-to-r from-emerald-600 to-teal-600" : "bg-gradient-to-r from-blue-500 to-cyan-500"
             )}
           >
-            <div className="bg-[#1a1c2e] rounded-full px-4 py-2 flex items-center gap-2 border border-white/5">
+            <div className="bg-[#1a1c2e] rounded-full px-3 sm:px-4 py-2 flex items-center gap-2 border border-white/5">
               <div className={cn("w-2 h-2 rounded-full", user.aegisTrialExpires ? "bg-emerald-500 animate-pulse" : "bg-blue-400")} />
-              <span className="text-white text-sm font-black whitespace-nowrap">
+              <span className="text-white text-[10px] sm:text-sm font-black whitespace-nowrap">
                 {user.aegisTrialExpires ? "🛡️ Aegis AI نشط" : "🛡️ Aegis AI مجاني"}
               </span>
               <ShieldCheck className={cn("w-4 h-4 group-hover:scale-110 transition-transform", user.aegisTrialExpires ? "text-emerald-400" : "text-blue-400")} />
