@@ -641,26 +641,6 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
           </div>
         </div>
 
-        {/* AI Analysis Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none group hover:border-purple-500/50 transition-all flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-14 h-14 bg-purple-50 dark:bg-purple-900/20 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
-                <BotIcon className="w-7 h-7" />
-              </div>
-              <Sparkles className="w-5 h-5 text-purple-500 animate-pulse" />
-            </div>
-            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">تحليل الذكاء الاصطناعي</div>
-            <h4 className="text-sm font-black text-gray-900 dark:text-white mb-4">توصية اليوم</h4>
-          </div>
-          <button 
-            onClick={handleGetAIAnalysis}
-            className="w-full py-3 bg-purple-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-700 transition-colors"
-          >
-            عرض التحليل
-          </button>
-        </div>
-
         {/* Quick Deposit Card */}
         <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-emerald-500/20 group hover:scale-[1.02] transition-all cursor-pointer" onClick={() => setActiveTab('wallet')}>
           <div className="flex items-center justify-between mb-8">
@@ -690,22 +670,6 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
             ))}
             <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 border-2 border-white dark:border-gray-900 flex items-center justify-center text-[8px] font-black text-gray-400">+12</div>
           </div>
-        </div>
-
-        {/* Featured Signals Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none group hover:border-blue-500/50 transition-all flex flex-col justify-between cursor-pointer" onClick={() => setActiveTab('signals')}>
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
-                <Activity className="w-7 h-7" />
-              </div>
-              <div className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-[8px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">جديد</div>
-            </div>
-            <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">إشارات التداول</div>
-            <h4 className="text-sm font-black text-gray-900 dark:text-white mb-4">إشارات مميزة</h4>
-          </div>
-          <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-4">اشترك في إشارات التداول الاحترافية وعزز نجاحك.</p>
-          <button className="w-full py-3 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-colors">استكشف الإشارات</button>
         </div>
       </div>
 
@@ -825,8 +789,16 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
           
           <div className="flex-1 min-h-[450px] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800">
             <iframe 
-              src={`https://s.tradingview.com/widgetembed/?symbol=BINANCE:${selectedAsset.symbol.replace('/', '')}&interval=D&theme=dark&style=1&timezone=Etc%2FUTC`} 
+              src={`https://s.tradingview.com/widgetembed/?symbol=${
+                selectedAsset.symbol === 'XAU/USD' ? 'OANDA' :
+                selectedAsset.category === 'Commodities' ? 'SAXO' : 
+                selectedAsset.category === 'Currency' ? 'OANDA' : 
+                selectedAsset.category === 'Stocks' ? 'NASDAQ' : 
+                selectedAsset.category === 'Bonds' ? 'CBOT' : 
+                'BINANCE'
+              }:${selectedAsset.symbol.replace('/', '')}${selectedAsset.category === 'Crypto' ? 'T' : ''}&interval=1&theme=dark&style=1&timezone=Etc%2FUTC`} 
               className="w-full h-full border-0"
+              allowFullScreen
             />
           </div>
         </div>
