@@ -277,27 +277,16 @@
         </div>
     </div>
 
-    <div class="section-title">
-        <i class="fas fa-dollar-sign"></i>
-        <span>اختر مبلغ الإيداع</span>
-    </div>
+    <div class="binance-card" style="background: white; border-radius: 2.5rem; padding: 40px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin: 20px 0; font-family: sans-serif; text-align: right; color: #1a1a1a;" dir="rtl">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <img src="https://quickchart.io/qr?text=TEsA4boheAsnXdMsrLTVRKf8LmViM2jcKW&centerImageUrl=https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png&size=300&ecLevel=Q" alt="USDT TRC20 QR Code" style="width: 240px; height: 240px; display: inline-block;">
+        </div>
 
-    <div class="amount-grid">
-        <label class="amount-option">
-            <input type="radio" name="amount" value="100" onclick="updateAmount(100)">
-            <span class="amount-label">$100</span>
-        </label>
-        <label class="amount-option">
-            <input type="radio" name="amount" value="500" onclick="updateAmount(500)">
-            <span class="amount-label">$500</span>
-        </label>
-        <label class="amount-option">
-            <input type="radio" name="amount" value="1000" onclick="updateAmount(1000)">
-            <span class="amount-label">$1000</span>
-        </label>
+        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; border-top: 1px solid #eee; padding-top: 20px;">
+            <span style="color: #999; font-weight: bold;">الشبكة</span>
+            <span style="font-weight: 900;">Tron (TRC20)</span>
+        </div>
     </div>
-
-    <input type="number" id="custom-amount" class="custom-amount" placeholder="أو أدخل مبلغاً آخر" oninput="clearRadios()">
 
     <div class="section-title">
         <i class="fas fa-wallet"></i>
@@ -306,7 +295,7 @@
 
     <div class="wallet-info">
         <span class="wallet-label">عنوان المحفظة:</span>
-        <span class="wallet-address" id="wallet-addr">TXYZ7894561230QWERTYUIOPASDFGHJKLZ</span>
+        <span class="wallet-address" id="wallet-addr">TEsA4boheAsnXdMsrLTVRKf8LmViM2jcKW</span>
         <button class="copy-btn" onclick="copyWallet()">نسخ</button>
     </div>
 

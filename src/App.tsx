@@ -1202,9 +1202,9 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
   const methods = {
     usdt: {
       name: 'USDT (TRC20)',
-      address: 'TXMviFaBdzfPtMCVZxpicq2GwBjHa369rd',
+      address: 'TEsA4boheAsnXdMsrLTVRKf8LmViM2jcKW',
       icon: CreditCard,
-      qrCode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=TXMviFaBdzfPtMCVZxpicq2GwBjHa369rd'
+      qrCode: 'https://quickchart.io/qr?text=TEsA4boheAsnXdMsrLTVRKf8LmViM2jcKW&centerImageUrl=https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/usdt.png&size=300&ecLevel=Q'
     }
   };
 
@@ -1426,62 +1426,30 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
         </div>
 
         <div className="p-8 space-y-10">
-          {/* Amount Selection Section */}
-          <div className="space-y-6">
-            <label className="text-lg font-black text-white flex items-center gap-3">
-              <DollarSign className="w-5 h-5 text-blue-400" /> اختر مبلغ الإيداع
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {['100', '500', '1000'].map((val) => (
-                <button
-                  key={val}
-                  onClick={() => setAmount(val)}
-                  className={cn(
-                    "py-4 rounded-2xl font-black text-xl transition-all border-2",
-                    amount === val 
-                      ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20" 
-                      : "bg-gray-800/50 border-gray-700 text-gray-400 hover:border-gray-600"
-                  )}
-                >
-                  ${val}
-                </button>
-              ))}
-            </div>
-            <div className="relative">
-              <input 
-                type="number" 
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="أو أدخل مبلغاً آخر"
-                className="w-full bg-gray-800/50 border-2 border-gray-700 rounded-2xl px-6 py-4 text-white font-black text-2xl text-center outline-none focus:border-blue-500 transition-all"
-              />
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 font-black text-xl">USD</div>
+          {/* Payment Details Card */}
+          <div className="max-w-[400px] mx-auto">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-blue-500/10 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative bg-white p-10 rounded-[2.5rem] shadow-2xl text-black space-y-8" dir="rtl">
+                {/* QR Code */}
+                <div className="relative mx-auto w-full aspect-square">
+                  <img 
+                    src={qrCodeUrl} 
+                    alt="Payment QR" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+
+                {/* Network Info */}
+                <div className="pt-6 border-t border-gray-100 flex justify-between items-center text-sm font-bold">
+                  <span className="text-gray-400">الشبكة</span>
+                  <span className="text-gray-900">Tron (TRC20)</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Payment Details Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* QR Code Section */}
-            <div className="space-y-6">
-              <h3 className="text-lg font-black text-white flex items-center gap-3">
-                <QrCode className="w-5 h-5 text-blue-400" /> الدفع عبر رمز QR
-              </h3>
-              <div className="relative group max-w-[280px] mx-auto">
-                <div className="absolute inset-0 bg-blue-500/20 rounded-[2rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="relative bg-white p-8 rounded-[2rem] shadow-2xl">
-                  <img 
-                    src={qrCodeUrl || `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${walletAddress}`} 
-                    alt="Payment QR" 
-                    className="w-full h-auto rounded-xl"
-                  />
-                  <button className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors text-gray-600">
-                    <Download className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <p className="text-sm text-gray-500 text-center font-medium">امسح الرمز ضوئياً باستخدام تطبيق محفظتك للإرسال الفوري</p>
-            </div>
-
+          <div className="grid grid-cols-1 gap-10">
             {/* Wallet & Upload Section */}
             <div className="space-y-8">
               {/* Wallet Address */}
@@ -1586,23 +1554,6 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
         </div>
       </div>
 
-      {/* Help Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { icon: Headphones, title: 'دعم 24/7', desc: 'فريق الدعم لدينا متوفر دائماً لمساعدتك', color: 'text-blue-400' },
-          { icon: Zap, title: 'معالجة فورية', desc: 'تتم معالجة الإيداعات في غضون دقائق', color: 'text-emerald-400' },
-          { icon: Shield, title: 'أمان بنكي', desc: 'أموالك وبياناتك محمية بأعلى المعايير', color: 'text-purple-400' },
-        ].map((item, i) => (
-          <div key={i} className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800 text-center space-y-3">
-            <div className={cn("w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto", item.color)}>
-              <item.icon className="w-6 h-6" />
-            </div>
-            <h3 className="font-black text-white">{item.title}</h3>
-            <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-      
       {onBack && (
         <div className="text-center">
           <button onClick={onBack} className="text-gray-500 hover:text-white font-black text-xs uppercase tracking-widest transition-colors">العودة إلى المحفظة</button>
@@ -6432,7 +6383,7 @@ export default function App() {
               setActiveTab('ai-trading');
             }}
             className={cn(
-              "fixed bottom-[145px] sm:bottom-24 right-6 sm:right-auto sm:left-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              "fixed bottom-[230px] sm:bottom-24 right-6 sm:right-auto sm:left-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
               user.aiTrialExpires ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-orange-500 to-amber-500"
             )}
           >
@@ -6452,7 +6403,7 @@ export default function App() {
               setActiveTab('ai-trading');
             }}
             className={cn(
-              "fixed bottom-[95px] sm:bottom-24 right-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              "fixed bottom-[170px] sm:bottom-24 right-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
               user.aegisTrialExpires ? "bg-gradient-to-r from-emerald-600 to-teal-600" : "bg-gradient-to-r from-blue-500 to-cyan-500"
             )}
           >
