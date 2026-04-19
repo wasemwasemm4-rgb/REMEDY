@@ -2667,17 +2667,30 @@ const AegisRescueTerminal = ({ user, isStopped }: { user: User, isStopped: boole
       'HEDGE_RATIO: 1:1 parity maintained',
     ];
 
-    const interval = setInterval(() => {
+    const interval = setInterval(async () => {
       const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
       setLogs(prev => [...prev.slice(-100), { id: Date.now(), text: msg, type: 'info' }]);
       
+      const profit = 0.015;
       setMetrics(prev => ({
         ...prev,
-        balance: prev.balance + 0.015,
-        pnl: prev.pnl + 0.015,
+        balance: prev.balance + profit,
+        pnl: prev.pnl + profit,
         trades: prev.trades + 1,
         direction: Math.random() > 0.5 ? 'BULLISH' : 'BEARISH'
       }));
+
+      // CREDIT PROFIT TO REAL BALANCE
+      if (user.uid) {
+        try {
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            balance: increment(profit)
+          });
+        } catch (error) {
+          console.error("Error updating Aegis profit:", error);
+        }
+      }
 
       setPnlData(prev => {
         const last = prev[prev.length - 1];
@@ -3018,11 +3031,25 @@ const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boo
       { text: 'EXIT BTC/USDT PROFIT +$25.12', type: 'exit' },
     ];
 
-    const logInterval = setInterval(() => {
+    const logInterval = setInterval(async () => {
       if (isStopped) return;
       const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
       setLogs(prev => [...prev.slice(-100), { id: Date.now(), text: msg.text, type: msg.type as any }]);
       
+      // If it's an exit log (profit), update real balance
+      if (msg.type === 'exit' && msg.text.includes('PROFIT +$') && user.uid) {
+        const profitMatch = msg.text.match(/PROFIT \+\$([0-9.]+)/);
+        if (profitMatch && profitMatch[1]) {
+          try {
+            const profit = parseFloat(profitMatch[1]);
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, { balance: increment(profit) });
+          } catch (error) {
+            console.error("Error updating Rexconal profit:", error);
+          }
+        }
+      }
+
       setChartData(prev => {
         const lastVal = prev[prev.length - 1].value;
         const nextVal = lastVal + (Math.random() * 4 - 1.8);
@@ -5505,10 +5532,21 @@ export default function App() {
                 status: 'completed'
               });
               
-              // Add final profit to user balance
+              // Return only the initial investment amount (principal) to user balance
+              // since profits were already paid out incrementally
               const userRef = doc(db, 'users', auth.currentUser!.uid);
               await updateDoc(userRef, {
-                balance: increment(inv.amount + inv.totalEarned)
+                balance: increment(inv.amount)
+              });
+              
+              // Create notification for completion
+              await addDoc(collection(db, 'notifications'), {
+                userId: auth.currentUser!.uid,
+                title: 'اكتمل الاستثمار',
+                message: `لقد اكتملت مدة استثمارك في "${inv.planName}". تم إعادة مبلغ الاستثمار ($${inv.amount.toLocaleString()}) إلى رصيدك.`,
+                type: 'success',
+                read: false,
+                timestamp: new Date().toISOString()
               });
               return;
             }
@@ -5518,19 +5556,32 @@ export default function App() {
             const elapsedMs = now.getTime() - startDate.getTime();
             const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
             
-            let expectedProfit = 0;
+            let currentExpectedTotalProfit = 0;
             if (inv.returnType === 'Daily') {
-              expectedProfit = inv.amount * (inv.returnRate / 100) * elapsedDays;
+              currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedDays;
             } else {
               // For other types, just add a small amount for demo
-              expectedProfit = inv.totalEarned + (inv.amount * 0.0001);
+              const elapsedPeriods = elapsedMs / (1000 * 60 * 10); // 10 minutes periods
+              currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedPeriods;
             }
 
-            // Only update if the difference is noticeable (e.g., > $0.01)
-            if (expectedProfit - inv.totalEarned > 0.01) {
+            // Only update and pay out if the difference is noticeable (e.g., > $0.01)
+            const profitIncrement = currentExpectedTotalProfit - inv.totalEarned;
+            
+            if (profitIncrement > 0.01) {
               const invRef = doc(db, 'planInvestments', inv.id);
+              const roundedProfit = Number(currentExpectedTotalProfit.toFixed(4));
+              const roundedIncrement = Number(profitIncrement.toFixed(4));
+              
+              // Update investment total earned
               await updateDoc(invRef, {
-                totalEarned: Number(expectedProfit.toFixed(2))
+                totalEarned: roundedProfit
+              });
+
+              // ADD PROFIT TO USER BALANCE IMMEDIATELY
+              const userRef = doc(db, 'users', auth.currentUser!.uid);
+              await updateDoc(userRef, {
+                balance: increment(roundedIncrement)
               });
             }
           } catch (error) {
