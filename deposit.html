@@ -419,6 +419,11 @@
 
         let db, auth, currentUser;
 
+        function safeLog(label, error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            console.error(`${label}:`, msg);
+        }
+
         async function init() {
             try {
                 const response = await fetch('/firebase-applet-config.json');
@@ -439,7 +444,7 @@
                     }
                 });
             } catch (error) {
-                console.error("Firebase Init Error:", error);
+                safeLog("Firebase Init Error", error);
             }
         }
 
@@ -493,8 +498,8 @@
                 setTimeout(() => {
                     window.location.href = '/'; 
                 }, 2000);
-            } catch (e) {
-                console.error(e);
+            } catch (error) {
+                safeLog("Deposit Request Error", error);
                 showToast('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال الطلب';

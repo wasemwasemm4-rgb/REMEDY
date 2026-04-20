@@ -78,7 +78,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       }
       onClose();
     } catch (err: any) {
-      console.error("Auth Error:", err);
+      console.error("Auth Error:", err instanceof Error ? err.message : String(err));
       
       // Improved error code extraction
       let errorCode = err.code;
@@ -132,7 +132,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       await signInWithPopup(auth, provider);
       onClose();
     } catch (err: any) {
-      console.error("Google Auth Error:", err);
+      console.error("Google Auth Error:", err instanceof Error ? err.message : String(err));
       
       let errorCode = err.code;
       if (!errorCode && err.message) {

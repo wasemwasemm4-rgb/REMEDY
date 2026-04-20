@@ -25,7 +25,7 @@ export async function getMarketAnalysis(query: string) {
     });
     return response.text;
   } catch (error) {
-    console.error("Gemini Analysis Error:", error);
+    console.error("Gemini Analysis Error:", error instanceof Error ? error.message : String(error));
     return "Unable to fetch live market analysis at this time.";
   }
 }
@@ -55,7 +55,7 @@ export async function getTradeSignals() {
     });
     return response.text;
   } catch (error) {
-    console.error("Gemini Signals Error:", error);
+    console.error("Gemini Signals Error:", error instanceof Error ? error.message : String(error));
     return "Unable to generate trade signals at this time.";
   }
 }
@@ -89,6 +89,6 @@ export async function textToSpeech(text: string) {
       await audio.play();
     }
   } catch (error) {
-    console.error("TTS Error:", error);
+    console.error("TTS Error:", error instanceof Error ? error.message : String(error));
   }
 }

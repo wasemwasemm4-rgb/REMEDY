@@ -2663,7 +2663,7 @@ const AegisRescueTerminal = ({ user, isStopped }: { user: User, isStopped: boole
             balance: increment(profit)
           });
         } catch (error) {
-          console.error("Error updating Aegis profit:", error);
+          console.error("Error updating Aegis profit:", error instanceof Error ? error.message : String(error));
         }
       }
 
@@ -3020,7 +3020,7 @@ const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boo
             const userRef = doc(db, 'users', user.uid);
             await updateDoc(userRef, { balance: increment(profit) });
           } catch (error) {
-            console.error("Error updating Rexconal profit:", error);
+            console.error("Error updating Rexconal profit:", error instanceof Error ? error.message : String(error));
           }
         }
       }
@@ -3242,7 +3242,7 @@ const AITradingDashboard = ({ user, showToast, initialBot }: { user: User, showT
       await updateDoc(doc(db, 'users', user.uid), updateData);
       showToast(`تم تفعيل ${botType === 'rexconal' ? 'Rexconal' : 'Aegis AI'} المجاني لمدة 3 أيام!`, 'success');
     } catch (error) {
-      console.error(error);
+      console.error(error instanceof Error ? error.message : String(error));
       showToast('فشل تفعيل التجربة المجانية', 'error');
     } finally {
       setIsActivating(false);
@@ -4845,7 +4845,7 @@ const PerformanceHistoryView = ({ trades, globalSettings }: { trades: Trade[], g
                               balance: increment(trade.amount + finalProfit)
                             });
                           } catch (error) {
-                            console.error("Error closing trade:", error);
+                            console.error("Error closing trade:", error instanceof Error ? error.message : String(error));
                           }
                         }}
                         className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors"
@@ -5368,172 +5368,6 @@ import CopyTradingView from './components/CopyTradingView';
 import { LoginModal } from './components/LoginModal';
 
 
-const OnboardingSystem = ({ user, onComplete, showToast, setActiveTab }: { user: User, onComplete: () => void, showToast: any, setActiveTab: (tab: string) => void }) => {
-  const [step, setStep] = useState(1);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [showReward, setShowReward] = useState(false);
-  const [rewardAmount, setRewardAmount] = useState("");
-
-  const steps = [
-    {
-      title: "ضاعف أرباحك بمشاركة رابطك",
-      description: "نظام الإحالات لدينا يمنحك عمولة 5% على كل استثمار يقوم به أصدقاؤك. ابدأ الآن بمشاركة رابطك الفريد.",
-      icon: Users,
-      buttonText: "نسخ رابط الإحالة ومتابعة",
-      reward: "50 نقطة",
-      action: async () => {
-        setIsProcessing(true);
-        try {
-          const refLink = `${window.location.origin}?ref=${user.referralCode || user.uid}`;
-          await navigator.clipboard.writeText(refLink);
-          showToast("تم نسخ رابط الإحالة بنجاح! شاركه مع أصدقائك.", "success");
-          
-          setRewardAmount("50 نقطة");
-          setShowReward(true);
-          await new Promise(r => setTimeout(r, 2000));
-          setShowReward(false);
-          
-          setActiveTab('kyc');
-          setStep(2);
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    },
-    {
-      title: "وثق حسابك الآن",
-      description: "المستخدمين الموثقين يحصلون على حدود سحب أعلى وميزات حماية إضافية. يجب إكمال التوثيق قبل التمكن من الإيداع.",
-      icon: ShieldCheck,
-      buttonText: user.kycStatus === 'approved' ? "تم التوثيق - متابعة" : "دخول صفحة التوثيق الآن",
-      reward: "50 نقطة",
-      action: async () => {
-        if (user.kycStatus === 'approved') {
-          setStep(3);
-          return;
-        }
-        setIsProcessing(true);
-        try {
-          setActiveTab('kyc');
-          showToast("يرجى إكمال نموذج التوثيق للبدء.", "info");
-          
-          if (user.kycStatus !== 'none') {
-             setRewardAmount("50 نقطة");
-             setShowReward(true);
-             await new Promise(r => setTimeout(r, 2000));
-             setShowReward(false);
-             setStep(3);
-          } else {
-             // Just stay on step 2 but let them know what to do
-             // Wait, usually onboarding should be a flow.
-             // Let's reward them for JUST GOING to the page first, then they can proceed.
-             setRewardAmount("50 نقطة");
-             setShowReward(true);
-             await new Promise(r => setTimeout(r, 2000));
-             setShowReward(false);
-             setStep(3);
-          }
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    },
-    {
-      title: "تشغيل روبوت Rexconal AI",
-      description: "هذه أهم خطوة. سنقوم الآن بتشغيل روبوت التداول الذكي الخاص بك لتبدأ في جني الأرباح فوراً.",
-      icon: BotIcon,
-      buttonText: "تشغيل الروبوت الآن ⚡",
-      reward: "100 نقطة + 10$ مكافأة",
-      action: async () => {
-        setIsProcessing(true);
-        try {
-          await new Promise(r => setTimeout(r, 1500));
-          
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            onboardingCompleted: true,
-            points: increment(200),
-            balance: increment(10),
-            aiTrialExpires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-          });
-          
-          await addDoc(collection(db, 'transactions'), {
-            userId: user.uid,
-            type: 'profit',
-            amount: 10,
-            status: 'completed',
-            timestamp: new Date().toISOString(),
-            details: 'مكافأة إكمال التعليم وتشغيل الروبوت بنجاح'
-          });
-
-          setRewardAmount("100 نقطة + 10$");
-          setShowReward(true);
-          await new Promise(r => setTimeout(r, 2500));
-          onComplete();
-        } catch (error) {
-          console.error("Onboarding Error:", error instanceof Error ? error.message : String(error));
-        } finally {
-          setIsProcessing(false);
-        }
-      }
-    }
-  ];
-
-  const currentStep = steps[step - 1];
-
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-md">
-      <AnimatePresence mode="wait">
-        {showReward ? (
-          <motion.div key="reward" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.2 }} className="text-center space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 bg-yellow-400 blur-3xl opacity-20 animate-pulse" />
-              <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto shadow-2xl relative">
-                <Gift className="w-16 h-16 text-white" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-3xl font-black text-white">رائع! تم التنفيذ</h3>
-              <p className="text-xl font-bold text-yellow-400">لقد ربحت {rewardAmount}</p>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div key="step" initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: -20 }} className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-2xl overflow-hidden">
-            <div className="p-8 md:p-10 space-y-8 text-center">
-              <div className="flex justify-center gap-2">
-                {[1, 2, 3].map((s) => (
-                  <div key={s} className={cn("h-1.5 rounded-full transition-all duration-500", s === step ? "w-8 bg-blue-600" : s < step ? "w-4 bg-emerald-500" : "w-4 bg-zinc-200 dark:bg-zinc-800")} />
-                ))}
-              </div>
-              <div className="space-y-6">
-                <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto">
-                  <currentStep.icon className="w-10 h-10 text-blue-600 dark:text-blue-500" />
-                </div>
-                <div className="space-y-3">
-                  <h2 className="text-3xl font-black tracking-tight leading-tight">{currentStep.title}</h2>
-                  <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed">{currentStep.description}</p>
-                </div>
-              </div>
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><Gift className="w-5 h-5 text-white" /></div>
-                  <div className="text-right">
-                    <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">المكافأة</div>
-                    <div className="font-black text-blue-950 dark:text-white">{currentStep.reward}</div>
-                  </div>
-                </div>
-                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-3 py-1 rounded-full">{step}/3</div>
-              </div>
-              <button disabled={isProcessing} onClick={() => currentStep.action()} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-50">
-                {isProcessing ? <RefreshCcw className="w-6 h-6 animate-spin" /> : <>{currentStep.buttonText} <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -5601,7 +5435,7 @@ export default function App() {
       await Promise.all(batch);
       showToast?.('تم تحديد جميع الإشعارات كمقروءة', 'success');
     } catch (err) {
-      console.error('Error marking all as read:', err);
+      console.error('Error marking all as read:', err instanceof Error ? err.message : String(err));
       showToast?.('حدث خطأ أثناء تحديث الإشعارات', 'error');
     }
   };
@@ -5617,7 +5451,7 @@ export default function App() {
       await Promise.all(batch);
       showToast?.('تم حذف جميع الإشعارات بنجاح', 'success');
     } catch (err) {
-      console.error('Error clearing notifications:', err);
+      console.error('Error clearing notifications:', err instanceof Error ? err.message : String(err));
       showToast?.('حدث خطأ أثناء حذف الإشعارات', 'error');
     }
   };
@@ -5926,7 +5760,6 @@ export default function App() {
               if (existingData.createdAt === undefined) updateData.createdAt = new Date().toISOString();
               if (existingData.uid === undefined) updateData.uid = firebaseUser.uid;
               if (existingData.email === undefined && !updateData.email) updateData.email = firebaseUser.email || '';
-              if (existingData.onboardingCompleted === undefined) updateData.onboardingCompleted = false;
               if (existingData.points === undefined) updateData.points = 0;
 
               console.log('Syncing existing user:', firebaseUser.uid, updateData);
@@ -5945,7 +5778,6 @@ export default function App() {
                 createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
                 referredBy: localStorage.getItem('referredBy') || null,
-                onboardingCompleted: false,
                 points: 0
               };
               console.log('Creating new user:', firebaseUser.uid, newUser);
@@ -6238,16 +6070,6 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className={cn("min-h-screen font-sans bg-gray-900 text-gray-100", isDarkMode && "dark")}>
-        {/* Onboarding System Overlay */}
-        {user && !user.onboardingCompleted && (
-          <OnboardingSystem 
-            user={user} 
-            onComplete={() => showToast("تهانينا! لقد أكملت التعليم وحصلت على مكافآتك (200 نقطة + 10$)", "success")} 
-            showToast={showToast}
-            setActiveTab={setActiveTab}
-          />
-        )}
-
         {/* Navbar */}
         <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 h-16 sm:h-20 flex items-center px-4 sm:px-6">
           <div className="flex items-center justify-between w-full max-w-[1920px] mx-auto">

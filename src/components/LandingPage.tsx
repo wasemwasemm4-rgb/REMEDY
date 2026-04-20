@@ -70,7 +70,6 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
               <NavItem label="تجارة" items={['العملات المشفرة', 'الفوركس', 'الأسهم', 'المؤشرات', 'صناديق المؤشرات']} />
               <NavItem label="نظام" items={['تجارة', 'نسخ التداول', 'التداول الآلي']} />
               <NavItem label="شركة" items={['معلومات عنا', 'لماذا نحن؟', 'التعليمات', 'الشؤون القانونية']} />
-              <a href="#" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-200 hover:text-white">تعليم</a>
               <a href="#" className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-200 hover:text-white">اتصال</a>
             </nav>
 
@@ -109,7 +108,6 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
                 <a href="#" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">تجارة</a>
                 <a href="#" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">نظام</a>
                 <a href="#" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">شركة</a>
-                <a href="#" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">تعليم</a>
                 <a href="#" className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">اتصال</a>
                 <div className="pt-4 pb-3 border-t border-gray-700">
                   <div className="flex flex-col gap-2 px-4">
@@ -407,46 +405,6 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
           </div>
         </section>
 
-        {/* Education Section */}
-        <section className="py-24 bg-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="rounded-[3rem] overflow-hidden shadow-2xl border border-gray-700 aspect-video relative group cursor-pointer">
-                <iframe 
-                  src="https://www.youtube.com/embed/Gc2en3nHxA4" 
-                  className="absolute inset-0 w-full h-full border-0"
-                  title="Education Video"
-                />
-              </div>
-              <div className="space-y-8 text-right">
-                <div>
-                  <span className="text-primary font-black uppercase tracking-[0.2em] text-xs">مركز التعليم</span>
-                  <h2 className="mt-4 text-4xl font-bold text-white leading-tight">تعلم من خبراء السوق <br /> وحسن مهاراتك</h2>
-                </div>
-                <p className="text-gray-300 text-lg leading-relaxed">
-                  اكتشف كل ما تحتاج لمعرفته حول تداول العملات المشفرة، من الأساسيات إلى الاستراتيجيات المتقدمة من خلال مكتبتنا التعليمية.
-                </p>
-                <div className="bg-dark-300 rounded-[2rem] p-8 border border-gray-800">
-                  <h3 className="text-xl font-bold text-white mb-4 flex items-center justify-end gap-3">
-                    حول البيتكوين <ShieldCheck className="text-blue-500 w-6 h-6" />
-                  </h3>
-                  <p className="text-gray-400 leading-relaxed">
-                    البيتكوين عملة رقمية لامركزية تعمل دون سلطة مركزية. يتم التحقق من المعاملات بواسطة عُقد الشبكة باستخدام التشفير، وتُسجل في سجل عام موزع يُسمى سلسلة الكتل.
-                  </p>
-                </div>
-                <div className="flex flex-wrap justify-end gap-4">
-                  <button className="flex items-center gap-2 px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20">
-                    استكشف المصادر <GraduationCap className="w-5 h-5" />
-                  </button>
-                  <button className="flex items-center gap-2 px-8 py-4 bg-gray-800 text-gray-300 font-bold rounded-2xl hover:bg-gray-700 transition-all border border-gray-700">
-                    الندوات المباشرة <Video className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* Trading Advantage Section */}
         <section className="py-24 bg-dark-400">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -722,7 +680,7 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
             <div>
               <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-8">روابط سريعة</h3>
               <ul className="space-y-4 text-sm font-medium">
-                {['معلومات عنا', 'لماذا تختارنا؟', 'تعليم', 'اتصال'].map((link, i) => (
+                {['معلومات عنا', 'لماذا تختارنا؟', 'اتصال'].map((link, i) => (
                   <li key={i} className="hover:text-blue-500 cursor-pointer transition-colors">{link}</li>
                 ))}
               </ul>

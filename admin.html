@@ -250,6 +250,36 @@
         .btn-loss { background-color: var(--red); color: white; }
         .btn-draw { background-color: var(--orange); color: white; }
 
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-completed {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-pending {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--orange);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-failed {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
         .profit-settings {
             display: flex;
             gap: 20px;
@@ -793,6 +823,12 @@
             setTimeout(() => { toast.style.display = 'none'; }, 3000);
         };
 
+        window.handleAdminError = function(error, label = "Error") {
+            const msg = error instanceof Error ? error.message : String(error);
+            console.error(`${label}:`, msg);
+            return msg;
+        };
+
         window.createNotification = async function(userId, title, message, type = 'info') {
             try {
                 await addDoc(collection(db, 'notifications'), {
@@ -804,7 +840,7 @@
                     timestamp: new Date().toISOString()
                 });
             } catch (error) {
-                console.error("Error creating notification:", error);
+                handleAdminError(error, "Error creating notification");
             }
         };
 
@@ -814,8 +850,8 @@
                 const provider = new GoogleAuthProvider();
                 await signInWithPopup(auth, provider);
             } catch (error) {
-                console.error("Login Error:", error);
-                showToast("فشل تسجيل الدخول: " + error.message, 'error');
+                handleAdminError(error, "Login Error");
+                showToast("فشل تسجيل الدخول: " + (error.message || String(error)), 'error');
             }
         };
 
@@ -897,8 +933,8 @@
                         renderUsersTable(users);
                         updateUserSelect(users);
                     }, (error) => {
-                        console.error("Admin: Error listening to users:", error);
-                        if (error.message.includes("permissions")) {
+                        handleAdminError(error, "Admin: Error listening to users");
+                        if (error.message && error.message.includes("permissions")) {
                             showToast("عذراً، ليس لديك صلاحيات كافية للوصول إلى لوحة التحكم.", 'error');
                         }
                     });
@@ -922,7 +958,7 @@
                         updateDepositStats(pendingCount, rejectedCount, totalApprovedAmount);
                         renderDepositsTable(deposits);
                     }, (error) => {
-                        console.error("Admin: Error listening to deposits:", error);
+                        handleAdminError(error, "Admin: Error listening to deposits");
                     });
 
                     // 3. Listen to Trades
@@ -941,14 +977,14 @@
                         document.getElementById('stat-losing-trades').innerText = losses;
                         renderTradesTable(trades.filter(t => t.status === 'PENDING').slice(0, 10));
                     }, (error) => {
-                        console.error("Admin: Error listening to trades:", error);
+                        handleAdminError(error, "Admin: Error listening to trades");
                     });
 
                     // 4. Listen to Withdrawals
                     unsubWithdrawals = onSnapshot(collection(db, 'withdrawals'), (snapshot) => {
                         document.getElementById('stat-total-withdrawals').innerText = snapshot.size;
                     }, (error) => {
-                        console.error("Admin: Error listening to withdrawals:", error);
+                        handleAdminError(error, "Admin: Error listening to withdrawals");
                     });
 
                     // 5. Listen to KYC Requests
@@ -959,7 +995,7 @@
                         });
                         renderKycTable(requests);
                     }, (error) => {
-                        console.error("Admin: Error listening to KYC requests:", error);
+                        handleAdminError(error, "Admin: Error listening to KYC requests");
                     });
 
                     // 6. Listen to Global Settings
@@ -986,7 +1022,7 @@
                         });
                         showToast('تم حفظ الإعدادات بنجاح', 'success');
                     } catch (error) {
-                        console.error("Error saving settings:", error);
+                        handleAdminError(error, "Error saving settings");
                         showToast('حدث خطأ أثناء حفظ الإعدادات', 'error');
                     }
                 };
@@ -1045,7 +1081,7 @@
 
                         showToast('تم تحديث نتيجة الصفقة بنجاح', 'success');
                     } catch (error) {
-                        console.error("Error handling trade result:", error);
+                        handleAdminError(error, "Error handling trade result");
                         showToast('حدث خطأ أثناء معالجة الصفقة', 'error');
                     }
                 };
@@ -1067,7 +1103,7 @@
 
                         showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} طلب التحقق بنجاح`, 'success');
                     } catch (error) {
-                        console.error("Error handling KYC:", error);
+                        handleAdminError(error, "Error handling KYC");
                         showToast('حدث خطأ أثناء معالجة الطلب', 'error');
                     }
                 };
@@ -1097,7 +1133,7 @@
                         showToast('تم تحديث الرصيد بنجاح', 'success');
                         document.getElementById('manual-amount').value = '';
                     } catch (error) {
-                        console.error("Error updating balance:", error);
+                        handleAdminError(error, "Error updating balance");
                         showToast('حدث خطأ أثناء تحديث الرصيد', 'error');
                     }
                 };
@@ -1133,7 +1169,7 @@
 
                         showToast(`تم ${status === 'approved' ? 'قبول' : 'رفض'} الطلب بنجاح`, 'success');
                     } catch (error) {
-                        console.error("Error handling deposit:", error);
+                        handleAdminError(error, "Error handling deposit");
                         showToast('حدث خطأ أثناء معالجة الطلب', 'error');
                     }
                 };
@@ -1169,7 +1205,7 @@
                             
                             showToast('تم حذف المستخدم وجميع بياناته بنجاح', 'success');
                         } catch (error) {
-                            console.error("Error deleting user and data:", error);
+                            handleAdminError(error, "Error deleting user and data");
                             showToast('حدث خطأ أثناء حذف بيانات المستخدم', 'error');
                         }
                     }
@@ -1183,7 +1219,7 @@
                             await updateDoc(userRef, { isBlocked: !currentStatus });
                             showToast(`تم ${action} المستخدم بنجاح`, 'success');
                         } catch (error) {
-                            console.error("Error toggling block status:", error);
+                            handleAdminError(error, "Error toggling block status");
                             showToast('حدث خطأ أثناء تغيير حالة الحظر', 'error');
                         }
                     }
@@ -1236,13 +1272,13 @@
                             showToast('لم يتم العثور على الطلب', 'error');
                         }
                     } catch(error) {
-                        console.error("Error fetching KYC document:", error);
+                        handleAdminError(error, "Error fetching KYC document");
                         showToast('حدث خطأ أثناء جلب المستندات', 'error');
                     }
                 };
 
             } catch (error) {
-                console.error("Firebase Init Error:", error);
+                handleAdminError(error, "Firebase Init Error");
                 showToast("فشل الاتصال بقاعدة البيانات.", 'error');
             }
         }
@@ -1268,12 +1304,12 @@
             tbody.innerHTML = users.map(u => {
                 const name = u.displayName || (u.firstName ? u.firstName + ' ' + (u.lastName || '') : 'بدون اسم');
                 let kycBadge = '';
-                if (u.kycStatus === 'approved') kycBadge = '<span class="status-badge status-completed">موثق</span>';
-                else if (u.kycStatus === 'pending') kycBadge = '<span class="status-badge status-pending">قيد المراجعة</span>';
-                else if (u.kycStatus === 'rejected') kycBadge = '<span class="status-badge status-failed">مرفوض</span>';
-                else kycBadge = '<span class="status-badge" style="background: #e2e8f0; color: #475569;">غير موثق</span>';
+                if (u.kycStatus === 'approved') kycBadge = `<span class="status-badge status-completed"><i class="fas fa-check-circle"></i> موثق</span>`;
+                else if (u.kycStatus === 'pending') kycBadge = `<span class="status-badge status-pending"><i class="fas fa-clock"></i> قيد المراجعة</span>`;
+                else if (u.kycStatus === 'rejected') kycBadge = `<span class="status-badge status-failed"><i class="fas fa-times-circle"></i> مرفوض</span>`;
+                else kycBadge = `<span class="status-badge" style="background: rgba(71, 85, 105, 0.1); color: #475569; border: 1px solid rgba(71, 85, 105, 0.2);"><i class="fas fa-user-slash"></i> غير موثق</span>`;
 
-                if (u.isBlocked) kycBadge += ' <span class="status-badge status-failed">محظور</span>';
+                if (u.isBlocked) kycBadge += ` <span class="status-badge status-failed"><i class="fas fa-ban"></i> محظور</span>`;
 
                 return `
                 <tr>
@@ -1320,7 +1356,8 @@
                         </button>
                     </td>
                     <td>
-                        <span style="color: ${d.status === 'pending' ? 'var(--orange)' : d.status === 'approved' ? 'var(--green)' : 'var(--red)'}; font-weight: 700;">
+                        <span class="status-badge ${d.status === 'pending' ? 'status-pending' : d.status === 'approved' ? 'status-completed' : 'status-failed'}">
+                            <i class="fas ${d.status === 'pending' ? 'fa-clock' : d.status === 'approved' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
                             ${d.status === 'pending' ? 'قيد المراجعة' : d.status === 'approved' ? 'مقبول' : 'مرفوض'}
                         </span>
                     </td>
@@ -1360,7 +1397,8 @@
                     </td>
                     <td>${r.country}</td>
                     <td>
-                        <span style="color: ${r.status === 'pending' ? 'var(--orange)' : r.status === 'approved' ? 'var(--green)' : 'var(--red)'}; font-weight: 700;">
+                        <span class="status-badge ${r.status === 'pending' ? 'status-pending' : r.status === 'approved' ? 'status-completed' : 'status-failed'}">
+                            <i class="fas ${r.status === 'pending' ? 'fa-clock' : r.status === 'approved' ? 'fa-check-circle' : 'fa-times-circle'}"></i>
                             ${r.status === 'pending' ? 'قيد المراجعة' : r.status === 'approved' ? 'مقبول' : 'مرفوض'}
                         </span>
                     </td>
