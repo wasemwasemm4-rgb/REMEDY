@@ -79,7 +79,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       onClose();
     } catch (err: any) {
       console.error("Auth Error:", err);
-      const errorCode = err.code || (err.message?.includes('auth/email-already-in-use') ? 'auth/email-already-in-use' : '');
+      
+      // Improved error code extraction
+      let errorCode = err.code;
+      if (!errorCode && err.message) {
+        const match = err.message.match(/\((auth\/[^)]+)\)/);
+        if (match) errorCode = match[1];
+      }
       
       switch (errorCode) {
         case 'auth/network-request-failed':
@@ -94,6 +100,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
+        case 'auth/invalid-login-credentials':
           setError(selectedLang.code === 'AR' ? 'البريد الإلكتروني أو كلمة المرور غير صحيحة.' : 'Invalid email or password.');
           break;
         case 'auth/email-already-in-use':
@@ -107,8 +114,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         case 'auth/operation-not-allowed':
           setError(selectedLang.code === 'AR' ? 'تسجيل الدخول بالبريد الإلكتروني غير مفعل.' : 'Email sign-in is not enabled.');
           break;
+        case 'auth/too-many-requests':
+          setError(selectedLang.code === 'AR' ? 'تم حظر الوصول إلى هذا الحساب مؤقتاً بسبب كثرة محاولات تسجيل الدخول غير الناجحة. يمكنك استعادة الوصول فوراً من خلال إعادة تعيين كلمة المرور أو المحاولة لاحقاً.' : 'Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.');
+          break;
         default:
-          setError(err.message || (selectedLang.code === 'AR' ? 'حدث خطأ أثناء المصادقة' : 'An error occurred during authentication'));
+          setError(selectedLang.code === 'AR' ? 'حدث خطأ أثناء المصادقة. يرجى التأكد من البيانات والمحاولة مرة أخرى.' : 'An error occurred during authentication. Please check your details and try again.');
       }
       if (!isLogin && errorCode !== 'auth/email-already-in-use') setStep(1); 
     } finally {
@@ -123,14 +133,31 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       onClose();
     } catch (err: any) {
       console.error("Google Auth Error:", err);
-      if (err.code === 'auth/network-request-failed') {
-        setError(selectedLang.code === 'AR' ? 'فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.' : 'Network request failed. Please check your internet connection.');
-      } else if (err.code === 'auth/account-exists-with-different-credential') {
-        setError(selectedLang.code === 'AR' ? 'يوجد حساب بالفعل بنفس البريد الإلكتروني ولكن تم إنشاؤه باستخدام طريقة تسجيل دخول مختلفة.' : 'An account already exists with the same email address but was created using a different sign-in method.');
-      } else if (err.code === 'auth/popup-closed-by-user') {
-        setError(selectedLang.code === 'AR' ? 'تم إغلاق نافذة تسجيل الدخول قبل إكمال العملية.' : 'The login popup was closed before completing the process.');
-      } else {
-        setError(err.message || (selectedLang.code === 'AR' ? 'حدث خطأ أثناء تسجيل الدخول بجوجل' : 'An error occurred during Google login'));
+      
+      let errorCode = err.code;
+      if (!errorCode && err.message) {
+        const match = err.message.match(/\((auth\/[^)]+)\)/);
+        if (match) errorCode = match[1];
+      }
+
+      switch (errorCode) {
+        case 'auth/network-request-failed':
+          setError(selectedLang.code === 'AR' ? 'فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.' : 'Network request failed. Please check your internet connection.');
+          break;
+        case 'auth/account-exists-with-different-credential':
+          setError(selectedLang.code === 'AR' ? 'يوجد حساب بالفعل بنفس البريد الإلكتروني ولكن تم إنشاؤه باستخدام طريقة تسجيل دخول مختلفة.' : 'An account already exists with the same email address but was created using a different sign-in method.');
+          break;
+        case 'auth/popup-closed-by-user':
+          setError(selectedLang.code === 'AR' ? 'تم إغلاق نافذة تسجيل الدخول قبل إكمال العملية.' : 'The login popup was closed before completing the process.');
+          break;
+        case 'auth/cancelled-popup-request':
+          setError(selectedLang.code === 'AR' ? 'تم إلغاء طلب تسجيل الدخول.' : 'Login request was cancelled.');
+          break;
+        case 'auth/operation-not-allowed':
+          setError(selectedLang.code === 'AR' ? 'تسجيل الدخول بجوجل غير مفعل في إعدادات المنصة.' : 'Google sign-in is not enabled.');
+          break;
+        default:
+          setError(selectedLang.code === 'AR' ? 'حدث خطأ أثناء تسجيل الدخول بجوجل. يرجى المحاولة مرة أخرى.' : 'An error occurred during Google login. Please try again.');
       }
     }
   };

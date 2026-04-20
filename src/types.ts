@@ -16,6 +16,8 @@ export interface User {
   isBlocked?: boolean;
   aiTrialExpires?: string | null;
   aegisTrialExpires?: string | null;
+  onboardingCompleted?: boolean;
+  points?: number;
 }
 
 export interface Bot {

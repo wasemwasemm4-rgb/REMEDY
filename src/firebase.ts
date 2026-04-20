@@ -40,59 +40,56 @@ export interface FirestoreErrorInfo {
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   // Construct a safe error message
   let errorMessage = 'Unknown error';
+  let isPermissionError = false;
+
   if (error instanceof Error) {
     errorMessage = error.message;
+    if (errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
+      isPermissionError = true;
+    }
   } else if (typeof error === 'string') {
     errorMessage = error;
-  } else {
-    try {
-      errorMessage = String(error);
-    } catch (e) {
-      errorMessage = 'Non-stringifiable error';
+    if (errorMessage.includes('permission-denied') || errorMessage.includes('Missing or insufficient permissions')) {
+      isPermissionError = true;
+    }
+  } else if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as any).code;
+    if (code === 'permission-denied') {
+      isPermissionError = true;
+      errorMessage = 'Missing or insufficient permissions.';
     }
   }
 
+  // Create a clean error info object for logging (avoiding circular structures)
   const errInfo: FirestoreErrorInfo = {
     error: errorMessage,
+    operationType,
+    path,
     authInfo: {
-      userId: auth.currentUser?.uid || undefined,
+      userId: auth.currentUser?.uid || 'anonymous',
       email: auth.currentUser?.email || null,
       emailVerified: auth.currentUser?.emailVerified || false,
       isAnonymous: auth.currentUser?.isAnonymous || false,
       tenantId: auth.currentUser?.tenantId || null,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId || '',
-        displayName: provider.displayName || null,
-        email: provider.email || null,
-        photoUrl: provider.photoURL || null
+      providerInfo: auth.currentUser?.providerData.map(p => ({
+        providerId: p.providerId,
+        displayName: p.displayName,
+        email: p.email,
+        photoUrl: p.photoURL
       })) || []
-    },
-    operationType,
-    path
+    }
   };
 
-  // Safe stringify to avoid circular structure errors
-  const safeStringify = (obj: any) => {
-    const cache = new Set();
-    return JSON.stringify(obj, (key, value) => {
-      if (typeof value === 'object' && value !== null) {
-        if (cache.has(value)) {
-          return '[Circular]';
-        }
-        cache.add(value);
-      }
-      return value;
-    });
-  };
-
-  try {
-    const jsonString = safeStringify(errInfo);
-    console.error('Firestore Error: ', jsonString);
-    throw new Error(jsonString);
-  } catch (e) {
-    console.error('Firestore Error (serialization failed):', errorMessage);
-    throw new Error(errorMessage);
+  // Log simple versions to avoid circular structure issues in bridge environments
+  console.error('Firestore Error:', errorMessage, operationType, path);
+  
+  if (isPermissionError) {
+    // Throw as JSON string as required by the instructions
+    throw new Error(JSON.stringify(errInfo));
   }
+  
+  // Throw a simple error message for other errors
+  throw new Error(errorMessage);
 }
 
 export async function testConnection() {
@@ -101,8 +98,9 @@ export async function testConnection() {
     await getDocFromServer(doc(db, 'test', 'connection'));
     console.log("Firestore connection successful.");
   } catch (error) {
-    console.error("Firestore connection test failed:", error);
-    if(error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('Could not reach Cloud Firestore backend'))) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Firestore connection test failed:", msg);
+    if(msg.includes('the client is offline') || msg.includes('Could not reach Cloud Firestore backend')) {
       console.error("Please check your Firebase configuration. The backend is unreachable.");
     }
   }

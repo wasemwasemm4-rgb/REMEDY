@@ -1,9 +1,70 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Users2, DollarSign, Wallet, TrendingUp, Copy, Search, HelpCircle, Check, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Users2, DollarSign, Wallet, TrendingUp, Copy, Search, HelpCircle, Check, Shield, Pause, Play, StopCircle, Clock, ExternalLink } from 'lucide-react';
+import { collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, increment } from 'firebase/firestore';
+import { db, OperationType, handleFirestoreError } from '../firebase';
+import { cn } from '../lib/utils';
 
-const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
+const CopyTradingView = ({ setActiveTab, user }: { setActiveTab: (tab: string) => void, user: any }) => {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [copyTrades, setCopyTrades] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const q = query(
+      collection(db, 'copyTrades'),
+      where('followerId', '==', user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const trades = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setCopyTrades(trades);
+      setIsLoading(false);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'copyTrades');
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  const toggleStatus = async (tradeId: string, currentStatus: string) => {
+    try {
+      const tradeRef = doc(db, 'copyTrades', tradeId);
+      await updateDoc(tradeRef, {
+        status: currentStatus === 'active' ? 'paused' : 'active'
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'copyTrades');
+    }
+  };
+
+  const stopCopying = async (trade: any) => {
+    if (!window.confirm(`هل أنت متأكد من رغبتك في إيقاف نسخ ${trade.traderName}؟ سيتم إعادة المبلغ المستثمر إلى رصيدك.`)) return;
+
+    try {
+      // Return balance
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        balance: increment(trade.amount + (trade.currentProfit || 0))
+      });
+
+      // Delete copy trade record
+      await deleteDoc(doc(db, 'copyTrades', trade.id));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, 'copyTrades');
+    }
+  };
+
+  const totalInvested = copyTrades.reduce((sum, t) => sum + (t.amount || 0), 0);
+  const totalProfit = copyTrades.reduce((sum, t) => sum + (t.currentProfit || 0), 0);
+  const currentValue = totalInvested + totalProfit;
+  const totalRoi = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
 
   return (
     <motion.div 
@@ -43,7 +104,7 @@ const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">النسخ النشطة</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate">0</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate">{copyTrades.length}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">يتم تقليد الخبراء</p>
             </div>
             <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl flex-shrink-0">
@@ -57,7 +118,7 @@ const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">إجمالي الاستثمار</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate">$0.00</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate">${totalInvested.toLocaleString()}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">رأس المال المستثمر</p>
             </div>
             <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-xl flex-shrink-0">
@@ -71,7 +132,7 @@ const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">القيمة الحالية</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate">$0.00</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mb-1 truncate">${currentValue.toLocaleString()}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400">قيمة المحفظة</p>
             </div>
             <div className="p-3 bg-gradient-to-br from-indigo-100 to-indigo-200 dark:from-indigo-900/30 dark:to-indigo-800/30 rounded-xl flex-shrink-0">
@@ -85,8 +146,13 @@ const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">إجمالي الأرباح والخسائر</p>
-              <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-1 truncate">+$0.00</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">عائد الاستثمار 0%</p>
+              <p className={cn(
+                "text-3xl font-bold mb-1 truncate",
+                totalProfit >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+              )}>
+                {totalProfit >= 0 ? '+' : ''}${totalProfit.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">عائد الاستثمار {totalRoi.toFixed(2)}%</p>
             </div>
             <div className="p-3 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/30 dark:to-green-800/30 rounded-xl flex-shrink-0">
               <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -95,8 +161,124 @@ const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
         </div>
       </div>
 
-      {/* Empty State */}
-      <div className="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl border border-gray-100 dark:border-gray-700 text-center py-20 px-6 relative overflow-hidden">
+      {isLoading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
+        </div>
+      ) : copyTrades.length > 0 ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">المتداولون الذين تنسخهم</h3>
+              <div className="text-sm font-medium text-gray-500 px-3 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                عدد {copyTrades.length} متداول
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-right">
+                <thead className="bg-gray-50 dark:bg-gray-700/30">
+                  <tr className="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-700">
+                    <th className="px-6 py-4">المتداول</th>
+                    <th className="px-6 py-4">المبلغ المستثمر</th>
+                    <th className="px-6 py-4">الربح/الخسارة</th>
+                    <th className="px-6 py-4">عائد الاستثمار</th>
+                    <th className="px-6 py-4">الحالة</th>
+                    <th className="px-6 py-4 text-left">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {copyTrades.map((trade) => (
+                    <tr key={trade.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <img src={trade.traderAvatar} className="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-600" alt="" />
+                          <div>
+                            <div className="font-bold text-gray-900 dark:text-white">{trade.traderName}</div>
+                            <div className="text-[10px] text-gray-400 flex items-center gap-1">
+                              <Clock className="w-3 h-3" />
+                              بدأ منذ {new Date(trade.startDate).toLocaleDateString('ar-EG')}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap font-bold text-gray-900 dark:text-white tabular-nums">
+                        ${trade.amount.toLocaleString()}
+                      </td>
+                      <td className={cn(
+                        "px-6 py-4 whitespace-nowrap font-bold tabular-nums",
+                        (trade.currentProfit || 0) >= 0 ? "text-green-500" : "text-red-500"
+                      )}>
+                        {(trade.currentProfit || 0) >= 0 ? '+' : ''}${(trade.currentProfit || 0).toLocaleString()}
+                      </td>
+                      <td className={cn(
+                        "px-6 py-4 whitespace-nowrap",
+                        (trade.roi || 0) >= 0 ? "text-green-500" : "text-red-500"
+                      )}>
+                        <span className="px-2 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg text-xs font-bold">
+                          {(trade.roi || 0).toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1 w-fit",
+                          trade.status === 'active' ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30" : "bg-orange-100 text-orange-600 dark:bg-orange-900/30"
+                        )}>
+                          {trade.status === 'active' ? (
+                            <><Play className="w-3 h-3" /> نشط</>
+                          ) : (
+                            <><Pause className="w-3 h-3" /> متوقف مؤقتاً</>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => toggleStatus(trade.id, trade.status)}
+                            className={cn(
+                              "w-8 h-8 flex items-center justify-center rounded-lg transition-all",
+                              trade.status === 'active' ? "bg-orange-100 text-orange-600 hover:bg-orange-200" : "bg-emerald-100 text-emerald-600 hover:bg-emerald-200"
+                            )}
+                            title={trade.status === 'active' ? "توقف مؤقت" : "استئناف"}
+                          >
+                            {trade.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                          </button>
+                          <button 
+                            onClick={() => stopCopying(trade)}
+                            className="w-8 h-8 flex items-center justify-center bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all"
+                            title="إغلاق ووقف النسخ"
+                          >
+                            <StopCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-700">
+              <Users2 className="w-32 h-32" />
+            </div>
+            <div className="relative z-10 space-y-2 text-center md:text-right">
+              <h3 className="text-2xl font-black italic">زيد أرباحك بنسخ المزيد من المحترفين!</h3>
+              <p className="text-blue-100">تنويع محفظتك بنسخ متداولين مختلفين يقلل المخاطر ويزيد فرص الربح.</p>
+            </div>
+            <button 
+              onClick={() => setActiveTab('copy-experts')}
+              className="relative z-10 px-8 py-4 bg-white text-blue-600 rounded-2xl font-black shadow-xl hover:shadow-white/20 transition-all active:scale-95 whitespace-nowrap"
+            >
+              اكتشف المزيد من الخبراء
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Empty State */
+        <div className="bg-white dark:bg-gray-800 rounded-[2rem] shadow-xl border border-gray-100 dark:border-gray-700 text-center py-20 px-6 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5 pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-blue-500 rounded-full blur-3xl"></div>
@@ -158,6 +340,7 @@ const CopyTradingView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
           </div>
         </div>
       </div>
+      )}
 
       {/* How It Works Modal */}
       {showHowItWorks && (

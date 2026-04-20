@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, collection, query, where, addDoc, updateDoc, deleteDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, deleteDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { User, PlanInvestment, Transaction, Trade, Notification } from './types';
 import { ReferralView } from './components/ReferralView';
 import { SupportView } from './components/SupportView';
@@ -414,7 +414,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
       const analysis = await getTechnicalAnalysis(selectedAsset.symbol, currentPrice || 0);
       setAnalysisContent(analysis);
     } catch (error) {
-      console.error("Analysis Error:", error);
+      console.error("Analysis Error:", error instanceof Error ? error.message : String(error));
       setAnalysisContent("عذراً، حدث خطأ أثناء جلب التحليل. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsAnalyzing(false);
@@ -524,13 +524,17 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
       {/* Dashboard Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="text-center lg:text-left">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2 justify-center lg:justify-start">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3 justify-center lg:justify-start">
             أهلاً بعودتك، {user.displayName}!
             {user.kycStatus === 'approved' && (
               <span title="حساب موثق">
                 <ShieldCheck className="w-6 h-6 text-blue-500" />
               </span>
             )}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-600 dark:text-amber-500 transition-all hover:scale-105 cursor-default">
+              <Star className="w-4 h-4 fill-amber-500" />
+              <span className="text-xs sm:text-sm font-black tabular-nums">{user.points || 0}</span>
+            </div>
           </h1>
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">نظرة عامة على لوحة معلومات الاستثمار الخاصة بك</p>
         </div>
@@ -957,56 +961,6 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
         </div>
       </div>
 
-      {/* Market News Section */}
-      <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-amber-50 dark:bg-amber-900/20 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400">
-              <Newspaper className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-black text-xl text-gray-900 dark:text-white">أخبار الأسواق العالمية</h3>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">تغطية حصرية على مدار الساعة</p>
-            </div>
-          </div>
-          <button className="px-6 py-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors">عرض الكل</button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { title: "الاحتياطي الفيدرالي يلمح إلى استقرار أسعار الفائدة في الاجتماع المقبل", time: "منذ 15 دقيقة", category: "اقتصاد", color: "blue" },
-            { title: "بيتكوين تحافظ على استقرارها فوق مستوى 65,000 دولار وسط تفاؤل المستثمرين", time: "منذ 45 دقيقة", category: "كريبتو", color: "orange" },
-            { title: "أسعار الذهب تسجل مستويات قياسية جديدة مع زيادة الطلب على الملاذات الآمنة", time: "منذ ساعتين", category: "سلع", color: "amber" }
-          ].map((news, i) => (
-            <div key={i} className="group cursor-pointer">
-              <div className="relative aspect-video rounded-2xl overflow-hidden mb-4">
-                <img 
-                  src={`https://picsum.photos/seed/news${i}/800/450`} 
-                  alt="News" 
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute top-4 left-4">
-                  <span className={cn(
-                    "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest text-white shadow-lg",
-                    news.color === 'blue' ? "bg-blue-600" : news.color === 'orange' ? "bg-orange-600" : "bg-amber-600"
-                  )}>
-                    {news.category}
-                  </span>
-                </div>
-              </div>
-              <h4 className="font-black text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors line-clamp-2 mb-2 leading-relaxed">
-                {news.title}
-              </h4>
-              <div className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <Clock className="w-3 h-3" />
-                <span>{news.time}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* AI Analysis Modal */}
       <AnimatePresence>
         {isAnalysisModalOpen && (
@@ -1297,7 +1251,7 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
       setIsSubmitting(false);
       setIsSuccess(true);
     } catch (error) {
-      console.error("Firestore Deposit Error:", error);
+      handleFirestoreError(error, OperationType.CREATE, 'deposits');
       setIsSubmitting(false);
       showToast?.("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.", 'error');
     }
@@ -1621,7 +1575,7 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
       setIsSuccess(true);
       showToast?.('تم إرسال طلب السحب بنجاح', 'success');
     } catch (error) {
-      console.error("Withdraw Error:", error);
+      handleFirestoreError(error, OperationType.CREATE, 'withdrawals');
       showToast?.('حدث خطأ أثناء معالجة طلبك', 'error');
     } finally {
       setIsSubmitting(false);
@@ -1737,15 +1691,25 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
 };
 
 const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: string, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
-  const [view, setView] = useState<'overview' | 'deposit' | 'withdraw'>(
-    activeTab === 'deposit' ? 'deposit' : activeTab === 'withdraw' ? 'withdraw' : 'overview'
-  );
+  const isKycApproved = user.kycStatus === 'approved';
+  
+  const [view, setView] = useState<'overview' | 'deposit' | 'withdraw'>(() => {
+    if (activeTab === 'deposit' && isKycApproved) return 'deposit';
+    if (activeTab === 'withdraw') return 'withdraw';
+    return 'overview';
+  });
 
   useEffect(() => {
-    if (activeTab === 'deposit') setView('deposit');
+    if (activeTab === 'deposit') {
+      if (isKycApproved) setView('deposit');
+      else {
+        showToast?.("يجب توثيق الهوية أولاً قبل البدء بعملية الإيداع.", "error");
+        setView('overview');
+      }
+    }
     else if (activeTab === 'withdraw') setView('withdraw');
     else if (activeTab === 'wallet') setView('overview');
-  }, [activeTab]);
+  }, [activeTab, isKycApproved]);
 
   if (view === 'deposit') {
     return <DepositPaymentView user={user} onBack={() => setView('overview')} showToast={showToast} />;
@@ -1754,6 +1718,14 @@ const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: str
   if (view === 'withdraw') {
     return <WithdrawView user={user} onBack={() => setView('overview')} showToast={showToast} />;
   }
+
+  const handleDepositClick = () => {
+    if (user.kycStatus !== 'approved') {
+      showToast?.("يجب توثيق الهوية أولاً قبل البدء بعملية الإيداع.", "error");
+      return;
+    }
+    setView('deposit');
+  };
 
   return (
     <motion.div 
@@ -1768,7 +1740,7 @@ const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: str
           <p className="text-gray-500 font-medium">إدارة أصولك الرقمية وعمليات السحب والإيداع.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button onClick={() => setView('deposit')} className="flex-1 md:flex-none px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">إيداع</button>
+          <button onClick={handleDepositClick} className="flex-1 md:flex-none px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">إيداع</button>
           <button onClick={() => setView('withdraw')} className="flex-1 md:flex-none px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-[1.5rem] font-black border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95">سحب</button>
         </div>
       </div>
@@ -2045,13 +2017,8 @@ const KYCFormView = ({ user, onBack, showToast }: { user: User, onBack: () => vo
       
       // The parent component (KYCView) will automatically re-render and show the pending state
     } catch (error) {
-      console.error("KYC Submit Error:", error);
+      handleFirestoreError(error, OperationType.WRITE, 'kyc_requests');
       showToast?.("حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى.", 'error');
-      try {
-        handleFirestoreError(error, OperationType.WRITE, 'kyc_requests');
-      } catch (e) {
-        // Ignore the thrown error from handleFirestoreError
-      }
     } finally {
       setIsSubmitting(false);
     }
@@ -2486,6 +2453,14 @@ const KYCView = ({ user, showToast }: { user: User, showToast?: (message: string
               أكمل عملية التحقق من هويتك (KYC) للامتثال للوائح والوصول إلى جميع الميزات.
             </p>
           </div>
+
+          <button 
+            onClick={() => setStep('form')}
+            className="w-full max-w-md py-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-2xl font-black shadow-xl shadow-yellow-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+            بدء عملية التحقق الآن
+            <ShieldCheck className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </motion.div>
@@ -5129,7 +5104,72 @@ const MarketsView = ({ setActiveTab }: any) => {
   );
 };
 
-const CopyExpertsView = ({ setActiveTab }: { setActiveTab: (tab: string) => void }) => {
+const CopyExpertsView = ({ setActiveTab, user, showToast }: { setActiveTab: (tab: string) => void, user: User, showToast?: (m: string, t?: any) => void }) => {
+  const [selectedExpert, setSelectedExpert] = useState<any>(null);
+  const [copyAmount, setCopyAmount] = useState('');
+  const [isCopying, setIsCopying] = useState(false);
+
+  const handleStartCopy = async () => {
+    if (!selectedExpert || !copyAmount || isNaN(Number(copyAmount))) {
+      showToast?.('الرجاء إدخال مبلغ صحيح', 'error');
+      return;
+    }
+
+    const amount = Number(copyAmount);
+    if (amount < Number(selectedExpert.minInvestment)) {
+      showToast?.(`الحد الأدنى للاستثمار هو $${selectedExpert.minInvestment}`, 'error');
+      return;
+    }
+
+    if (amount > user.balance) {
+      showToast?.('رصيد غير كافٍ في محفظتك', 'error');
+      return;
+    }
+
+    setIsCopying(true);
+    try {
+      const copyTradeData = {
+        followerId: user.uid,
+        traderId: selectedExpert.id.toString(),
+        traderName: selectedExpert.name,
+        traderAvatar: selectedExpert.avatar,
+        amount: amount,
+        status: 'active',
+        startDate: new Date().toISOString(),
+        currentProfit: 0,
+        roi: 0
+      };
+
+      await addDoc(collection(db, 'copyTrades'), copyTradeData);
+
+      // Deduct balance
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
+        balance: increment(-amount)
+      });
+
+      // Add notification
+      await addDoc(collection(db, 'notifications'), {
+        userId: user.uid,
+        title: 'بدء نسخ التداول',
+        message: `لقد بدأت بنجاح في نسخ المتداول ${selectedExpert.name} بمبلغ $${amount}.`,
+        type: 'success',
+        read: false,
+        timestamp: new Date().toISOString()
+      });
+
+      showToast?.(`تم البدء في نسخ ${selectedExpert.name} بنجاح!`, 'success');
+      setSelectedExpert(null);
+      setCopyAmount('');
+      setActiveTab('copy');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'copyTrades');
+      showToast?.('حدث خطأ أثناء بدء النسخ. يرجى المحاولة مرة أخرى.', 'error');
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
   const experts = [
     { id: 1, name: 'إيزابيلا فوستر', strategy: 'الدخل الثابت', winRate: '93%', profit: '+124,500%', followers: '13802', risk: 'Low', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200&h=200', minInvestment: '3800.00', description: 'خبير في تداول الدخل الثابت والسندات بخلفية مؤسسية. متخصص في استراتيجيات منحنى العائد وتداول فروق الائتمان.' },
     { id: 2, name: 'أليكس طومسون', strategy: 'خبير في سوق الفوركس', winRate: '92%', profit: '+86%', followers: '235', risk: 'Medium', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200&h=200', minInvestment: '100.00', description: 'متداول فوركس ذو خبرة متخصص في أزواج العملات الرئيسية مع التركيز على إدارة المخاطر.' },
@@ -5210,7 +5250,10 @@ const CopyExpertsView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
                   <span className="text-base font-semibold text-gray-900 dark:text-white">${expert.minInvestment}</span>
                 </div>
               </div>
-              <button className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+              <button 
+                onClick={() => setSelectedExpert(expert)}
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
                 <span className="flex items-center justify-center gap-2">
                   <Copy className="w-4 h-4" />
                   ابدأ النسخ (${expert.minInvestment})
@@ -5220,6 +5263,82 @@ const CopyExpertsView = ({ setActiveTab }: { setActiveTab: (tab: string) => void
           </motion.div>
         ))}
       </div>
+
+      {/* Copy Modal */}
+      <AnimatePresence>
+        {selectedExpert && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedExpert(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden"
+            >
+              <div className="flex items-center gap-4 mb-8">
+                <img src={selectedExpert.avatar} className="w-16 h-16 rounded-full object-cover border-2 border-blue-500" alt="" />
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">نسخ المتداول: {selectedExpert.name}</h3>
+                  <p className="text-sm text-gray-500">{selectedExpert.strategy}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest px-1">مبلغ الاستثمار للنسخ</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input 
+                      type="number" 
+                      value={copyAmount}
+                      onChange={(e) => setCopyAmount(e.target.value)}
+                      placeholder={`الحد الأدنى $${selectedExpert.minInvestment}`}
+                      className="w-full bg-gray-50 dark:bg-gray-800 border-none focus:ring-2 focus:ring-blue-500 rounded-2xl py-4 pl-12 pr-4 text-gray-900 dark:text-white font-black"
+                    />
+                  </div>
+                  <div className="flex justify-between px-1 text-[10px] font-black uppercase">
+                    <span className="text-gray-400 font-black">رصيدك المتاح:</span>
+                    <span className="text-blue-500">${user.balance.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800 space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">رسوم إدارة النسخ</span>
+                    <span className="font-bold text-green-500">0% (مجاناً حالياً)</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">تنفيذ تلقائي</span>
+                    <span className="font-bold text-blue-500">فوري</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <button 
+                    onClick={() => setSelectedExpert(null)}
+                    className="flex-1 py-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-2xl font-black transition-all"
+                  >
+                    إلغاء
+                  </button>
+                  <button 
+                    onClick={handleStartCopy}
+                    disabled={isCopying}
+                    className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black shadow-lg shadow-blue-500/20 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isCopying ? 'جاري البدء...' : 'تأكيد النسخ'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
@@ -5247,6 +5366,173 @@ import CopyTradingView from './components/CopyTradingView';
 // --- Main App ---
 
 import { LoginModal } from './components/LoginModal';
+
+
+const OnboardingSystem = ({ user, onComplete, showToast, setActiveTab }: { user: User, onComplete: () => void, showToast: any, setActiveTab: (tab: string) => void }) => {
+  const [step, setStep] = useState(1);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showReward, setShowReward] = useState(false);
+  const [rewardAmount, setRewardAmount] = useState("");
+
+  const steps = [
+    {
+      title: "ضاعف أرباحك بمشاركة رابطك",
+      description: "نظام الإحالات لدينا يمنحك عمولة 5% على كل استثمار يقوم به أصدقاؤك. ابدأ الآن بمشاركة رابطك الفريد.",
+      icon: Users,
+      buttonText: "نسخ رابط الإحالة ومتابعة",
+      reward: "50 نقطة",
+      action: async () => {
+        setIsProcessing(true);
+        try {
+          const refLink = `${window.location.origin}?ref=${user.referralCode || user.uid}`;
+          await navigator.clipboard.writeText(refLink);
+          showToast("تم نسخ رابط الإحالة بنجاح! شاركه مع أصدقائك.", "success");
+          
+          setRewardAmount("50 نقطة");
+          setShowReward(true);
+          await new Promise(r => setTimeout(r, 2000));
+          setShowReward(false);
+          
+          setActiveTab('kyc');
+          setStep(2);
+        } finally {
+          setIsProcessing(false);
+        }
+      }
+    },
+    {
+      title: "وثق حسابك الآن",
+      description: "المستخدمين الموثقين يحصلون على حدود سحب أعلى وميزات حماية إضافية. يجب إكمال التوثيق قبل التمكن من الإيداع.",
+      icon: ShieldCheck,
+      buttonText: user.kycStatus === 'approved' ? "تم التوثيق - متابعة" : "دخول صفحة التوثيق الآن",
+      reward: "50 نقطة",
+      action: async () => {
+        if (user.kycStatus === 'approved') {
+          setStep(3);
+          return;
+        }
+        setIsProcessing(true);
+        try {
+          setActiveTab('kyc');
+          showToast("يرجى إكمال نموذج التوثيق للبدء.", "info");
+          
+          if (user.kycStatus !== 'none') {
+             setRewardAmount("50 نقطة");
+             setShowReward(true);
+             await new Promise(r => setTimeout(r, 2000));
+             setShowReward(false);
+             setStep(3);
+          } else {
+             // Just stay on step 2 but let them know what to do
+             // Wait, usually onboarding should be a flow.
+             // Let's reward them for JUST GOING to the page first, then they can proceed.
+             setRewardAmount("50 نقطة");
+             setShowReward(true);
+             await new Promise(r => setTimeout(r, 2000));
+             setShowReward(false);
+             setStep(3);
+          }
+        } finally {
+          setIsProcessing(false);
+        }
+      }
+    },
+    {
+      title: "تشغيل روبوت Rexconal AI",
+      description: "هذه أهم خطوة. سنقوم الآن بتشغيل روبوت التداول الذكي الخاص بك لتبدأ في جني الأرباح فوراً.",
+      icon: BotIcon,
+      buttonText: "تشغيل الروبوت الآن ⚡",
+      reward: "100 نقطة + 10$ مكافأة",
+      action: async () => {
+        setIsProcessing(true);
+        try {
+          await new Promise(r => setTimeout(r, 1500));
+          
+          const userRef = doc(db, 'users', user.uid);
+          await updateDoc(userRef, {
+            onboardingCompleted: true,
+            points: increment(200),
+            balance: increment(10),
+            aiTrialExpires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          });
+          
+          await addDoc(collection(db, 'transactions'), {
+            userId: user.uid,
+            type: 'profit',
+            amount: 10,
+            status: 'completed',
+            timestamp: new Date().toISOString(),
+            details: 'مكافأة إكمال التعليم وتشغيل الروبوت بنجاح'
+          });
+
+          setRewardAmount("100 نقطة + 10$");
+          setShowReward(true);
+          await new Promise(r => setTimeout(r, 2500));
+          onComplete();
+        } catch (error) {
+          console.error("Onboarding Error:", error instanceof Error ? error.message : String(error));
+        } finally {
+          setIsProcessing(false);
+        }
+      }
+    }
+  ];
+
+  const currentStep = steps[step - 1];
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-zinc-950/90 backdrop-blur-md">
+      <AnimatePresence mode="wait">
+        {showReward ? (
+          <motion.div key="reward" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.2 }} className="text-center space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 bg-yellow-400 blur-3xl opacity-20 animate-pulse" />
+              <div className="w-32 h-32 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto shadow-2xl relative">
+                <Gift className="w-16 h-16 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-3xl font-black text-white">رائع! تم التنفيذ</h3>
+              <p className="text-xl font-bold text-yellow-400">لقد ربحت {rewardAmount}</p>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="step" initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: -20 }} className="max-w-md w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <div className="p-8 md:p-10 space-y-8 text-center">
+              <div className="flex justify-center gap-2">
+                {[1, 2, 3].map((s) => (
+                  <div key={s} className={cn("h-1.5 rounded-full transition-all duration-500", s === step ? "w-8 bg-blue-600" : s < step ? "w-4 bg-emerald-500" : "w-4 bg-zinc-200 dark:bg-zinc-800")} />
+                ))}
+              </div>
+              <div className="space-y-6">
+                <div className="w-20 h-20 bg-blue-500/10 rounded-3xl flex items-center justify-center mx-auto">
+                  <currentStep.icon className="w-10 h-10 text-blue-600 dark:text-blue-500" />
+                </div>
+                <div className="space-y-3">
+                  <h2 className="text-3xl font-black tracking-tight leading-tight">{currentStep.title}</h2>
+                  <p className="text-gray-500 dark:text-gray-400 text-lg leading-relaxed">{currentStep.description}</p>
+                </div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center"><Gift className="w-5 h-5 text-white" /></div>
+                  <div className="text-right">
+                    <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">المكافأة</div>
+                    <div className="font-black text-blue-950 dark:text-white">{currentStep.reward}</div>
+                  </div>
+                </div>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-3 py-1 rounded-full">{step}/3</div>
+              </div>
+              <button disabled={isProcessing} onClick={() => currentStep.action()} className="w-full py-5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-[1.5rem] font-black text-lg active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-50">
+                {isProcessing ? <RefreshCcw className="w-6 h-6 animate-spin" /> : <>{currentStep.buttonText} <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" /></>}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -5489,7 +5775,7 @@ export default function App() {
                 timestamp: new Date().toISOString()
               });
             } catch (error) {
-              console.error("Error updating trade:", error);
+              console.error("Error updating trade:", error instanceof Error ? error.message : String(error));
               closingTradesRef.current.delete(trade.id);
             }
           } else if (status === 'PENDING') {
@@ -5499,7 +5785,7 @@ export default function App() {
                 profit: Number(profit.toFixed(2))
               });
             } catch (error) {
-              console.error("Error updating trade profit:", error);
+              console.error("Error updating trade profit:", error instanceof Error ? error.message : String(error));
             }
           }
         });
@@ -5585,7 +5871,7 @@ export default function App() {
               });
             }
           } catch (error) {
-            console.error("Error updating investment:", error);
+            console.error("Error updating investment:", error instanceof Error ? error.message : String(error));
           }
         });
         return currentInvestments;
@@ -5640,6 +5926,8 @@ export default function App() {
               if (existingData.createdAt === undefined) updateData.createdAt = new Date().toISOString();
               if (existingData.uid === undefined) updateData.uid = firebaseUser.uid;
               if (existingData.email === undefined && !updateData.email) updateData.email = firebaseUser.email || '';
+              if (existingData.onboardingCompleted === undefined) updateData.onboardingCompleted = false;
+              if (existingData.points === undefined) updateData.points = 0;
 
               console.log('Syncing existing user:', firebaseUser.uid, updateData);
               await updateDoc(userDocRef, updateData);
@@ -5657,6 +5945,8 @@ export default function App() {
                 createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
                 referredBy: localStorage.getItem('referredBy') || null,
+                onboardingCompleted: false,
+                points: 0
               };
               console.log('Creating new user:', firebaseUser.uid, newUser);
               await setDoc(userDocRef, newUser);
@@ -5664,7 +5954,7 @@ export default function App() {
               localStorage.removeItem('referredBy');
             }
           } catch (err) {
-            console.error('SyncUser Error:', err);
+            console.error('SyncUser Error:', err instanceof Error ? err.message : String(err));
             handleFirestoreError(err, OperationType.WRITE, 'users');
           }
         };
@@ -5676,7 +5966,7 @@ export default function App() {
             const userData = docSnap.data() as User;
             // Auto-upgrade to admin if email matches
             if (userData.email === 'wasemwasemm4@gmail.com' && userData.role !== 'admin') {
-              updateDoc(userDocRef, { role: 'admin' }).catch(console.error);
+              updateDoc(userDocRef, { role: 'admin' }).catch((err) => console.error("Admin upgrade error:", err instanceof Error ? err.message : String(err)));
             }
             setUser(userData);
           }
@@ -5719,11 +6009,47 @@ export default function App() {
             setGlobalSettings(docSnap.data() as any);
           }
         }, (err) => handleFirestoreError(err, OperationType.GET, 'settings/global'));
+
+        // --- Copy Trading Simulation ---
+        const intervalId = setInterval(async () => {
+          const q = query(
+            collection(db, 'copyTrades'),
+            where('followerId', '==', firebaseUser.uid),
+            where('status', '==', 'active')
+          );
+          
+          try {
+            const snapshot = await getDocs(q);
+            snapshot.forEach(async (tradeDoc) => {
+              const data = tradeDoc.data();
+              // Simulate small profit fluctuation (-0.02% to +0.08%) every 30s
+              const changeRate = (Math.random() * 0.1 - 0.02) / 100;
+              const profitChange = data.amount * changeRate;
+              const newProfit = (data.currentProfit || 0) + profitChange;
+              const newRoi = (newProfit / data.amount) * 100;
+
+              await updateDoc(tradeDoc.ref, {
+                currentProfit: newProfit,
+                roi: newRoi
+              });
+            });
+          } catch (error) {
+            console.warn("Copy profit simulation skipped (likely offline or permission denied)");
+          }
+        }, 30000);
+
+        // Store intervalId for cleanup if needed outside or handle it in specific cleanup logic
+        // For simplicity with the existing structure, we can just clear it when another user logs in or on unmount
+        (window as any).copyTradeInterval = intervalId;
+
       } else {
         setUser(null);
         setPlanInvestments([]);
         setTrades([]);
         setLoading(false);
+        if ((window as any).copyTradeInterval) {
+          clearInterval((window as any).copyTradeInterval);
+        }
       }
     });
 
@@ -5733,6 +6059,9 @@ export default function App() {
       if (unsubInvestments) unsubInvestments();
       if (unsubTrades) unsubTrades();
       if (unsubSettings) unsubSettings();
+      if ((window as any).copyTradeInterval) {
+        clearInterval((window as any).copyTradeInterval);
+      }
     };
   }, []);
 
@@ -5909,6 +6238,16 @@ export default function App() {
   return (
     <ErrorBoundary>
       <div className={cn("min-h-screen font-sans bg-gray-900 text-gray-100", isDarkMode && "dark")}>
+        {/* Onboarding System Overlay */}
+        {user && !user.onboardingCompleted && (
+          <OnboardingSystem 
+            user={user} 
+            onComplete={() => showToast("تهانينا! لقد أكملت التعليم وحصلت على مكافآتك (200 نقطة + 10$)", "success")} 
+            showToast={showToast}
+            setActiveTab={setActiveTab}
+          />
+        )}
+
         {/* Navbar */}
         <nav className="fixed top-0 w-full z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200 dark:border-gray-800 h-16 sm:h-20 flex items-center px-4 sm:px-6">
           <div className="flex items-center justify-between w-full max-w-[1920px] mx-auto">
@@ -6042,7 +6381,7 @@ export default function App() {
                                   try {
                                     await updateDoc(doc(db, 'notifications', notification.id), { read: true });
                                   } catch (err) {
-                                    console.error('Error marking notification as read:', err);
+                                    console.error('Error marking notification as read:', err instanceof Error ? err.message : String(err));
                                   }
                                 }
                               }}
@@ -6144,7 +6483,13 @@ export default function App() {
                                 </span>
                               )}
                             </div>
-                            <div className="text-xs font-bold text-blue-600 dark:text-blue-400">${user.balance.toLocaleString()}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-xs font-bold text-blue-600 dark:text-blue-400">${user.balance.toLocaleString()}</div>
+                              <div className="text-[10px] font-black text-amber-600 dark:text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                                <Star className="w-2.5 h-2.5 fill-amber-500" />
+                                {user.points || 0}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -6205,6 +6550,10 @@ export default function App() {
                     )}
                   </div>
                   <div className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-0.5">مستوى المتداول: برونزي</div>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Star className="w-3 h-3 text-amber-500 fill-amber-500" />
+                    <span className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">{user.points || 0} نقطة مكافأة</span>
+                  </div>
                 </div>
               </div>
               <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 shadow-sm backdrop-blur-sm">
@@ -6261,7 +6610,19 @@ export default function App() {
               </NavSection>
 
               <NavSection title="المحفظة والأموال" icon={Wallet}>
-                <SidebarItem icon={PlusCircle} label="إيداع الأموال" active={activeTab === 'deposit'} onClick={() => setActiveTab('deposit')} />
+                <SidebarItem 
+                  icon={PlusCircle} 
+                  label="إيداع الأموال" 
+                  active={activeTab === 'deposit'} 
+                  onClick={() => {
+                    if (user.kycStatus !== 'approved') {
+                      showToast("يجب توثيق الهوية أولاً", "error");
+                      setActiveTab('kyc');
+                      return;
+                    }
+                    setActiveTab('deposit');
+                  }} 
+                />
                 <SidebarItem icon={MinusCircle} label="سحب الأموال" active={activeTab === 'withdraw'} onClick={() => setActiveTab('withdraw')} />
                 <SidebarItem icon={ArrowLeftRight} label="نقل داخلي" active={activeTab === 'transfer'} onClick={() => setActiveTab('transfer')} />
               </NavSection>
@@ -6309,8 +6670,8 @@ export default function App() {
                 {activeTab === 'portfolio' && <MyPortfolioView key="portfolio" investments={planInvestments} />}
                 {activeTab === 'performance' && <PerformanceHistoryView key="performance" trades={trades} globalSettings={globalSettings} />}
                 {activeTab === 'markets' && <MarketsView key="markets" setActiveTab={setActiveTab} />}
-                {activeTab === 'copy' && <CopyTradingView key="copy" setActiveTab={setActiveTab} />}
-                {activeTab === 'copy-experts' && <CopyExpertsView key="copy-experts" setActiveTab={setActiveTab} />}
+                {activeTab === 'copy' && <CopyTradingView key="copy" setActiveTab={setActiveTab} user={user} />}
+                {activeTab === 'copy-experts' && <CopyExpertsView key="copy-experts" setActiveTab={setActiveTab} user={user} showToast={showToast} />}
                 {activeTab === 'settings' && <SettingsView key="settings" user={user} showToast={showToast} />}
                 {activeTab === 'signals' && <FeaturedSignalsView key="signals" showToast={showToast} />}
                 {activeTab === 'referral' && <ReferralView key="referral" user={user} />}
@@ -6338,7 +6699,17 @@ export default function App() {
               <Home className="w-6 h-6" />
               <span className="text-[10px] font-bold">بيت</span>
             </button>
-            <button onClick={() => setActiveTab('deposit')} className={cn("flex flex-col items-center gap-1", activeTab === 'deposit' ? "text-blue-600" : "text-gray-500")}>
+            <button 
+              onClick={() => {
+                if (user.kycStatus !== 'approved') {
+                  showToast("يجب توثيق الهوية أولاً قبل الإيداع", "error");
+                  setActiveTab('kyc');
+                  return;
+                }
+                setActiveTab('deposit');
+              }} 
+              className={cn("flex flex-col items-center gap-1", activeTab === 'deposit' ? "text-blue-600" : "text-gray-500")}
+            >
               <Banknote className="w-6 h-6" />
               <span className="text-[10px] font-bold">إيداع</span>
             </button>

@@ -18,7 +18,9 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "lastLogin": { "type": "string", "format": "date-time" },
         "isBlocked": { "type": "boolean" },
-        "aiTrialExpires": { "type": "string", "format": "date-time" }
+        "aiTrialExpires": { "type": "string", "format": "date-time" },
+        "onboardingCompleted": { "type": "boolean" },
+        "points": { "type": "number" }
       },
       "required": ["uid", "email", "role", "balance", "profit", "kycStatus", "createdAt"]
     },
