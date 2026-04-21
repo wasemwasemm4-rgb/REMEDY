@@ -1,12 +1,25 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, getDocFromServer, Timestamp } from 'firebase/firestore';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, where, onSnapshot, getDocFromServer, Timestamp, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
+
+// Enable persistence for better offline/flaky connection handling
+if (typeof window !== 'undefined') {
+  enableMultiTabIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      // Multiple tabs open, persistence can only be enabled in one tab at a time.
+      console.warn('Firestore persistence failed: Multiple tabs open');
+    } else if (err.code === 'unimplemented') {
+      // The current browser does not support all of the features required to enable persistence
+      console.warn('Firestore persistence is not supported by this browser');
+    }
+  });
+}
 export const googleProvider = new GoogleAuthProvider();
 
 export enum OperationType {
@@ -95,13 +108,15 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 export async function testConnection() {
   try {
     console.log("Testing Firestore connection...");
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log("Firestore connection successful.");
+    // Use getDoc instead of getDocFromServer for the test to allow cache-based success if offline
+    await getDoc(doc(db, 'test', 'connection'));
+    console.log("Firestore connection test passed (may be from cache)");
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    console.error("Firestore connection test failed:", msg);
-    if(msg.includes('the client is offline') || msg.includes('Could not reach Cloud Firestore backend')) {
-      console.error("Please check your Firebase configuration. The backend is unreachable.");
+    if(msg.includes('the client is offline') || msg.includes('Could not reach Cloud Firestore backend') || msg.includes('network-request-failed')) {
+      console.warn("Firestore is operating in offline mode. Changes will sync when connection is restored.");
+    } else {
+      console.error("Firestore connection unexpected error:", msg);
     }
   }
 }

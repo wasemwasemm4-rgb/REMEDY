@@ -390,10 +390,9 @@ const MarketNewsTicker = () => {
 
 // --- Views ---
 
-const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trades = [] }: any) => {
+const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trades = [], botProfit = 0 }: any) => {
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
-  const [priceDirection, setPriceDirection] = useState<'up' | 'down' | 'neutral'>('neutral');
   const [kycDetailsOpen, setKycDetailsOpen] = useState(false);
   const [walletPromptOpen, setWalletPromptOpen] = useState(true);
   const [amount, setAmount] = useState<string>('');
@@ -502,9 +501,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
       setCurrentPrice(prev => {
         if (prev === null) return basePrice;
         const change = prev * (Math.random() * 0.002 - 0.001);
-        const next = prev + change;
-        setPriceDirection(change > 0 ? 'up' : 'down');
-        return next;
+        return prev + change;
       });
     }, 3000);
 
@@ -584,8 +581,8 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                 <div className="text-xl font-black">$45,800.00</div>
               </div>
               <div className="hidden sm:block">
-                <div className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">المكافآت</div>
-                <div className="text-xl font-black text-amber-400">+$250.00</div>
+                <div className="text-[10px] font-black opacity-60 uppercase tracking-widest mb-1">أرباح الروبوت الكمي</div>
+                <div className="text-xl font-black text-amber-400">+${botProfit.toFixed(2)}</div>
               </div>
             </div>
           </div>
@@ -866,7 +863,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                 <span className="text-[10px] font-black text-gray-400">الحد الأدنى: $50</span>
                 <div className="flex items-center gap-1">
                   <span className="text-[10px] font-black text-gray-400 uppercase">السعر الحالي:</span>
-                  <span className={cn("text-xs font-black font-mono", priceDirection === 'up' ? "text-emerald-500" : "text-red-500")}>
+                  <span className="text-xs font-black font-mono text-gray-900 dark:text-white">
                     ${currentPrice?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
@@ -1041,74 +1038,6 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
           </div>
         )}
       </AnimatePresence>
-
-      {/* Latest Trades Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-[2rem] p-8 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/20 dark:shadow-none">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="font-black text-xl text-gray-900 dark:text-white">سجل الصفقات الأخيرة</h3>
-          <div className="flex gap-2">
-            <button className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <Filter className="w-4 h-4 text-gray-400" />
-            </button>
-            <button className="w-10 h-10 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <Download className="w-4 h-4 text-gray-400" />
-            </button>
-          </div>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-50 dark:border-gray-800">
-                <th className="pb-4 pr-4">الأصل المالي</th>
-                <th className="pb-4">النوع</th>
-                <th className="pb-4">المبلغ</th>
-                <th className="pb-4">الربح/الخسارة</th>
-                <th className="pb-4">الحالة</th>
-                <th className="pb-4 pl-4">التاريخ</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-              {[
-                { asset: "BTC/USDT", type: "شراء", amount: "$1,200.00", profit: "+$145.20", status: "مكتمل", date: "2024/03/15", color: "emerald" },
-                { asset: "EUR/USD", type: "بيع", amount: "$500.00", profit: "-$22.50", status: "مكتمل", date: "2024/03/14", color: "red" },
-                { asset: "XAU/USD", type: "شراء", amount: "$2,500.00", profit: "+$310.00", status: "مكتمل", date: "2024/03/14", color: "emerald" },
-                { asset: "ETH/USDT", type: "شراء", amount: "$800.00", profit: "+$68.40", status: "مكتمل", date: "2024/03/13", color: "emerald" }
-              ].map((trade, i) => (
-                <tr key={i} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className="py-5 pr-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center font-black text-[10px]">
-                        {trade.asset.split('/')[0]}
-                      </div>
-                      <span className="font-black text-sm text-gray-900 dark:text-white">{trade.asset}</span>
-                    </div>
-                  </td>
-                  <td className="py-5">
-                    <span className={cn(
-                      "px-3 py-1 rounded-lg text-[10px] font-black uppercase",
-                      trade.type === 'شراء' ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
-                    )}>
-                      {trade.type}
-                    </span>
-                  </td>
-                  <td className="py-5 font-black text-sm text-gray-900 dark:text-white">{trade.amount}</td>
-                  <td className={cn("py-5 font-black text-sm", trade.color === 'emerald' ? "text-emerald-500" : "text-red-500")}>
-                    {trade.profit}
-                  </td>
-                  <td className="py-5">
-                    <div className="flex items-center gap-2 justify-end">
-                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
-                      <span className="text-[10px] font-black text-gray-500 uppercase">{trade.status}</span>
-                    </div>
-                  </td>
-                  <td className="py-5 pl-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{trade.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </motion.div>
   );
 };
@@ -5677,7 +5606,13 @@ export default function App() {
             const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
             
             let currentExpectedTotalProfit = 0;
-            if (inv.returnType === 'Daily') {
+            if (inv.planName?.includes('روبوت')) {
+              // Specific logic for trading bots: $10 to $26 per day
+              // Use a deterministic value based on the investment ID to ensure consistent daily profit
+              const idHash = inv.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+              const dailyProfit = 10 + (Math.abs(idHash) % 17); // Results in 10-26 range
+              currentExpectedTotalProfit = dailyProfit * elapsedDays;
+            } else if (inv.returnType === 'Daily') {
               currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedDays;
             } else {
               // For other types, just add a small amount for demo
@@ -5786,8 +5721,13 @@ export default function App() {
               localStorage.removeItem('referredBy');
             }
           } catch (err) {
-            console.error('SyncUser Error:', err instanceof Error ? err.message : String(err));
-            handleFirestoreError(err, OperationType.WRITE, 'users');
+            const msg = err instanceof Error ? err.message : String(err);
+            if (msg.includes('offline') || msg.includes('network-request-failed')) {
+              console.warn('SyncUser postponed: Client is offline. Profile will sync when reconnected.');
+            } else {
+              console.error('SyncUser Error:', msg);
+              handleFirestoreError(err, OperationType.WRITE, 'users');
+            }
           }
         };
         syncUser();
@@ -6483,7 +6423,19 @@ export default function App() {
           <main className="flex-1 ml-0 md:ml-72 p-4 pb-24 md:pb-8 overflow-x-hidden pt-20 sm:pt-24">
             <div className="max-w-6xl mx-auto">
               <AnimatePresence mode="wait">
-                {activeTab === 'dashboard' && <DashboardView key="dashboard" user={user} setActiveTab={setActiveTab} trades={trades} showToast={showToast} />}
+                {activeTab === 'dashboard' && (
+                  <DashboardView 
+                    key="dashboard" 
+                    user={user} 
+                    setActiveTab={setActiveTab} 
+                    trades={trades} 
+                    showToast={showToast}
+                    botProfit={planInvestments
+                      .filter(inv => inv.planName?.includes('روبوت'))
+                      .reduce((sum, inv) => sum + (inv.totalEarned || 0), 0)
+                    }
+                  />
+                )}
                 {activeTab === 'history' && <AccountHistoryView key="history" />}
                 {(activeTab === 'wallet' || activeTab === 'deposit' || activeTab === 'withdraw') && <WalletView key="wallet" user={user} activeTab={activeTab} showToast={showToast} />}
                 {activeTab === 'kyc' && <KYCView key="kyc" user={user} showToast={showToast} />}

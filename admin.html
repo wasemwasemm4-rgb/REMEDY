@@ -825,7 +825,11 @@
 
         window.handleAdminError = function(error, label = "Error") {
             const msg = error instanceof Error ? error.message : String(error);
-            console.error(`${label}:`, msg);
+            if (msg.includes('offline') || msg.includes('network-request-failed')) {
+                console.warn(`${label} (Offline):`, msg);
+            } else {
+                console.error(`${label}:`, msg);
+            }
             return msg;
         };
 
@@ -1108,6 +1112,26 @@
                     }
                 };
 
+                window.forceVerifyKyc = async (userId) => {
+                    if (!confirm('هل أنت متأكد من توثيق هذا الحساب مباشرة بدون مستندات؟')) return;
+                    try {
+                        const userRef = doc(db, 'users', userId);
+                        await updateDoc(userRef, { kycStatus: 'approved' });
+
+                        await createNotification(
+                            userId,
+                            'تم توثيق الحساب',
+                            'تهانينا! لقد تم توثيق حسابك بنجاح من قبل الإدارة.',
+                            'success'
+                        );
+
+                        showToast('تم توثيق الحساب بنجاح', 'success');
+                    } catch (error) {
+                        handleAdminError(error, "Error forcing KYC verification");
+                        showToast('حدث خطأ أثناء معالجة الطلب', 'error');
+                    }
+                };
+
                 window.addManualBalance = async () => {
                     const userId = document.getElementById('manual-user-select').value;
                     const amount = parseFloat(document.getElementById('manual-amount').value);
@@ -1324,6 +1348,9 @@
                         <button class="btn-action btn-loss" onclick="deleteUser('${u.id}')">حذف</button>
                         <button class="btn-action ${u.isBlocked ? 'btn-win' : 'btn-draw'}" onclick="toggleBlockUser('${u.id}', ${u.isBlocked || false})">
                             ${u.isBlocked ? 'إلغاء الحظر' : 'حظر'}
+                        </button>
+                        <button class="btn-action btn-win" onclick="forceVerifyKyc('${u.id}')" ${u.kycStatus === 'approved' ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            توثيق
                         </button>
                     </td>
                 </tr>
