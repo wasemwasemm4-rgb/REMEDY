@@ -20,7 +20,9 @@
         "isBlocked": { "type": "boolean" },
         "aiTrialExpires": { "type": "string", "format": "date-time" },
         "onboardingCompleted": { "type": "boolean" },
-        "points": { "type": "number" }
+        "points": { "type": "number" },
+        "demoBalance": { "type": "number" },
+        "isAccountReal": { "type": "boolean" }
       },
       "required": ["uid", "email", "role", "balance", "profit", "kycStatus", "createdAt"]
     },
@@ -98,7 +100,12 @@
         "traderId": { "type": "string" },
         "amount": { "type": "number" },
         "status": { "type": "string", "enum": ["active", "paused", "stopped"] },
-        "startDate": { "type": "string", "format": "date-time" }
+        "startDate": { "type": "string", "format": "date-time" },
+        "lastUpdate": { "type": "string", "format": "date-time" },
+        "isDemo": { "type": "boolean" },
+        "currentProfit": { "type": "number" },
+        "roi": { "type": "number" },
+        "dailyRoi": { "type": "number" }
       },
       "required": ["id", "followerId", "traderId", "amount", "status", "startDate"]
     },
@@ -119,7 +126,8 @@
         "startDate": { "type": "string", "format": "date-time" },
         "endDate": { "type": "string", "format": "date-time" },
         "totalEarned": { "type": "number" },
-        "lastPayoutDate": { "type": "string", "format": "date-time" }
+        "lastPayoutDate": { "type": "string", "format": "date-time" },
+        "isDemo": { "type": "boolean" }
       },
       "required": ["id", "userId", "planId", "planName", "amount", "status", "startDate"]
     },
@@ -137,7 +145,8 @@
         "exitPrice": { "type": "number" },
         "status": { "type": "string", "enum": ["WIN", "LOSE", "PENDING"] },
         "profit": { "type": "number" },
-        "timestamp": { "type": "string", "format": "date-time" }
+        "timestamp": { "type": "string", "format": "date-time" },
+        "isDemo": { "type": "boolean" }
       },
       "required": ["id", "userId", "asset", "type", "amount", "entryPrice", "status", "profit", "timestamp"]
     },

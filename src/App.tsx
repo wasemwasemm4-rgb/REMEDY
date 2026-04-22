@@ -135,6 +135,185 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
 
 // --- Components ---
 
+// Global Bot Data Configuration
+const BOTS_DATA = [
+    // العملات المشفرة
+    {
+      name: 'ألفا سكالبر',
+      category: 'العملات المشفرة',
+      strategy: 'سكالبينج',
+      description: 'تداول سريع وعالي التردد للعملات المشفرة للاستفادة من تقلبات الأسعار الصغيرة.',
+      winRate: '92.4%', profit: '+28.4%', risk: 'Low', riskScore: 3, trades: '1,245', tradesPerDay: 42, drawdown: '1.2%', color: 'blue', icon: Zap, minInvestment: '100', tradingPairs: ['BTC/USDT', 'ETH/USDT'], duration: 'يومياً'
+    },
+    {
+      name: 'صائد الاتجاه المشفر',
+      category: 'العملات المشفرة',
+      strategy: 'تتبع الاتجاه',
+      description: 'يحلل الاتجاهات الكبرى في سوق الكريبتو لتحديد نقاط الدخول والخروج المثلى.',
+      winRate: '88.7%', profit: '+32.2%', risk: 'Medium', riskScore: 5, trades: '342', tradesPerDay: 12, drawdown: '4.5%', color: 'indigo', icon: TrendingUp, minInvestment: '500', tradingPairs: ['BTC/USDT', 'SOL/USDT'], duration: 'يومياً'
+    },
+    {
+      name: 'مراجحة البيتكوين',
+      category: 'العملات المشفرة',
+      strategy: 'مراجحة',
+      description: 'يستفيد من فروق أسعار البيتكوين بين المنصات المختلفة بسرعة فائقة.',
+      winRate: '95.1%', profit: '+22.1%', risk: 'Low', riskScore: 2, trades: '2,100', tradesPerDay: 85, drawdown: '0.8%', color: 'green', icon: Cpu, minInvestment: '1000', tradingPairs: ['BTC/USDT', 'BTC/USDC'], duration: 'يومياً'
+    },
+    {
+      name: 'شبكة الإيثريوم',
+      category: 'العملات المشفرة',
+      strategy: 'تداول شبكي',
+      description: 'يضع أوامر شراء وبيع متعددة على مستويات محددة مسبقاً لعملة الإيثريوم.',
+      winRate: '85.2%', profit: '+25.5%', risk: 'Medium', riskScore: 4, trades: '890', tradesPerDay: 28, drawdown: '5.2%', color: 'purple', icon: Activity, minInvestment: '250', tradingPairs: ['ETH/USDT'], duration: 'يومياً'
+    },
+    {
+      name: 'متأرجح العملات البديلة',
+      category: 'العملات المشفرة',
+      strategy: 'تداول متأرجح',
+      description: 'يستهدف العملات البديلة ذات الإمكانات العالية لتحقيق أرباح على المدى المتوسط.',
+      winRate: '76.4%', profit: '+38.3%', risk: 'High', riskScore: 7, trades: '120', tradesPerDay: 5, drawdown: '8.1%', color: 'orange', icon: Star, minInvestment: '150', tradingPairs: ['ADA/USDT', 'DOT/USDT'], duration: 'يومياً'
+    },
+    {
+      name: 'مزارع العوائد',
+      category: 'العملات المشفرة',
+      strategy: 'زراعة العوائد',
+      description: 'يبحث عن أفضل فرص زراعة العوائد في بروتوكولات التمويل اللامركزي (DeFi).',
+      winRate: '98.2%', profit: '+19.7%', risk: 'Low', riskScore: 2, trades: '45', tradesPerDay: 3, drawdown: '0.5%', color: 'emerald', icon: ShieldCheck, minInvestment: '500', tradingPairs: ['USDT', 'USDC'], duration: 'يومياً'
+    },
+
+    // الفوركس
+    {
+      name: 'أوميغا تريند',
+      category: 'الفوركس',
+      strategy: 'تتبع الاتجاه',
+      description: 'خوارزمية متقدمة لتتبع الاتجاهات طويلة المدى في أزواج العملات الرئيسية.',
+      winRate: '82.1%', profit: '+24.2%', risk: 'Medium', riskScore: 4, trades: '210', tradesPerDay: 8, drawdown: '3.2%', color: 'blue', icon: TrendingUp, minInvestment: '500', tradingPairs: ['EUR/USD', 'GBP/USD'], duration: 'يومياً'
+    },
+    {
+      name: 'قناص اليورو/دولار',
+      category: 'الفوركس',
+      strategy: 'سكالبينج',
+      description: 'روبوت متخصص في التداول السريع لزوج اليورو/دولار خلال أوقات الذروة.',
+      winRate: '89.5%', profit: '+21.5%', risk: 'Low', riskScore: 3, trades: '1,500', tradesPerDay: 55, drawdown: '1.5%', color: 'indigo', icon: Zap, minInvestment: '100', tradingPairs: ['EUR/USD'], duration: 'يومياً'
+    },
+    {
+      name: 'مخترق الباوند',
+      category: 'الفوركس',
+      strategy: 'اختراق',
+      description: 'يتداول بناءً على اختراق مستويات الدعم والمقاومة لزوج الجنيه الإسترليني.',
+      winRate: '75.2%', profit: '+27.2%', risk: 'High', riskScore: 6, trades: '180', tradesPerDay: 10, drawdown: '5.8%', color: 'purple', icon: Activity, minInvestment: '250', tradingPairs: ['GBP/USD', 'GBP/JPY'], duration: 'يومياً'
+    },
+    {
+      name: 'متداول الين',
+      category: 'الفوركس',
+      strategy: 'تداول محمول',
+      description: 'يستفيد من فروق أسعار الفائدة بين الين الياباني والعملات الأخرى.',
+      winRate: '91.4%', profit: '+20%', risk: 'Low', riskScore: 2, trades: '80', tradesPerDay: 2, drawdown: '1.1%', color: 'green', icon: BarChart3, minInvestment: '1000', tradingPairs: ['USD/JPY', 'AUD/JPY'], duration: 'يومياً'
+    },
+    {
+      name: 'شبكة الفوركس',
+      category: 'الفوركس',
+      strategy: 'تداول شبكي',
+      description: 'يستخدم استراتيجية الشبكة للتداول في الأسواق العرضية (الجانبية).',
+      winRate: '86.8%', profit: '+23%', risk: 'Medium', riskScore: 4, trades: '650', tradesPerDay: 25, drawdown: '2.9%', color: 'orange', icon: Cpu, minInvestment: '300', tradingPairs: ['EUR/GBP', 'USD/CHF'], duration: 'يومياً'
+    },
+    {
+      name: 'متداول الأخبار',
+      category: 'الفوركس',
+      strategy: 'تداول الأخبار',
+      description: 'يتفاعل بسرعة فائقة مع الأخبار الاقتصادية والبيانات المالية الهامة.',
+      winRate: '72.5%', profit: '+35%', risk: 'High', riskScore: 8, trades: '40', tradesPerDay: 15, drawdown: '7.5%', color: 'red', icon: Star, minInvestment: '500', tradingPairs: ['EUR/USD', 'USD/JPY'], duration: 'يومياً'
+    },
+
+    // الأسهم
+    {
+      name: 'دلتا أربيتراج',
+      category: 'الأسهم',
+      strategy: 'مراجحة إحصائية',
+      description: 'يستغل التسعير الخاطئ المؤقت بين الأسهم المرتبطة ببعضها البعض.',
+      winRate: '88.1%', profit: '+18.5%', risk: 'Low', riskScore: 3, trades: '420', tradesPerDay: 12, drawdown: '1.8%', color: 'blue', icon: Cpu, minInvestment: '2000', tradingPairs: ['AAPL/MSFT', 'GOOGL/META'], duration: 'يومياً'
+    },
+    {
+      name: 'مؤشر إس آند بي',
+      category: 'الأسهم',
+      strategy: 'استثمار سلبي',
+      description: 'يتتبع أداء مؤشر S&P 500 مع إعادة توازن تلقائية للمحفظة.',
+      winRate: '99.9%', profit: '+15%', risk: 'Low', riskScore: 1, trades: '12', tradesPerDay: 1, drawdown: '5.0%', color: 'green', icon: TrendingUp, minInvestment: '500', tradingPairs: ['SPY', 'VOO'], duration: 'يومياً'
+    },
+    {
+      name: 'زخم التكنولوجيا',
+      category: 'الأسهم',
+      strategy: 'تداول الزخم',
+      description: 'يستثمر في أسهم التكنولوجيا ذات الزخم الإيجابي القوي.',
+      winRate: '78.5%', profit: '+28%', risk: 'High', riskScore: 7, trades: '150', tradesPerDay: 6, drawdown: '9.2%', color: 'purple', icon: Zap, minInvestment: '1000', tradingPairs: ['NVDA', 'AMD', 'TSLA'], duration: 'يومياً'
+    },
+    {
+      name: 'حاصد الأرباح',
+      category: 'الأسهم',
+      strategy: 'استثمار الأرباح',
+      description: 'يستهدف الأسهم ذات التوزيعات النقدية العالية والمستقرة.',
+      winRate: '94.2%', profit: '+16%', risk: 'Low', riskScore: 2, trades: '24', tradesPerDay: 0.5, drawdown: '2.1%', color: 'indigo', icon: ShieldCheck, minInvestment: '5000', tradingPairs: ['JNJ', 'PG', 'KO'], duration: 'يومياً'
+    },
+    {
+      name: 'قناص الأسهم الصغيرة',
+      category: 'الأسهم',
+      strategy: 'مضاربة',
+      description: 'يتداول في الأسهم ذات القيمة السوقية الصغيرة (Penny Stocks) عالية التقلب.',
+      winRate: '65.4%', profit: '+42%', risk: 'High', riskScore: 9, trades: '890', tradesPerDay: 30, drawdown: '15.4%', color: 'red', icon: Activity, minInvestment: '100', tradingPairs: ['Penny Stocks'], duration: 'يومياً'
+    },
+    {
+      name: 'فجوة الأرباح',
+      category: 'الأسهم',
+      strategy: 'تداول الفجوات',
+      description: 'يتداول بناءً على الفجوات السعرية التي تحدث بعد إعلانات الأرباح.',
+      winRate: '71.8%', profit: '+30%', risk: 'High', riskScore: 6, trades: '80', tradesPerDay: 4, drawdown: '6.5%', color: 'orange', icon: Star, minInvestment: '1000', tradingPairs: ['US Equities'], duration: 'يومياً'
+    },
+
+    // السلع
+    {
+      name: 'سيغما جريد',
+      category: 'السلع',
+      strategy: 'تداول شبكي',
+      description: 'استراتيجية شبكية مصممة خصيصاً لتداول السلع الأساسية.',
+      winRate: '84.7%', profit: '+22%', risk: 'Medium', riskScore: 5, trades: '340', tradesPerDay: 18, drawdown: '4.8%', color: 'blue', icon: Activity, minInvestment: '1000', tradingPairs: ['XAU/USD', 'XAG/USD'], duration: 'يومياً'
+    },
+    {
+      name: 'متأرجح الذهب',
+      category: 'السلع',
+      strategy: 'تداول متأرجح',
+      description: 'يستفيد من تقلبات أسعار الذهب على المدى القصير والمتوسط.',
+      winRate: '79.3%', profit: '+26%', risk: 'Medium', riskScore: 4, trades: '110', tradesPerDay: 3, drawdown: '3.5%', color: 'yellow', icon: TrendingUp, minInvestment: '500', tradingPairs: ['XAU/USD'], duration: 'يومياً'
+    },
+    {
+      name: 'متتبع النفط',
+      category: 'السلع',
+      strategy: 'تتبع الاتجاه',
+      description: 'يتتبع الاتجاهات الكبرى في أسعار النفط الخام.',
+      winRate: '76.8%', profit: '+33%', risk: 'High', riskScore: 6, trades: '95', tradesPerDay: 2, drawdown: '7.2%', color: 'gray', icon: Zap, minInvestment: '1000', tradingPairs: ['USOIL', 'UKOIL'], duration: 'يومياً'
+    },
+    {
+      name: 'قناص الفضة',
+      category: 'السلع',
+      strategy: 'سكالبينج',
+      description: 'تداول سريع وعالي التردد للفضة للاستفادة من تحركاتها السريعة.',
+      winRate: '88.5%', profit: '+20%', risk: 'Medium', riskScore: 5, trades: '850', tradesPerDay: 45, drawdown: '2.8%', color: 'slate', icon: Cpu, minInvestment: '250', tradingPairs: ['XAG/USD'], duration: 'يومياً'
+    },
+    {
+      name: 'موسمي الزراعة',
+      category: 'السلع',
+      strategy: 'تداول موسمي',
+      description: 'يتداول السلع الزراعية بناءً على الأنماط الموسمية التاريخية.',
+      winRate: '81.2%', profit: '+18.2%', risk: 'Low', riskScore: 3, trades: '30', tradesPerDay: 1, drawdown: '2.5%', color: 'green', icon: BarChart3, minInvestment: '2000', tradingPairs: ['CORN', 'WHEAT', 'SOYBEAN'], duration: 'يومياً'
+    },
+    {
+      name: 'مراجحة المعادن',
+      category: 'السلع',
+      strategy: 'مراجحة',
+      description: 'يستغل فروق الأسعار بين المعادن الثمينة المختلفة.',
+      winRate: '92.1%', profit: '+20.9%', risk: 'Low', riskScore: 2, trades: '150', tradesPerDay: 10, drawdown: '1.5%', color: 'indigo', icon: ShieldCheck, minInvestment: '1500', tradingPairs: ['XAU/XAG'], duration: 'يومياً'
+    }
+];
+
 const StatCard = ({ title, value, icon: Icon, trend, color }: any) => (
   <div className="bg-zinc-900/50 border border-zinc-800 p-6 rounded-2xl space-y-4">
     <div className="flex justify-between items-start">
@@ -390,8 +569,10 @@ const MarketNewsTicker = () => {
 
 // --- Views ---
 
-const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trades = [], botProfit = 0 }: any) => {
+const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trades = [], botProfit = 0, isDemoOn, toggleDemoMode }: any) => {
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
+  const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
+
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [kycDetailsOpen, setKycDetailsOpen] = useState(false);
   const [walletPromptOpen, setWalletPromptOpen] = useState(true);
@@ -436,7 +617,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
       showToast?.('الرجاء إدخال حجم عقد صحيح', 'error');
       return;
     }
-    if (Number(amount) > user.balance) {
+    if (Number(amount) > currentBalance) {
       showToast?.('رصيد غير كافٍ', 'error');
       return;
     }
@@ -444,36 +625,68 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
 
     setIsTrading(true);
     try {
+      // Market Reality: Spread, Slippage, and Commissions
+      const spreadPips = 2; // Fixed 2 pip spread for now
+      const maxSlippagePips = 3; 
+      
+      let pipMultiplier = 10000;
+      if (selectedAsset.symbol.includes('XAU') || selectedAsset.symbol.includes('Gold')) pipMultiplier = 100;
+      else if (selectedAsset.symbol.includes('JPY')) pipMultiplier = 100;
+      else if (selectedAsset.symbol.includes('BTC') || selectedAsset.symbol.includes('ETH') || selectedAsset.symbol.includes('Crypto')) pipMultiplier = 1;
+
+      const spreadAmount = spreadPips / pipMultiplier;
+      const slippage = (Math.random() * maxSlippagePips) / pipMultiplier;
+      
+      // Adjusted entry price based on type (spread) and slippage
+      const adjustedPrice = type === 'Buy' 
+        ? currentPrice + spreadAmount + slippage 
+        : currentPrice - spreadAmount - slippage;
+
+      const commissionRate = 0.0005; // 0.05% commission
+      const commission = Number(amount) * commissionRate;
+
       const tradeData = {
         userId: auth.currentUser?.uid,
         asset: selectedAsset.symbol,
         type,
         amount: Number(amount),
         lotSize: Number(lotSize),
-        entryPrice: currentPrice,
+        entryPrice: Number(adjustedPrice.toFixed(5)),
+        marketPriceAtEntry: currentPrice,
         leverage,
         duration,
         stopLoss: stopLoss ? Number(stopLoss) : null,
         status: 'PENDING',
-        profit: 0,
+        profit: -commission, // Trade starts with commission loss
+        commission,
+        spread: spreadAmount,
+        isDemo: isDemoOn,
         timestamp: new Date().toISOString(),
       };
 
       await addDoc(collection(db, 'trades'), tradeData);
       
+      const totalInitialDeduction = Number(amount) + commission;
+
       await addDoc(collection(db, 'notifications'), {
         userId: auth.currentUser?.uid,
-        title: 'فتح صفقة جديدة',
-        message: `لقد قمت بفتح صفقة ${type === 'Buy' ? 'شراء' : 'بيع'} على ${selectedAsset.symbol} بمبلغ $${Number(amount).toFixed(2)}.`,
+        title: isDemoOn ? 'فتح صفقة تجريبية' : 'فتح صفقة جديدة',
+        message: `لقد قمت بفتح صفقة ${type === 'Buy' ? 'شراء' : 'بيع'} على ${selectedAsset.symbol} بمبلغ $${Number(amount).toFixed(2)}. الرسوم: $${commission.toFixed(2)}`,
         type: 'info',
         read: false,
         timestamp: new Date().toISOString()
       });
       
       const userRef = doc(db, 'users', auth.currentUser!.uid);
-      await updateDoc(userRef, {
-        balance: increment(-Number(amount))
-      });
+      if (isDemoOn) {
+        await updateDoc(userRef, {
+          demoBalance: increment(-totalInitialDeduction)
+        });
+      } else {
+        await updateDoc(userRef, {
+          balance: increment(-totalInitialDeduction)
+        });
+      }
 
       setAmount('');
       setLotSize('0.01');
@@ -536,6 +749,18 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
           <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mt-1">نظرة عامة على لوحة معلومات الاستثمار الخاصة بك</p>
         </div>
         <div className="hidden sm:flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <button 
+            onClick={toggleDemoMode}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 px-4 py-2 sm:py-3 border rounded-lg transition-all text-sm sm:text-base font-bold",
+              isDemoOn 
+                ? "bg-amber-500 border-amber-600 text-white shadow-lg shadow-amber-500/20 scale-105" 
+                : "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50"
+            )}
+          >
+            <Zap className={cn("w-4 h-4", isDemoOn && "animate-pulse")} />
+            {isDemoOn ? "وضع التجربة نشط" : "تفعيل الحساب التجريبي"}
+          </button>
           <button onClick={() => setActiveTab('wallet')} className="inline-flex items-center justify-center gap-2 px-4 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-blue-500 text-white rounded-lg shadow hover:from-indigo-700 transition animate-pulse text-sm sm:text-base">
             <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5" /> محفظة Connect
           </button>
@@ -560,7 +785,10 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
                   <span className="text-[10px] font-black uppercase tracking-[0.2em]">إجمالي الرصيد المتاح</span>
                 </div>
                 <div className="flex items-baseline gap-3">
-                  <span className="text-5xl sm:text-7xl font-black tracking-tighter tabular-nums">${user.balance.toLocaleString()}</span>
+                  <span className="text-5xl sm:text-7xl font-black tracking-tighter tabular-nums">
+                    ${currentBalance.toLocaleString()}
+                    {!isDemoOn && !user.isAccountReal && <span className="text-xl sm:text-2xl mr-2 text-white/60">(تجريبي)</span>}
+                  </span>
                   <div className="flex items-center gap-1 px-3 py-1.5 bg-white/20 backdrop-blur-md rounded-xl text-[10px] font-black">
                     <ArrowUpRight className="w-3 h-3" /> 12.5%
                   </div>
@@ -825,7 +1053,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
             <div className="space-y-2">
               <div className="flex justify-between px-1">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">مبلغ الاستثمار</label>
-                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase">الرصيد: ${user.balance.toLocaleString()}</span>
+                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase">الرصيد: ${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -1446,12 +1674,13 @@ const DepositPaymentView = ({ user, onBack, showToast }: { user: User | null, on
   );
 };
 
-const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => void, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
+const WithdrawView = ({ user, onBack, showToast, isDemoOn }: { user: User, onBack: () => void, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void, isDemoOn?: boolean }) => {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('usdt');
   const [address, setAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1459,7 +1688,11 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
       showToast?.('يرجى ملء جميع الحقول', 'error');
       return;
     }
-    if (parseFloat(amount) > user.balance) {
+    if (!user.isAccountReal && !isDemoOn) {
+      showToast?.('عذراً، لا يمكنك السحب من الحساب التجريبي. يرجى ترقية حسابك.', 'error');
+      return;
+    }
+    if (parseFloat(amount) > currentBalance) {
       showToast?.('رصيد غير كافٍ', 'error');
       return;
     }
@@ -1476,8 +1709,9 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
         type: 'withdrawal',
         amount: parseFloat(amount),
         status: 'pending',
+        isDemo: isDemoOn,
         timestamp: new Date().toISOString(),
-        details: `سحب عبر ${method.toUpperCase()} - ${address}`,
+        details: `سحب عبر ${method.toUpperCase()} - ${address}${isDemoOn ? ' (تجريبي)' : ''}`,
         method: method // Added method field
       };
       const transRef = await addDoc(collection(db, 'transactions'), transactionData);
@@ -1490,6 +1724,7 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
         method: method,
         address: address,
         status: 'pending',
+        isDemo: isDemoOn,
         transactionId: transRef.id,
         createdAt: new Date().toISOString()
       };
@@ -1497,9 +1732,15 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
 
       // Deduct balance
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        balance: increment(-parseFloat(amount))
-      });
+      if (isDemoOn) {
+        await updateDoc(userRef, {
+          demoBalance: increment(-parseFloat(amount))
+        });
+      } else {
+        await updateDoc(userRef, {
+          balance: increment(-parseFloat(amount))
+        });
+      }
 
       setIsSuccess(true);
       showToast?.('تم إرسال طلب السحب بنجاح', 'success');
@@ -1584,7 +1825,7 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
               />
             </div>
             <div className="flex justify-between text-xs mt-1">
-              <span className="text-gray-500">الرصيد المتاح: ${user.balance.toLocaleString()}</span>
+              <span className="text-gray-500">الرصيد المتاح: ${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
               <button type="button" onClick={() => setAmount(user.balance.toString())} className="text-blue-500 font-bold hover:underline">سحب الكل</button>
             </div>
           </div>
@@ -1619,8 +1860,9 @@ const WithdrawView = ({ user, onBack, showToast }: { user: User, onBack: () => v
   );
 };
 
-const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: string, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void }) => {
+const WalletView = ({ user, activeTab, showToast, isDemoOn }: { user: User, activeTab: string, showToast?: (message: string, type?: 'success' | 'error' | 'info') => void, isDemoOn?: boolean }) => {
   const isKycApproved = user.kycStatus === 'approved';
+  const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
   
   const [view, setView] = useState<'overview' | 'deposit' | 'withdraw'>(() => {
     if (activeTab === 'deposit' && isKycApproved) return 'deposit';
@@ -1645,7 +1887,7 @@ const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: str
   }
 
   if (view === 'withdraw') {
-    return <WithdrawView user={user} onBack={() => setView('overview')} showToast={showToast} />;
+    return <WithdrawView user={user} onBack={() => setView('overview')} showToast={showToast} isDemoOn={isDemoOn} />;
   }
 
   const handleDepositClick = () => {
@@ -1665,12 +1907,19 @@ const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: str
     >
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tighter">المحفظة المالية</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-4xl font-black tracking-tighter">المحفظة المالية</h2>
+            {isDemoOn && (
+              <span className="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] font-black rounded-lg border border-purple-500/30 uppercase tracking-widest">
+                تجريبي
+              </span>
+            )}
+          </div>
           <p className="text-gray-500 font-medium">إدارة أصولك الرقمية وعمليات السحب والإيداع.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button onClick={handleDepositClick} className="flex-1 md:flex-none px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">إيداع</button>
-          <button onClick={() => setView('withdraw')} className="flex-1 md:flex-none px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-[1.5rem] font-black border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95">سحب</button>
+          <button onClick={handleDepositClick} className="flex-1 md:flex-none px-8 py-4 bg-blue-600 text-white rounded-[1.5rem] font-black shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">إيداع {isDemoOn ? 'تجريبي' : ''}</button>
+          <button onClick={() => setView('withdraw')} className="flex-1 md:flex-none px-8 py-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-[1.5rem] font-black border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95">سحب {isDemoOn ? 'تجريبي' : ''}</button>
         </div>
       </div>
 
@@ -1678,7 +1927,12 @@ const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: str
         <div className="lg:col-span-2 space-y-10">
           {/* Premium Card Design */}
           <div className="relative group perspective-1000">
-            <div className="bg-gradient-to-br from-[#1a1a1a] via-[#0a0a0a] to-black p-12 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl border border-white/10 transition-transform duration-700 group-hover:rotate-y-6">
+            <div className={cn(
+              "p-12 rounded-[3.5rem] text-white relative overflow-hidden shadow-2xl border transition-transform duration-700 group-hover:rotate-y-6",
+              isDemoOn 
+                ? "bg-gradient-to-br from-purple-900/40 via-zinc-950 to-black border-purple-500/20" 
+                : "bg-gradient-to-br from-[#1a1a1a] via-[#0a0a0a] to-black border-white/10"
+            )}>
               <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:scale-110 transition-transform duration-1000">
                 <TrendingUp className="w-64 h-64" />
               </div>
@@ -1690,13 +1944,31 @@ const WalletView = ({ user, activeTab, showToast }: { user: User, activeTab: str
                 <div className="flex justify-between items-start">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                      <p className="text-blue-400 font-black uppercase tracking-[0.2em] text-[10px]">الرصيد الإجمالي</p>
+                      <div className={cn("w-2 h-2 rounded-full animate-pulse", isDemoOn ? "bg-purple-500" : "bg-blue-500")} />
+                      <p className={cn("font-black uppercase tracking-[0.2em] text-[10px]", isDemoOn ? "text-purple-400" : "text-blue-400")}>
+                        {isDemoOn ? "الرصيد التجريبي" : "الرصيد الإجمالي"}
+                      </p>
                     </div>
-                    <h3 className="text-7xl font-black tracking-tighter tabular-nums">${user.balance.toLocaleString()}</h3>
+                    <h3 className="text-7xl font-black tracking-tighter tabular-nums">${currentBalance.toLocaleString()}</h3>
                   </div>
                   <div className="w-20 h-12 bg-white/5 backdrop-blur-xl rounded-xl border border-white/10 flex items-center justify-center font-black italic tracking-widest text-lg">VISA</div>
                 </div>
+
+                {isDemoOn && (
+                  <button 
+                    onClick={async () => {
+                      const userRef = doc(db, 'users', user.uid);
+                      await updateDoc(userRef, {
+                        demoBalance: (user.demoBalance || 0) + 10000
+                      });
+                      showToast?.('تمت إضافة 10,000$ إلى رصيدك التجريبي!', 'success');
+                    }}
+                    className="absolute bottom-12 right-12 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black shadow-lg shadow-purple-600/20 transition-all active:scale-95 flex items-center gap-2"
+                  >
+                    <RefreshCcw className="w-4 h-4" />
+                    <span>شحن الرصيد التجريبي</span>
+                  </button>
+                )}
 
                 <div className="flex justify-between items-end pt-8">
                   <div className="space-y-2">
@@ -2396,6 +2668,101 @@ const KYCView = ({ user, showToast }: { user: User, showToast?: (message: string
   );
 };
 
+const AdminSubscriptionsView = () => {
+  const [investments, setInvestments] = useState<PlanInvestment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, 'planInvestments'), where('status', '==', 'active'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PlanInvestment));
+      setInvestments(docs);
+      setLoading(false);
+    }, (err) => {
+      console.error("Admin view error:", err);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+            <Users2 className="w-8 h-8 text-purple-600" />
+            المشتركين في الخطط
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">عرض جميع المشتركين الحاليين في خطط الاستثمار والروبوتات</p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right border-collapse">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-gray-800/50">
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">المستخدم</th>
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">الخطة</th>
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">المبلغ</th>
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">تاريخ البدء</th>
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">الأرباح</th>
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">الحالة</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">جاري التحميل...</td>
+                </tr>
+              ) : investments.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-bold">لا يوجد مشتركين نشطين حالياً</td>
+                </tr>
+              ) : investments.map((inv) => (
+                <tr key={inv.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                        <UserIcon className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 dark:text-white text-sm">{inv.userEmail || 'مستخدم'}</span>
+                        <span className="text-[10px] text-gray-400 font-mono">{inv.userId}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="font-black text-gray-700 dark:text-gray-300">{inv.planName}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-blue-600 font-black">${inv.amount.toLocaleString()}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-gray-500 text-sm">{new Date(inv.startDate).toLocaleDateString('ar-SA')}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-emerald-500 font-black">+${(inv.totalEarned || 0).toLocaleString()}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-black rounded-full">
+                      {inv.status === 'active' ? 'نشط' : inv.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
 const generateChartData = (points: number, trend: 'up' | 'down' | 'mixed') => {
   let current = 100;
   return Array.from({ length: points }).map((_, i) => {
@@ -2584,17 +2951,9 @@ const AegisRescueTerminal = ({ user, isStopped }: { user: User, isStopped: boole
         direction: Math.random() > 0.5 ? 'BULLISH' : 'BEARISH'
       }));
 
-      // CREDIT PROFIT TO REAL BALANCE
-      if (user.uid) {
-        try {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, {
-            balance: increment(profit)
-          });
-        } catch (error) {
-          console.error("Error updating Aegis profit:", error instanceof Error ? error.message : String(error));
-        }
-      }
+      // Removed direct balance update from terminal simulation to prevent double-crediting.
+      // Aegis profit is now handled by the background simulation if intended,
+      // but typically Aegis is a simulation of growth.
 
       setPnlData(prev => {
         const last = prev[prev.length - 1];
@@ -2603,7 +2962,7 @@ const AegisRescueTerminal = ({ user, isStopped }: { user: User, isStopped: boole
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isStopped, user.balance]);
+  }, [isStopped]);
 
   // Particle Animation (The branching "tree")
   useEffect(() => {
@@ -2940,19 +3299,8 @@ const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boo
       const msg = logMessages[Math.floor(Math.random() * logMessages.length)];
       setLogs(prev => [...prev.slice(-100), { id: Date.now(), text: msg.text, type: msg.type as any }]);
       
-      // If it's an exit log (profit), update real balance
-      if (msg.type === 'exit' && msg.text.includes('PROFIT +$') && user.uid) {
-        const profitMatch = msg.text.match(/PROFIT \+\$([0-9.]+)/);
-        if (profitMatch && profitMatch[1]) {
-          try {
-            const profit = parseFloat(profitMatch[1]);
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, { balance: increment(profit) });
-          } catch (error) {
-            console.error("Error updating Rexconal profit:", error instanceof Error ? error.message : String(error));
-          }
-        }
-      }
+      // Removed direct balance update from terminal simulation to prevent double-crediting
+      // with the global profit loop. The terminal is now purely a visual representation.
 
       setChartData(prev => {
         const lastVal = prev[prev.length - 1].value;
@@ -3128,7 +3476,7 @@ const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boo
   );
 };
 
-const AITradingDashboard = ({ user, showToast, initialBot }: { user: User, showToast: (msg: string, type: 'success' | 'error' | 'info') => void, initialBot?: 'rexconal' | 'aegis' | null }) => {
+const AITradingDashboard = ({ user, showToast, initialBot, isDemoOn }: { user: User, showToast: (msg: string, type: 'success' | 'error' | 'info') => void, initialBot?: 'rexconal' | 'aegis' | null, isDemoOn?: boolean }) => {
   const [isActivating, setIsActivating] = useState(false);
   const [activeBot, setActiveBot] = useState<'rexconal' | 'aegis'>(initialBot || 'rexconal');
   const [isStopped, setIsStopped] = useState(false);
@@ -3536,187 +3884,9 @@ const BotsView = ({ onSubscribe, isSubscribing }: { onSubscribe: (bot: any, amou
   const [activeCategory, setActiveCategory] = useState('جميع الروبوتات');
   const categories = ['جميع الروبوتات', 'العملات المشفرة', 'الفوركس', 'الأسهم', 'السلع'];
 
-  const botsData = [
-    // العملات المشفرة
-    {
-      name: 'ألفا سكالبر',
-      category: 'العملات المشفرة',
-      strategy: 'سكالبينج',
-      description: 'تداول سريع وعالي التردد للعملات المشفرة للاستفادة من تقلبات الأسعار الصغيرة.',
-      winRate: '92.4%', profit: '+12.4%', risk: 'Low', riskScore: 3, trades: '1,245', drawdown: '1.2%', color: 'blue', icon: Zap, minInvestment: '100', tradingPairs: ['BTC/USDT', 'ETH/USDT'], duration: '30 يومًا'
-    },
-    {
-      name: 'صائد الاتجاه المشفر',
-      category: 'العملات المشفرة',
-      strategy: 'تتبع الاتجاه',
-      description: 'يحلل الاتجاهات الكبرى في سوق الكريبتو لتحديد نقاط الدخول والخروج المثلى.',
-      winRate: '88.7%', profit: '+15.2%', risk: 'Medium', riskScore: 5, trades: '342', drawdown: '4.5%', color: 'indigo', icon: TrendingUp, minInvestment: '500', tradingPairs: ['BTC/USDT', 'SOL/USDT'], duration: '45 يومًا'
-    },
-    {
-      name: 'مراجحة البيتكوين',
-      category: 'العملات المشفرة',
-      strategy: 'مراجحة',
-      description: 'يستفيد من فروق أسعار البيتكوين بين المنصات المختلفة بسرعة فائقة.',
-      winRate: '95.1%', profit: '+8.1%', risk: 'Low', riskScore: 2, trades: '2,100', drawdown: '0.8%', color: 'green', icon: Cpu, minInvestment: '1000', tradingPairs: ['BTC/USDT', 'BTC/USDC'], duration: '15 يومًا'
-    },
-    {
-      name: 'شبكة الإيثريوم',
-      category: 'العملات المشفرة',
-      strategy: 'تداول شبكي',
-      description: 'يضع أوامر شراء وبيع متعددة على مستويات محددة مسبقاً لعملة الإيثريوم.',
-      winRate: '85.2%', profit: '+10.5%', risk: 'Medium', riskScore: 4, trades: '890', drawdown: '5.2%', color: 'purple', icon: Activity, minInvestment: '250', tradingPairs: ['ETH/USDT'], duration: '60 يومًا'
-    },
-    {
-      name: 'متأرجح العملات البديلة',
-      category: 'العملات المشفرة',
-      strategy: 'تداول متأرجح',
-      description: 'يستهدف العملات البديلة ذات الإمكانات العالية لتحقيق أرباح على المدى المتوسط.',
-      winRate: '76.4%', profit: '+18.3%', risk: 'High', riskScore: 7, trades: '120', drawdown: '8.1%', color: 'orange', icon: Star, minInvestment: '150', tradingPairs: ['ADA/USDT', 'DOT/USDT'], duration: '90 يومًا'
-    },
-    {
-      name: 'مزارع العوائد',
-      category: 'العملات المشفرة',
-      strategy: 'زراعة العوائد',
-      description: 'يبحث عن أفضل فرص زراعة العوائد في بروتوكولات التمويل اللامركزي (DeFi).',
-      winRate: '98.2%', profit: '+9.7%', risk: 'Low', riskScore: 2, trades: '45', drawdown: '0.5%', color: 'emerald', icon: ShieldCheck, minInvestment: '500', tradingPairs: ['USDT', 'USDC'], duration: '30 يومًا'
-    },
-
-    // الفوركس
-    {
-      name: 'أوميغا تريند',
-      category: 'الفوركس',
-      strategy: 'تتبع الاتجاه',
-      description: 'خوارزمية متقدمة لتتبع الاتجاهات طويلة المدى في أزواج العملات الرئيسية.',
-      winRate: '82.1%', profit: '+8.2%', risk: 'Medium', riskScore: 4, trades: '210', drawdown: '3.2%', color: 'blue', icon: TrendingUp, minInvestment: '500', tradingPairs: ['EUR/USD', 'GBP/USD'], duration: '60 يومًا'
-    },
-    {
-      name: 'قناص اليورو/دولار',
-      category: 'الفوركس',
-      strategy: 'سكالبينج',
-      description: 'روبوت متخصص في التداول السريع لزوج اليورو/دولار خلال أوقات الذروة.',
-      winRate: '89.5%', profit: '+6.5%', risk: 'Low', riskScore: 3, trades: '1,500', drawdown: '1.5%', color: 'indigo', icon: Zap, minInvestment: '100', tradingPairs: ['EUR/USD'], duration: '15 يومًا'
-    },
-    {
-      name: 'مخترق الباوند',
-      category: 'الفوركس',
-      strategy: 'اختراق',
-      description: 'يتداول بناءً على اختراق مستويات الدعم والمقاومة لزوج الجنيه الإسترليني.',
-      winRate: '75.2%', profit: '+11.2%', risk: 'High', riskScore: 6, trades: '180', drawdown: '5.8%', color: 'purple', icon: Activity, minInvestment: '250', tradingPairs: ['GBP/USD', 'GBP/JPY'], duration: '30 يومًا'
-    },
-    {
-      name: 'متداول الين',
-      category: 'الفوركس',
-      strategy: 'تداول محمول',
-      description: 'يستفيد من فروق أسعار الفائدة بين الين الياباني والعملات الأخرى.',
-      winRate: '91.4%', profit: '+10%', risk: 'Low', riskScore: 2, trades: '80', drawdown: '1.1%', color: 'green', icon: BarChart3, minInvestment: '1000', tradingPairs: ['USD/JPY', 'AUD/JPY'], duration: 'يومياً'
-    },
-    {
-      name: 'شبكة الفوركس',
-      category: 'الفوركس',
-      strategy: 'تداول شبكي',
-      description: 'يستخدم استراتيجية الشبكة للتداول في الأسواق العرضية (الجانبية).',
-      winRate: '86.8%', profit: '+10%', risk: 'Medium', riskScore: 4, trades: '650', drawdown: '2.9%', color: 'orange', icon: Cpu, minInvestment: '300', tradingPairs: ['EUR/GBP', 'USD/CHF'], duration: 'يومياً'
-    },
-    {
-      name: 'متداول الأخبار',
-      category: 'الفوركس',
-      strategy: 'تداول الأخبار',
-      description: 'يتفاعل بسرعة فائقة مع الأخبار الاقتصادية والبيانات المالية الهامة.',
-      winRate: '72.5%', profit: '+10%', risk: 'High', riskScore: 8, trades: '40', drawdown: '7.5%', color: 'red', icon: Star, minInvestment: '500', tradingPairs: ['EUR/USD', 'USD/JPY'], duration: 'يومياً'
-    },
-
-    // الأسهم
-    {
-      name: 'دلتا أربيتراج',
-      category: 'الأسهم',
-      strategy: 'مراجحة إحصائية',
-      description: 'يستغل التسعير الخاطئ المؤقت بين الأسهم المرتبطة ببعضها البعض.',
-      winRate: '88.1%', profit: '+10%', risk: 'Low', riskScore: 3, trades: '420', drawdown: '1.8%', color: 'blue', icon: Cpu, minInvestment: '2000', tradingPairs: ['AAPL/MSFT', 'GOOGL/META'], duration: 'يومياً'
-    },
-    {
-      name: 'مؤشر إس آند بي',
-      category: 'الأسهم',
-      strategy: 'استثمار سلبي',
-      description: 'يتتبع أداء مؤشر S&P 500 مع إعادة توازن تلقائية للمحفظة.',
-      winRate: '99.9%', profit: '+10%', risk: 'Low', riskScore: 1, trades: '12', drawdown: '5.0%', color: 'green', icon: TrendingUp, minInvestment: '500', tradingPairs: ['SPY', 'VOO'], duration: 'يومياً'
-    },
-    {
-      name: 'زخم التكنولوجيا',
-      category: 'الأسهم',
-      strategy: 'تداول الزخم',
-      description: 'يستثمر في أسهم التكنولوجيا ذات الزخم الإيجابي القوي.',
-      winRate: '78.5%', profit: '+10%', risk: 'High', riskScore: 7, trades: '150', drawdown: '9.2%', color: 'purple', icon: Zap, minInvestment: '1000', tradingPairs: ['NVDA', 'AMD', 'TSLA'], duration: 'يومياً'
-    },
-    {
-      name: 'حاصد الأرباح',
-      category: 'الأسهم',
-      strategy: 'استثمار الأرباح',
-      description: 'يستهدف الأسهم ذات التوزيعات النقدية العالية والمستقرة.',
-      winRate: '94.2%', profit: '+10%', risk: 'Low', riskScore: 2, trades: '24', drawdown: '2.1%', color: 'indigo', icon: ShieldCheck, minInvestment: '5000', tradingPairs: ['JNJ', 'PG', 'KO'], duration: 'يومياً'
-    },
-    {
-      name: 'قناص الأسهم الصغيرة',
-      category: 'الأسهم',
-      strategy: 'مضاربة',
-      description: 'يتداول في الأسهم ذات القيمة السوقية الصغيرة (Penny Stocks) عالية التقلب.',
-      winRate: '65.4%', profit: '+10%', risk: 'High', riskScore: 9, trades: '890', drawdown: '15.4%', color: 'red', icon: Activity, minInvestment: '100', tradingPairs: ['Penny Stocks'], duration: 'يومياً'
-    },
-    {
-      name: 'فجوة الأرباح',
-      category: 'الأسهم',
-      strategy: 'تداول الفجوات',
-      description: 'يتداول بناءً على الفجوات السعرية التي تحدث بعد إعلانات الأرباح.',
-      winRate: '71.8%', profit: '+10%', risk: 'High', riskScore: 6, trades: '80', drawdown: '6.5%', color: 'orange', icon: Star, minInvestment: '1000', tradingPairs: ['US Equities'], duration: 'يومياً'
-    },
-
-    // السلع
-    {
-      name: 'سيغما جريد',
-      category: 'السلع',
-      strategy: 'تداول شبكي',
-      description: 'استراتيجية شبكية مصممة خصيصاً لتداول السلع الأساسية.',
-      winRate: '84.7%', profit: '+10%', risk: 'Medium', riskScore: 5, trades: '340', drawdown: '4.8%', color: 'blue', icon: Activity, minInvestment: '1000', tradingPairs: ['XAU/USD', 'XAG/USD'], duration: 'يومياً'
-    },
-    {
-      name: 'متأرجح الذهب',
-      category: 'السلع',
-      strategy: 'تداول متأرجح',
-      description: 'يستفيد من تقلبات أسعار الذهب على المدى القصير والمتوسط.',
-      winRate: '79.3%', profit: '+10%', risk: 'Medium', riskScore: 4, trades: '110', drawdown: '3.5%', color: 'yellow', icon: TrendingUp, minInvestment: '500', tradingPairs: ['XAU/USD'], duration: 'يومياً'
-    },
-    {
-      name: 'متتبع النفط',
-      category: 'السلع',
-      strategy: 'تتبع الاتجاه',
-      description: 'يتتبع الاتجاهات الكبرى في أسعار النفط الخام.',
-      winRate: '76.8%', profit: '+10%', risk: 'High', riskScore: 6, trades: '95', drawdown: '7.2%', color: 'gray', icon: Zap, minInvestment: '1000', tradingPairs: ['USOIL', 'UKOIL'], duration: 'يومياً'
-    },
-    {
-      name: 'قناص الفضة',
-      category: 'السلع',
-      strategy: 'سكالبينج',
-      description: 'تداول سريع وعالي التردد للفضة للاستفادة من تحركاتها السريعة.',
-      winRate: '88.5%', profit: '+10%', risk: 'Medium', riskScore: 5, trades: '850', drawdown: '2.8%', color: 'slate', icon: Cpu, minInvestment: '250', tradingPairs: ['XAG/USD'], duration: 'يومياً'
-    },
-    {
-      name: 'موسمي الزراعة',
-      category: 'السلع',
-      strategy: 'تداول موسمي',
-      description: 'يتداول السلع الزراعية بناءً على الأنماط الموسمية التاريخية.',
-      winRate: '81.2%', profit: '+6.2%', risk: 'Low', riskScore: 3, trades: '30', drawdown: '2.5%', color: 'green', icon: BarChart3, minInvestment: '2000', tradingPairs: ['CORN', 'WHEAT', 'SOYBEAN'], duration: '90 يومًا'
-    },
-    {
-      name: 'مراجحة المعادن',
-      category: 'السلع',
-      strategy: 'مراجحة',
-      description: 'يستغل فروق الأسعار بين المعادن الثمينة المختلفة.',
-      winRate: '92.1%', profit: '+8.9%', risk: 'Low', riskScore: 2, trades: '150', drawdown: '1.5%', color: 'indigo', icon: ShieldCheck, minInvestment: '1500', tradingPairs: ['XAU/XAG'], duration: '60 يومًا'
-    }
-  ];
-
   const filteredBots = activeCategory === 'جميع الروبوتات' 
-    ? botsData 
-    : botsData.filter(bot => bot.category === activeCategory);
+    ? BOTS_DATA 
+    : BOTS_DATA.filter(bot => bot.category === activeCategory);
 
   return (
     <motion.div 
@@ -3735,7 +3905,7 @@ const BotsView = ({ onSubscribe, isSubscribing }: { onSubscribe: (bot: any, amou
             <div className="w-4 h-4 bg-emerald-500 rounded-full animate-ping absolute inset-0" />
             <div className="w-4 h-4 bg-emerald-500 rounded-full relative z-10" />
           </div>
-          <span className="text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">{botsData.length} روبوت نشط حالياً</span>
+          <span className="text-sm font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">{BOTS_DATA.length} روبوت نشط حالياً</span>
         </div>
       </div>
 
@@ -4060,6 +4230,21 @@ const MyPortfolioView = ({ investments }: { investments: PlanInvestment[] }) => 
                     <div className="text-lg font-black text-gray-900 dark:text-white">{inv.returnRate}% {inv.returnType === 'Daily' ? 'يومياً' : 'كل 10 دقائق'}</div>
                   </div>
                 </div>
+
+                {inv.planName?.includes('روبوت') && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex justify-between items-center transition-all hover:bg-blue-100 dark:hover:bg-blue-900/20">
+                    <div className="flex items-center gap-3">
+                       <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/20">
+                         <Zap className="w-4 h-4 text-white" />
+                       </div>
+                       <div className="flex flex-col">
+                         <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">إجمالي الصفقات</span>
+                         <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">ذكاء اصطناعي نشط</span>
+                       </div>
+                    </div>
+                    <div className="text-xl font-black text-blue-600 dark:text-blue-400">{inv.totalTrades || 0} <span className="text-xs font-bold text-gray-400">صفقة</span></div>
+                  </div>
+                )}
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
@@ -5033,10 +5218,11 @@ const MarketsView = ({ setActiveTab }: any) => {
   );
 };
 
-const CopyExpertsView = ({ setActiveTab, user, showToast }: { setActiveTab: (tab: string) => void, user: User, showToast?: (m: string, t?: any) => void }) => {
+const CopyExpertsView = ({ setActiveTab, user, showToast, isDemoOn }: { setActiveTab: (tab: string) => void, user: User, showToast?: (m: string, t?: any) => void, isDemoOn: boolean }) => {
   const [selectedExpert, setSelectedExpert] = useState<any>(null);
   const [copyAmount, setCopyAmount] = useState('');
   const [isCopying, setIsCopying] = useState(false);
+  const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
 
   const handleStartCopy = async () => {
     if (!selectedExpert || !copyAmount || isNaN(Number(copyAmount))) {
@@ -5050,13 +5236,17 @@ const CopyExpertsView = ({ setActiveTab, user, showToast }: { setActiveTab: (tab
       return;
     }
 
-    if (amount > user.balance) {
+    if (amount > currentBalance) {
       showToast?.('رصيد غير كافٍ في محفظتك', 'error');
       return;
     }
 
     setIsCopying(true);
     try {
+      // Increased ROI percentages for experts
+      const riskRoiMap: { [key: string]: number } = { 'Low': 1.5, 'Medium': 3.8, 'High': 7.5 };
+      const expertRoi = riskRoiMap[selectedExpert.risk] || 1.0;
+
       const copyTradeData = {
         followerId: user.uid,
         traderId: selectedExpert.id.toString(),
@@ -5064,7 +5254,10 @@ const CopyExpertsView = ({ setActiveTab, user, showToast }: { setActiveTab: (tab
         traderAvatar: selectedExpert.avatar,
         amount: amount,
         status: 'active',
+        isDemo: isDemoOn,
         startDate: new Date().toISOString(),
+        lastUpdate: new Date().toISOString(),
+        dailyRoi: expertRoi,
         currentProfit: 0,
         roi: 0
       };
@@ -5073,9 +5266,15 @@ const CopyExpertsView = ({ setActiveTab, user, showToast }: { setActiveTab: (tab
 
       // Deduct balance
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        balance: increment(-amount)
-      });
+      if (isDemoOn) {
+        await updateDoc(userRef, {
+          demoBalance: increment(-amount)
+        });
+      } else {
+        await updateDoc(userRef, {
+          balance: increment(-amount)
+        });
+      }
 
       // Add notification
       await addDoc(collection(db, 'notifications'), {
@@ -5233,7 +5432,7 @@ const CopyExpertsView = ({ setActiveTab, user, showToast }: { setActiveTab: (tab
                   </div>
                   <div className="flex justify-between px-1 text-[10px] font-black uppercase">
                     <span className="text-gray-400 font-black">رصيدك المتاح:</span>
-                    <span className="text-blue-500">${user.balance.toLocaleString()}</span>
+                    <span className="text-blue-500">${currentBalance.toLocaleString()}{!user.isAccountReal && <span className="text-[8px] mr-1">(تجريبي)</span>}</span>
                   </div>
                 </div>
 
@@ -5314,6 +5513,27 @@ export default function App() {
   const [ethPrice, setEthPrice] = useState<number | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [isDemoOn, setIsDemoOn] = useState(false);
+
+  const toggleDemoMode = async () => {
+    if (!user) return;
+    const newMode = !isDemoOn;
+    
+    if (newMode && (user.demoBalance === undefined || user.demoBalance === null)) {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+          demoBalance: 50000 
+        });
+        showToast('تم تفعيل الحساب التجريبي برصيد $50,000', 'success');
+      } catch (err) {
+        console.error('Error seeding demo balance:', err);
+      }
+    }
+    
+    setIsDemoOn(newMode);
+    showToast(newMode ? 'أنت الآن في وضع التجربة' : 'عدت إلى وضع الحساب الحقيقي', 'info');
+  };
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ message, type });
@@ -5408,8 +5628,12 @@ export default function App() {
         if (pendingTrades.length === 0) return currentTrades;
 
         pendingTrades.forEach(async (trade) => {
-          const volatility = 0.0005;
-          let simulatedCurrentPrice = trade.entryPrice * (1 + (Math.random() * volatility * 2 - volatility));
+          // Market Factors
+          const baseVolatility = 0.0006;
+          const randomFactor = Math.random() * 2 - 1;
+          const volatility = baseVolatility * (1 + Math.abs(randomFactor)); 
+          
+          let simulatedCurrentPrice = trade.entryPrice * (1 + (randomFactor * volatility));
           
           let pipMultiplier = 10000;
           if (trade.asset.includes('XAU') || trade.asset.includes('Gold')) pipMultiplier = 100;
@@ -5419,15 +5643,34 @@ export default function App() {
           const priceDiff = simulatedCurrentPrice - trade.entryPrice;
           const pips = priceDiff * pipMultiplier;
           
+          // Initial profit already accounts for commission
           let profit = pips * (trade.lotSize || 0.01) * 10;
           if (trade.type === 'Sell') profit = -profit;
+          
+          // Deduct spread/commission impact over time or initially
+          // The commission was already deducted from balance, but for display 
+          // we can include it in the net profit
+          const initialCost = trade.commission || 0;
+          const netProfit = profit - initialCost;
 
-          // Calculate time-based multiplier for losses
+          // Time-based risk increase (realistic for leveraged trades)
           const tradeTime = trade.timestamp ? new Date(trade.timestamp).getTime() : new Date().getTime();
           const elapsedMinutes = (new Date().getTime() - tradeTime) / (1000 * 60);
-          const timeMultiplier = Math.min(50, 1 + (elapsedMinutes * 0.5)); // 50% increase in loss per minute, capped at 50x
-
+          const timeMultiplier = 1 + (elapsedMinutes * 0.05); // Faster increase for simulation effect
+          
           let status = trade.status;
+          
+          // Realistic Stop Loss
+          if (trade.stopLoss && trade.stopLoss > 0) {
+            const stopLossTriggered = trade.type === 'Buy' 
+              ? simulatedCurrentPrice <= trade.entryPrice - (trade.stopLoss / (trade.lotSize || 0.01) / 10 / pipMultiplier)
+              : simulatedCurrentPrice >= trade.entryPrice + (trade.stopLoss / (trade.lotSize || 0.01) / 10 / pipMultiplier);
+            
+            if (stopLossTriggered) {
+              status = 'LOSE';
+              profit = -trade.stopLoss;
+            }
+          }
 
           // Apply Admin Auto-Control
           if (globalSettings.autoControl === 'win') {
@@ -5440,56 +5683,42 @@ export default function App() {
             simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
           } else if (globalSettings.autoControl === 'loss') {
             if (trade.stopLoss && trade.stopLoss > 0) {
-              // New requirement: profit is stop loss multiplied by 100
-              profit = -(trade.stopLoss * 100);
+              // Forced loss relative to stop loss
+              profit = -(trade.stopLoss * 1.5 * timeMultiplier);
             } else {
               // Force loss: between 50 and 100 units
               const userBalance = userRef.current?.balance || 100;
               const targetLoss = 50 + Math.random() * 50;
-              profit = -Math.min(targetLoss, userBalance * 0.9); // Cap at 90% of balance to avoid immediate liquidation if not intended, but still a heavy loss
+              profit = -Math.min(targetLoss * timeMultiplier, userBalance * 0.9);
             }
             
             // Adjust simulated price to match profit
-            {
-              const targetPips = Math.abs(profit) / ((trade.lotSize || 0.01) * 10);
-              const targetPriceDiff = targetPips / pipMultiplier;
-              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? -targetPriceDiff : targetPriceDiff);
-            }
-
-            // Apply time multiplier to forced loss
-            profit *= timeMultiplier;
-            
-            // Adjust simulated price to match loss
-            {
-              const targetPips = profit / ((trade.lotSize || 0.01) * 10);
-              const targetPriceDiff = targetPips / pipMultiplier;
-              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
-            }
+            const targetPips = Math.abs(profit) / ((trade.lotSize || 0.01) * 10);
+            const targetPriceDiff = targetPips / pipMultiplier;
+            simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? -targetPriceDiff : targetPriceDiff);
           } else {
-            // Natural simulation: if it's a loss, apply time multiplier
+            // Natural simulation: if it's a loss, apply time multiplier for realism
             if (profit < 0) {
               profit *= timeMultiplier;
-              // Adjust simulated price to match increased loss
-              const targetPipsNatural = profit / ((trade.lotSize || 0.01) * 10);
+              const targetPipsNatural = Math.abs(profit) / ((trade.lotSize || 0.01) * 10);
               const targetPriceDiffNatural = targetPipsNatural / pipMultiplier;
-              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiffNatural : -targetPriceDiffNatural);
+              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? -targetPriceDiffNatural : targetPriceDiffNatural);
             }
           }
 
+          // Automatic closing logic
           if (trade.stopLoss && trade.stopLoss > 0) {
-            // If profit is less than or equal to negative stopLoss amount, close the trade
+            // If profit is less than or equal to negative stopLoss amount, close it
             if (profit <= -trade.stopLoss) {
               status = 'LOSE';
-              
-              // If Always Loss mode is active, we allow the 100x loss, otherwise cap at stopLoss
+              // If Always Loss mode is active, we allow deep loss, otherwise cap
               if (globalSettings.autoControl !== 'loss') {
-                profit = -trade.stopLoss; // Cap the loss at the stop loss amount
+                profit = -trade.stopLoss;
               }
               
-              // Adjust simulated price to match the final profit/loss
-              const targetPips = profit / ((trade.lotSize || 0.01) * 10);
+              const targetPips = Math.abs(profit) / ((trade.lotSize || 0.01) * 10);
               const targetPriceDiff = targetPips / pipMultiplier;
-              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? targetPriceDiff : -targetPriceDiff);
+              simulatedCurrentPrice = trade.entryPrice + (trade.type === 'Buy' ? -targetPriceDiff : targetPriceDiff);
             }
           }
 
@@ -5559,96 +5788,118 @@ export default function App() {
     return () => clearInterval(interval);
   }, [auth.currentUser, globalSettings]);
 
-  // Simulate investment profit generation
-  useEffect(() => {
+  // --- Investment & Bot Profit Simulation ---
+  const simulateInvestments = async (currentInvestments: PlanInvestment[]) => {
     if (!auth.currentUser) return;
+    const activeInvestments = currentInvestments.filter(inv => inv.status === 'active');
+    if (activeInvestments.length === 0) return;
 
-    const interval = setInterval(() => {
-      setPlanInvestments(currentInvestments => {
-        const activeInvestments = currentInvestments.filter(inv => inv.status === 'active');
-        if (activeInvestments.length === 0) return currentInvestments;
+    for (const inv of activeInvestments) {
+      try {
+        const now = new Date();
+        const startDate = new Date(inv.startDate);
+        const endDate = new Date(inv.endDate);
+        
+        // Check if investment has expired
+        if (now >= endDate) {
+          const invRef = doc(db, 'planInvestments', inv.id);
+          await updateDoc(invRef, {
+            status: 'completed'
+          });
+          
+          const userRef = doc(db, 'users', auth.currentUser.uid);
+          await updateDoc(userRef, {
+            balance: increment(inv.amount)
+          });
+          
+          await addDoc(collection(db, 'notifications'), {
+            userId: auth.currentUser.uid,
+            title: 'اكتمل الاستثمار',
+            message: `لقد اكتملت مدة استثمارك في "${inv.planName}". تم إعادة مبلغ الاستثمار ($${inv.amount.toLocaleString()}) إلى رصيدك.`,
+            type: 'success',
+            read: false,
+            timestamp: new Date().toISOString()
+          });
+          continue;
+        }
 
-        activeInvestments.forEach(async (inv) => {
-          try {
-            const now = new Date();
-            const startDate = new Date(inv.startDate);
-            const endDate = new Date(inv.endDate);
-            
-            // Check if investment has expired
-            if (now >= endDate) {
-              const invRef = doc(db, 'planInvestments', inv.id);
-              await updateDoc(invRef, {
-                status: 'completed'
-              });
-              
-              // Return only the initial investment amount (principal) to user balance
-              // since profits were already paid out incrementally
-              const userRef = doc(db, 'users', auth.currentUser!.uid);
-              await updateDoc(userRef, {
-                balance: increment(inv.amount)
-              });
-              
-              // Create notification for completion
-              await addDoc(collection(db, 'notifications'), {
-                userId: auth.currentUser!.uid,
-                title: 'اكتمل الاستثمار',
-                message: `لقد اكتملت مدة استثمارك في "${inv.planName}". تم إعادة مبلغ الاستثمار ($${inv.amount.toLocaleString()}) إلى رصيدك.`,
-                type: 'success',
-                read: false,
-                timestamp: new Date().toISOString()
-              });
-              return;
-            }
+        // Calculate profit based on elapsed time (simulation)
+        const elapsedMs = now.getTime() - startDate.getTime();
+        const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+        
+        let currentExpectedTotalProfit = 0;
+        let currentExpectedTrades = 0;
+        let profitIncrement = 0;
 
-            // Calculate profit based on elapsed time (simulation)
-            // For a 10% daily return, we simulate it by adding a small fraction every 10 seconds
-            const elapsedMs = now.getTime() - startDate.getTime();
-            const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
-            
-            let currentExpectedTotalProfit = 0;
-            if (inv.planName?.includes('روبوت')) {
-              // Specific logic for trading bots: $10 to $26 per day
-              // Use a deterministic value based on the investment ID to ensure consistent daily profit
-              const idHash = inv.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-              const dailyProfit = 10 + (Math.abs(idHash) % 17); // Results in 10-26 range
-              currentExpectedTotalProfit = dailyProfit * elapsedDays;
-            } else if (inv.returnType === 'Daily') {
-              currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedDays;
+        if (inv.planName?.includes('روبوت')) {
+          // Find bot in global configuration for latest metrics (covers old subscribers)
+          const botName = inv.planId || inv.planName.replace('روبوت: ', '');
+          const botConfig = BOTS_DATA.find(b => b.name === botName);
+          
+          const returnRate = inv.returnRate || (botConfig ? parseFloat(botConfig.profit.replace(/[+%]/g, '')) : 15);
+          const tpd = inv.tradesPerDay || (botConfig ? botConfig.tradesPerDay : 5);
+          
+          currentExpectedTrades = Math.floor(tpd * elapsedDays);
+          
+          const tradesIncrement = currentExpectedTrades - (inv.totalTrades || 0);
+          
+          if (tradesIncrement > 0) {
+            // Distribute daily profit target per trade
+            const dailyTargetPercent = returnRate / 100;
+            const profitPerTrade = (inv.amount * dailyTargetPercent) / tpd;
+            profitIncrement = profitPerTrade * tradesIncrement;
+            currentExpectedTotalProfit = inv.totalEarned + profitIncrement;
+          } else {
+            // No new trades, no new profit for robots
+            currentExpectedTotalProfit = inv.totalEarned;
+            currentExpectedTrades = inv.totalTrades || 0;
+          }
+        } else if (inv.returnType === 'Daily') {
+          currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedDays;
+          profitIncrement = currentExpectedTotalProfit - inv.totalEarned;
+        } else {
+          const elapsedPeriods = elapsedMs / (1000 * 60 * 10); // 10 min periods
+          currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedPeriods;
+          profitIncrement = currentExpectedTotalProfit - inv.totalEarned;
+        }
+
+        if (profitIncrement > 0.0001 || (currentExpectedTrades > (inv.totalTrades || 0))) {
+          const invRef = doc(db, 'planInvestments', inv.id);
+          const roundedProfit = Number(currentExpectedTotalProfit.toFixed(4));
+          const roundedIncrement = Number(profitIncrement.toFixed(4));
+          
+          const updateData: any = {
+            totalEarned: roundedProfit,
+            totalTrades: currentExpectedTrades
+          };
+          
+          await updateDoc(invRef, updateData);
+
+          const userRefData = doc(db, 'users', auth.currentUser.uid);
+          if (roundedIncrement > 0) {
+            if (inv.isDemo) {
+              await updateDoc(userRefData, {
+                demoBalance: increment(roundedIncrement)
+              });
             } else {
-              // For other types, just add a small amount for demo
-              const elapsedPeriods = elapsedMs / (1000 * 60 * 10); // 10 minutes periods
-              currentExpectedTotalProfit = inv.amount * (inv.returnRate / 100) * elapsedPeriods;
-            }
-
-            // Only update and pay out if the difference is noticeable (e.g., > $0.01)
-            const profitIncrement = currentExpectedTotalProfit - inv.totalEarned;
-            
-            if (profitIncrement > 0.01) {
-              const invRef = doc(db, 'planInvestments', inv.id);
-              const roundedProfit = Number(currentExpectedTotalProfit.toFixed(4));
-              const roundedIncrement = Number(profitIncrement.toFixed(4));
-              
-              // Update investment total earned
-              await updateDoc(invRef, {
-                totalEarned: roundedProfit
-              });
-
-              // ADD PROFIT TO USER BALANCE IMMEDIATELY
-              const userRef = doc(db, 'users', auth.currentUser!.uid);
-              await updateDoc(userRef, {
+              await updateDoc(userRefData, {
                 balance: increment(roundedIncrement)
               });
             }
-          } catch (error) {
-            console.error("Error updating investment:", error instanceof Error ? error.message : String(error));
           }
-        });
-        return currentInvestments;
-      });
-    }, 10000); // Update every 10 seconds
+        }
+      } catch (error) {
+        console.error("Error updating investment:", error instanceof Error ? error.message : String(error));
+      }
+    }
+  };
 
+  // Periodic simulation for online users
+  useEffect(() => {
+    if (!auth.currentUser || planInvestments.length === 0) return;
+    const interval = setInterval(() => simulateInvestments(planInvestments), 10000);
     return () => clearInterval(interval);
-  }, [auth.currentUser]);
+  }, [auth.currentUser, planInvestments]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
@@ -5696,6 +5947,8 @@ export default function App() {
               if (existingData.uid === undefined) updateData.uid = firebaseUser.uid;
               if (existingData.email === undefined && !updateData.email) updateData.email = firebaseUser.email || '';
               if (existingData.points === undefined) updateData.points = 0;
+              if (existingData.demoBalance === undefined) updateData.demoBalance = existingData.balance || 0;
+              if (existingData.isAccountReal === undefined) updateData.isAccountReal = false;
 
               console.log('Syncing existing user:', firebaseUser.uid, updateData);
               await updateDoc(userDocRef, updateData);
@@ -5707,13 +5960,15 @@ export default function App() {
                 displayName: firebaseUser.displayName || '',
                 photoURL: firebaseUser.photoURL || '',
                 role: firebaseUser.email === 'wasemwasemm4@gmail.com' ? 'admin' : 'user',
-                balance: 0,
+                balance: 50000,
                 profit: 0,
                 kycStatus: 'none',
                 createdAt: new Date().toISOString(),
                 lastLogin: new Date().toISOString(),
                 referredBy: localStorage.getItem('referredBy') || null,
-                points: 0
+                points: 0,
+                demoBalance: 50000,
+                isAccountReal: false,
               };
               console.log('Creating new user:', firebaseUser.uid, newUser);
               await setDoc(userDocRef, newUser);
@@ -5750,6 +6005,9 @@ export default function App() {
         unsubInvestments = onSnapshot(investmentsQuery, (snapshot) => {
           const investments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PlanInvestment));
           setPlanInvestments(investments);
+          
+          // Trigger immediate catch-up simulation for bots/investments
+          simulateInvestments(investments);
         }, (err) => handleFirestoreError(err, OperationType.LIST, 'planInvestments'));
 
         // Listen for trades
@@ -5783,7 +6041,8 @@ export default function App() {
         }, (err) => handleFirestoreError(err, OperationType.GET, 'settings/global'));
 
         // --- Copy Trading Simulation ---
-        const intervalId = setInterval(async () => {
+        const simulateCopyTrades = async () => {
+          if (!firebaseUser) return;
           const q = query(
             collection(db, 'copyTrades'),
             where('followerId', '==', firebaseUser.uid),
@@ -5791,24 +6050,60 @@ export default function App() {
           );
           
           try {
+            const now = new Date();
             const snapshot = await getDocs(q);
             snapshot.forEach(async (tradeDoc) => {
               const data = tradeDoc.data();
-              // Simulate small profit fluctuation (-0.02% to +0.08%) every 30s
-              const changeRate = (Math.random() * 0.1 - 0.02) / 100;
-              const profitChange = data.amount * changeRate;
+              
+              // Fallbacks and updated ROI logic
+              const riskRoiMap: { [key: string]: number } = { 'Low': 1.5, 'Medium': 3.8, 'High': 7.5 };
+              const lastUpdateStr = data.lastUpdate || data.startDate;
+              const lastUpdate = new Date(lastUpdateStr);
+              
+              // Try to determine current dailyRoi (use stored or map based on what we know)
+              // For existing trades, we'll give them the new boosted rates
+              const dailyRoi = data.dailyRoi || 1.5; 
+              const boostedRoi = Math.max(dailyRoi, 1.5); // Ensure no one is below the new minimum
+              
+              const elapsedMs = now.getTime() - lastUpdate.getTime();
+              // Prevent negative or zero duration updates
+              if (elapsedMs < 1000) return; 
+
+              const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+              
+              // Calculate profit based on realistic market simulation (Random Walk with Drift)
+              // Drift represents the expert's edge, volatility represents market risk
+              const volatilityPerDay = 1.8; // 1.8% daily volatility
+              
+              // Standard Normal Random Variable simulated via Box-Muller transform
+              const u1 = Math.random();
+              const u2 = Math.random();
+              const z0 = Math.sqrt(-2.0 * Math.log(u1 || 0.0001)) * Math.cos(2.0 * Math.PI * u2);
+              
+              // Daily Return = Mean + (Volatility * Z)
+              const meanDailyReturn = boostedRoi / 100;
+              const actualDailyReturn = meanDailyReturn + (volatilityPerDay / 100 * z0);
+              
+              // Profit change for the elapsed time
+              const profitChange = data.amount * actualDailyReturn * elapsedDays;
+              
               const newProfit = (data.currentProfit || 0) + profitChange;
               const newRoi = (newProfit / data.amount) * 100;
 
               await updateDoc(tradeDoc.ref, {
-                currentProfit: newProfit,
-                roi: newRoi
+                currentProfit: Number(newProfit.toFixed(4)),
+                roi: Number(newRoi.toFixed(4)),
+                lastUpdate: now.toISOString()
               });
             });
           } catch (error) {
-            console.warn("Copy profit simulation skipped (likely offline or permission denied)");
+            console.warn("Copy profit simulation skipped:", error instanceof Error ? error.message : String(error));
           }
-        }, 30000);
+        };
+
+        // Run once on startup to catch up any offline time
+        simulateCopyTrades();
+        const intervalId = setInterval(simulateCopyTrades, 30000);
 
         // Store intervalId for cleanup if needed outside or handle it in specific cleanup logic
         // For simplicity with the existing structure, we can just clear it when another user logs in or on unmount
@@ -5839,7 +6134,9 @@ export default function App() {
 
   const subscribeToBot = async (bot: any, amount: number) => {
     if (!user) return;
-    if (user.balance < amount) {
+    const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
+
+    if (currentBalance < amount) {
       showToast("رصيدك غير كافٍ للاشتراك في هذا الروبوت.", 'error');
       return;
     }
@@ -5848,20 +6145,28 @@ export default function App() {
     try {
       const startDate = new Date();
       const endDate = new Date();
-      endDate.setDate(startDate.getDate() + 30); // 30 days duration
+      endDate.setDate(startDate.getDate() + 30); // Standard 30 days but daily profits
+
+      // Parse profit percentage from string like "+28.4%"
+      const profitRate = parseFloat(bot.profit.replace(/[+%]/g, '')) || 10;
+      const tradesPerDay = bot.tradesPerDay || 5;
 
       const newInvestment: Omit<PlanInvestment, 'id'> = {
         userId: user.uid,
-        planId: bot.name, // Using bot name as ID for simplicity
+        planId: bot.name,
         planName: `روبوت: ${bot.name}`,
         amount: amount,
-        returnRate: 10, // 10% daily
+        returnRate: profitRate,
         returnType: 'Daily',
-        duration: '30 يومًا',
+        duration: bot.duration || 'يومياً',
         status: 'active',
+        isDemo: isDemoOn,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         totalEarned: 0,
+        userEmail: user.email,
+        tradesPerDay: tradesPerDay,
+        totalTrades: 0
       };
 
       // Add investment
@@ -5869,9 +6174,15 @@ export default function App() {
 
       // Deduct balance and add transaction
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        balance: increment(-amount)
-      });
+      if (isDemoOn) {
+        await updateDoc(userRef, {
+          demoBalance: increment(-amount)
+        });
+      } else {
+        await updateDoc(userRef, {
+          balance: increment(-amount)
+        });
+      }
 
       const transaction: Omit<Transaction, 'id'> = {
         userId: user.uid,
@@ -5893,7 +6204,9 @@ export default function App() {
 
   const subscribeToPlan = async (plan: any, amount: number) => {
     if (!user) return;
-    if (user.balance < amount) {
+    const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
+
+    if (currentBalance < amount) {
       showToast("رصيدك غير كافٍ للاشتراك في هذه الخطة.", 'error');
       return;
     }
@@ -5914,9 +6227,11 @@ export default function App() {
         returnType: plan.returnType,
         duration: plan.duration,
         status: 'active',
+        isDemo: isDemoOn,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         totalEarned: 0,
+        userEmail: user.email,
       };
 
       // Add investment
@@ -5924,9 +6239,15 @@ export default function App() {
 
       // Deduct balance and add transaction
       const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        balance: increment(-amount)
-      });
+      if (isDemoOn) {
+        await updateDoc(userRef, {
+          demoBalance: increment(-amount)
+        });
+      } else {
+        await updateDoc(userRef, {
+          balance: increment(-amount)
+        });
+      }
 
       const transaction: Omit<Transaction, 'id'> = {
         userId: user.uid,
@@ -6051,7 +6372,7 @@ export default function App() {
               {/* Balance Display (Desktop) */}
               <div className="hidden xl:flex flex-col items-end px-4 border-r border-gray-100 dark:border-gray-800">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">رصيدك الحالي</span>
-                <span className="text-sm font-black text-gray-900 dark:text-white">${user.balance.toLocaleString()}</span>
+                <span className="text-sm font-black text-gray-900 dark:text-white">${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
               </div>
 
               {/* Quick Actions */}
@@ -6246,7 +6567,7 @@ export default function App() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className="text-xs font-bold text-blue-600 dark:text-blue-400">${user.balance.toLocaleString()}</div>
+                              <div className="text-xs font-bold text-blue-600 dark:text-blue-400">${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</div>
                               <div className="text-[10px] font-black text-amber-600 dark:text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
                                 <Star className="w-2.5 h-2.5 fill-amber-500" />
                                 {user.points || 0}
@@ -6320,7 +6641,7 @@ export default function App() {
               </div>
               <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 shadow-sm backdrop-blur-sm">
                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">رصيد الحساب</div>
-                <div className="text-xl font-black text-gray-900 dark:text-white tabular-nums">${user.balance.toLocaleString()}</div>
+                <div className="text-xl font-black text-gray-900 dark:text-white tabular-nums">${user.balance.toLocaleString()}{!user.isAccountReal && <span className="text-xs ml-1 opacity-50">(تجريبي)</span>}</div>
               </div>
             </div>
 
@@ -6398,14 +6719,24 @@ export default function App() {
                 <SidebarItem icon={UserCircle} label="إعدادات الملف" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
                 <SidebarItem icon={ShieldAlert} label="التحقق من الهوية" active={activeTab === 'kyc'} onClick={() => setActiveTab('kyc')} />
                 {user.role === 'admin' && (
-                  <SidebarItem 
-                    icon={Settings} 
-                    label="لوحة الإدارة" 
-                    active={false} 
-                    onClick={() => { window.open('/admin.html', '_blank'); setIsSidebarOpen(false); }} 
-                    badge="ADMIN"
-                    badgeColor="bg-purple-500"
-                  />
+                  <>
+                    <SidebarItem 
+                      icon={Users2} 
+                      label="مشتركي الخطط" 
+                      active={activeTab === 'admin-subs'} 
+                      onClick={() => setActiveTab('admin-subs')} 
+                      badge="إدارة"
+                      badgeColor="bg-indigo-600"
+                    />
+                    <SidebarItem 
+                      icon={Settings} 
+                      label="لوحة الإدارة" 
+                      active={false} 
+                      onClick={() => { window.open('/admin.html', '_blank'); setIsSidebarOpen(false); }} 
+                      badge="ADMIN"
+                      badgeColor="bg-purple-500"
+                    />
+                  </>
                 )}
               </NavSection>
 
@@ -6430,6 +6761,8 @@ export default function App() {
                     setActiveTab={setActiveTab} 
                     trades={trades} 
                     showToast={showToast}
+                    isDemoOn={isDemoOn}
+                    toggleDemoMode={toggleDemoMode}
                     botProfit={planInvestments
                       .filter(inv => inv.planName?.includes('روبوت'))
                       .reduce((sum, inv) => sum + (inv.totalEarned || 0), 0)
@@ -6445,12 +6778,13 @@ export default function App() {
                 {activeTab === 'performance' && <PerformanceHistoryView key="performance" trades={trades} globalSettings={globalSettings} />}
                 {activeTab === 'markets' && <MarketsView key="markets" setActiveTab={setActiveTab} />}
                 {activeTab === 'copy' && <CopyTradingView key="copy" setActiveTab={setActiveTab} user={user} />}
-                {activeTab === 'copy-experts' && <CopyExpertsView key="copy-experts" setActiveTab={setActiveTab} user={user} showToast={showToast} />}
+                {activeTab === 'copy-experts' && <CopyExpertsView key="copy-experts" setActiveTab={setActiveTab} user={user} showToast={showToast} isDemoOn={isDemoOn} />}
                 {activeTab === 'settings' && <SettingsView key="settings" user={user} showToast={showToast} />}
                 {activeTab === 'signals' && <FeaturedSignalsView key="signals" showToast={showToast} />}
                 {activeTab === 'referral' && <ReferralView key="referral" user={user} />}
                 {activeTab === 'support' && <SupportView key="support" user={user} showToast={showToast} />}
-                {activeTab === 'ai-trading' && <AITradingDashboard key="ai-trading" user={user} showToast={showToast} initialBot={selectedAIBot} />}
+                {activeTab === 'ai-trading' && <AITradingDashboard key="ai-trading" user={user} showToast={showToast} initialBot={selectedAIBot} isDemoOn={isDemoOn} />}
+                {activeTab === 'admin-subs' && user.role === 'admin' && <AdminSubscriptionsView key="admin-subs" />}
                 
                 {/* Fallback for other tabs */}
                 {!['dashboard', 'history', 'wallet', 'deposit', 'withdraw', 'kyc', 'bots', 'plans', 'portfolio', 'performance', 'markets', 'copy', 'copy-experts', 'settings', 'signals', 'referral', 'support', 'ai-trading'].includes(activeTab) && (

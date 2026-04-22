@@ -188,7 +188,7 @@ service cloud.firestore {
 
     function isValidUser(data, userId) {
       return hasRequiredFields(['uid', 'email', 'role', 'balance', 'profit', 'kycStatus', 'createdAt']) &&
-             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'balance', 'profit', 'kycStatus', 'referralCode', 'referredBy', 'referralCount', 'createdAt', 'lastLogin', 'phone', 'country', 'firstName', 'lastName', 'address', 'city', 'state', 'dob', 'documentType', 'frontImage', 'backImage', 'zipCode', 'idNumber', 'isBlocked', 'aiTrialExpires', 'aegisTrialExpires', 'onboardingCompleted', 'points']) &&
+             hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role', 'balance', 'profit', 'kycStatus', 'referralCode', 'referredBy', 'referralCount', 'createdAt', 'lastLogin', 'phone', 'country', 'firstName', 'lastName', 'address', 'city', 'state', 'dob', 'documentType', 'frontImage', 'backImage', 'zipCode', 'idNumber', 'isBlocked', 'aiTrialExpires', 'aegisTrialExpires', 'onboardingCompleted', 'points', 'demoBalance', 'isAccountReal']) &&
              data.uid == userId &&
              data.role in ['user', 'admin'] &&
              data.balance is number &&
@@ -199,7 +199,9 @@ service cloud.firestore {
              (data.get('aiTrialExpires', '') == '' || isValidDateString(data.get('aiTrialExpires', ''))) &&
              (data.get('aegisTrialExpires', '') == '' || isValidDateString(data.get('aegisTrialExpires', ''))) &&
              (data.get('onboardingCompleted', false) is bool) &&
-             (data.get('points', 0) is number);
+             (data.get('points', 0) is number) &&
+             (data.get('demoBalance', 0) is number) &&
+             (data.get('isAccountReal', false) is bool);
     }
 
     function isValidBot(data) {
@@ -240,34 +242,39 @@ service cloud.firestore {
 
     function isValidCopyTrade(data) {
       return hasRequiredFields(['followerId', 'traderId', 'traderName', 'amount', 'status', 'startDate']) &&
-             hasOnlyAllowedFields(['followerId', 'traderId', 'traderName', 'traderAvatar', 'amount', 'status', 'startDate', 'currentProfit', 'roi']) &&
+             hasOnlyAllowedFields(['followerId', 'traderId', 'traderName', 'traderAvatar', 'amount', 'status', 'startDate', 'currentProfit', 'roi', 'isDemo', 'lastUpdate', 'dailyRoi']) &&
              (data.followerId == request.auth.uid || isAdmin()) &&
              data.amount is number && data.amount > 0 &&
              data.status in ['active', 'paused', 'stopped'] &&
              isValidDateString(data.startDate) &&
+             (data.get('lastUpdate', '') == '' || isValidDateString(data.get('lastUpdate', ''))) &&
+             (data.get('dailyRoi', 0) is number) &&
              (data.get('currentProfit', 0) is number) &&
-             (data.get('roi', 0) is number);
+             (data.get('roi', 0) is number) &&
+             (data.get('isDemo', false) is bool);
     }
 
     function isValidPlanInvestment(data) {
       return hasRequiredFields(['userId', 'planId', 'planName', 'amount', 'returnRate', 'returnType', 'duration', 'status', 'startDate', 'endDate', 'totalEarned']) &&
-             hasOnlyAllowedFields(['userId', 'planId', 'planName', 'amount', 'returnRate', 'returnType', 'duration', 'status', 'startDate', 'endDate', 'totalEarned', 'lastPayoutDate']) &&
+             hasOnlyAllowedFields(['userId', 'planId', 'planName', 'amount', 'returnRate', 'returnType', 'duration', 'status', 'startDate', 'endDate', 'totalEarned', 'lastPayoutDate', 'isDemo', 'userEmail', 'tradesPerDay', 'totalTrades']) &&
              (data.userId == request.auth.uid || isAdmin()) &&
              data.amount is number && data.amount > 0 &&
              data.status in ['active', 'completed', 'expired'] &&
              isValidDateString(data.startDate) &&
-             isValidDateString(data.endDate);
+             isValidDateString(data.endDate) &&
+             (data.get('isDemo', false) is bool);
     }
 
     function isValidTrade(data) {
       return hasRequiredFields(['userId', 'asset', 'type', 'amount', 'entryPrice', 'status', 'profit', 'timestamp']) &&
-             hasOnlyAllowedFields(['userId', 'asset', 'type', 'amount', 'lotSize', 'entryPrice', 'exitPrice', 'leverage', 'duration', 'stopLoss', 'status', 'profit', 'timestamp', 'closedAt']) &&
+             hasOnlyAllowedFields(['userId', 'asset', 'type', 'amount', 'lotSize', 'entryPrice', 'exitPrice', 'leverage', 'duration', 'stopLoss', 'status', 'profit', 'timestamp', 'closedAt', 'isDemo']) &&
              (data.userId == request.auth.uid || isAdmin()) &&
              data.type in ['Buy', 'Sell'] &&
              data.amount is number &&
              data.status in ['WIN', 'LOSE', 'PENDING'] &&
              data.profit is number &&
-             isValidDateString(data.timestamp);
+             isValidDateString(data.timestamp) &&
+             (data.get('isDemo', false) is bool);
     }
 
     function isValidDeposit(data) {

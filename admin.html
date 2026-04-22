@@ -1249,6 +1249,30 @@
                     }
                 };
 
+                window.upgradeToReal = async (userId) => {
+                    if (!confirm('هل أنت متأكد من ترقية هذا الحساب إلى حساب حقيقي؟ سيتم تصفير الرصيد التجريبي.')) return;
+                    try {
+                        const userRef = doc(db, 'users', userId);
+                        await updateDoc(userRef, {
+                            isAccountReal: true,
+                            balance: 0,
+                            demoBalance: 0
+                        });
+                        
+                        await createNotification(
+                            userId,
+                            'تم ترقية الحساب',
+                            'تهانينا! لقد تم ترقية حسابك إلى حساب حقيقي بنجاح. يمكنك الآن الإيداع وتداول الأموال الحقيقية.',
+                            'success'
+                        );
+                        
+                        showToast('تم ترقية الحساب بنجاح', 'success');
+                    } catch (error) {
+                        handleAdminError(error, "Error upgrading account");
+                        showToast('حدث خطأ أثناء ترقية الحساب', 'error');
+                    }
+                };
+
                 window.viewReceipt = (depositId) => {
                     const deposit = currentDeposits.find(d => d.id === depositId);
                     if (!deposit || !deposit.receipt) {
@@ -1352,6 +1376,11 @@
                         <button class="btn-action btn-win" onclick="forceVerifyKyc('${u.id}')" ${u.kycStatus === 'approved' ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
                             توثيق
                         </button>
+                        ${!u.isAccountReal ? `
+                            <button class="btn-action btn-win" style="background-color: var(--primary-color);" onclick="upgradeToReal('${u.id}')">
+                                ترقية لحقيقي
+                            </button>
+                        ` : ''}
                     </td>
                 </tr>
             `}).join('');

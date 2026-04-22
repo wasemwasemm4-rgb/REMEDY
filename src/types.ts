@@ -18,6 +18,8 @@ export interface User {
   aegisTrialExpires?: string | null;
   onboardingCompleted?: boolean;
   points?: number;
+  demoBalance?: number;
+  isAccountReal?: boolean;
 }
 
 export interface Bot {
@@ -46,7 +48,7 @@ export interface Investment {
 export interface PlanInvestment {
   id: string;
   userId: string;
-  planId: number;
+  planId: string | number;
   planName: string;
   amount: number;
   returnRate: number;
@@ -56,7 +58,11 @@ export interface PlanInvestment {
   startDate: string;
   endDate: string;
   totalEarned: number;
+  userEmail?: string;
+  tradesPerDay?: number;
+  totalTrades?: number;
   lastPayoutDate?: string;
+  isDemo?: boolean;
 }
 
 export interface Transaction {
@@ -87,6 +93,7 @@ export interface CopyTrade {
   amount: number;
   status: 'active' | 'paused' | 'stopped';
   startDate: string;
+  isDemo?: boolean;
 }
 
 export interface Trade {
@@ -102,7 +109,10 @@ export interface Trade {
   stopLoss?: number;
   status: 'WIN' | 'LOSE' | 'PENDING';
   profit: number;
+  commission?: number;
+  closedAt?: string;
   timestamp: string;
+  isDemo?: boolean;
 }
 
 export interface KYCRequest {
