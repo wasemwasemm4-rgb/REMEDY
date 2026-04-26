@@ -49,10 +49,16 @@ const CopyTradingView = ({ setActiveTab, user }: { setActiveTab: (tab: string) =
 
     try {
       // Return balance
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        balance: increment(trade.amount + (trade.currentProfit || 0))
-      });
+      const userRefDoc = doc(db, 'users', user.uid);
+      if (trade.isDemo) {
+        await updateDoc(userRefDoc, {
+          demoBalance: increment(trade.amount + (trade.currentProfit || 0))
+        });
+      } else {
+        await updateDoc(userRefDoc, {
+          balance: increment(trade.amount + (trade.currentProfit || 0))
+        });
+      }
 
       // Delete copy trade record
       await deleteDoc(doc(db, 'copyTrades', trade.id));

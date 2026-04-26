@@ -4954,10 +4954,16 @@ const PerformanceHistoryView = ({ trades, globalSettings }: { trades: Trade[], g
                               exitPrice: trade.entryPrice // Simplification for manual close
                             });
                             
-                            const userRef = doc(db, 'users', auth.currentUser!.uid);
-                            await updateDoc(userRef, {
-                              balance: increment(trade.amount + finalProfit)
-                            });
+                            const userRefDoc = doc(db, 'users', auth.currentUser!.uid);
+                            if (trade.isDemo) {
+                              await updateDoc(userRefDoc, {
+                                demoBalance: increment(trade.amount + finalProfit)
+                              });
+                            } else {
+                              await updateDoc(userRefDoc, {
+                                balance: increment(trade.amount + finalProfit)
+                              });
+                            }
                           } catch (error) {
                             console.error("Error closing trade:", error instanceof Error ? error.message : String(error));
                           }
@@ -5723,9 +5729,10 @@ export default function App() {
           }
 
           // Liquidation logic: if loss exceeds or equals current balance
-          if (status === 'PENDING' && userRef.current && profit <= -userRef.current.balance) {
+          const currentUserBalance = trade.isDemo ? (userRef.current?.demoBalance || 0) : (userRef.current?.balance || 0);
+          if (status === 'PENDING' && profit <= -currentUserBalance) {
             status = 'LOSE';
-            profit = -userRef.current.balance; // Cap loss at current balance
+            profit = -currentUserBalance; // Cap loss at current balance
             
             // Adjust simulated price to match the liquidation amount
             const targetPips = profit / ((trade.lotSize || 0.01) * 10);
@@ -5745,14 +5752,24 @@ export default function App() {
               });
 
               const userRefDoc = doc(db, 'users', auth.currentUser!.uid);
-              const isLiquidation = userRef.current && profit <= -userRef.current.balance;
+              const isLiquidation = profit <= -currentUserBalance;
               
               if (isLiquidation) {
-                await updateDoc(userRefDoc, { balance: 0 });
+                if (trade.isDemo) {
+                  await updateDoc(userRefDoc, { demoBalance: 0 });
+                } else {
+                  await updateDoc(userRefDoc, { balance: 0 });
+                }
               } else {
-                await updateDoc(userRefDoc, {
-                  balance: increment(trade.amount + profit)
-                });
+                if (trade.isDemo) {
+                  await updateDoc(userRefDoc, {
+                    demoBalance: increment(trade.amount + profit)
+                  });
+                } else {
+                  await updateDoc(userRefDoc, {
+                    balance: increment(trade.amount + profit)
+                  });
+                }
               }
 
               // Create notification for auto-close
@@ -5808,9 +5825,15 @@ export default function App() {
           });
           
           const userRef = doc(db, 'users', auth.currentUser.uid);
-          await updateDoc(userRef, {
-            balance: increment(inv.amount)
-          });
+          if (inv.isDemo) {
+            await updateDoc(userRef, {
+              demoBalance: increment(inv.amount)
+            });
+          } else {
+            await updateDoc(userRef, {
+              balance: increment(inv.amount)
+            });
+          }
           
           await addDoc(collection(db, 'notifications'), {
             userId: auth.currentUser.uid,
