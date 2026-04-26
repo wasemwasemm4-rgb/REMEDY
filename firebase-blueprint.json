@@ -136,19 +136,26 @@
       "description": "Trading activity record",
       "type": "object",
       "properties": {
-        "id": { "type": "string" },
         "userId": { "type": "string" },
         "asset": { "type": "string" },
         "type": { "type": "string", "enum": ["Buy", "Sell"] },
         "amount": { "type": "number" },
+        "lotSize": { "type": "number" },
         "entryPrice": { "type": "number" },
-        "exitPrice": { "type": "number" },
+        "marketPriceAtEntry": { "type": "number" },
+        "leverage": { "type": "string" },
+        "duration": { "type": "string" },
+        "stopLoss": { "type": ["number", "null"] },
         "status": { "type": "string", "enum": ["WIN", "LOSE", "PENDING"] },
         "profit": { "type": "number" },
+        "commission": { "type": "number" },
+        "spread": { "type": "number" },
         "timestamp": { "type": "string", "format": "date-time" },
-        "isDemo": { "type": "boolean" }
+        "isDemo": { "type": "boolean" },
+        "exitPrice": { "type": "number" },
+        "closedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "userId", "asset", "type", "amount", "entryPrice", "status", "profit", "timestamp"]
+      "required": ["userId", "asset", "type", "amount", "entryPrice", "status", "profit", "timestamp"]
     },
     "Deposit": {
       "title": "Deposit",

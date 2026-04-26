@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
 import { onAuthStateChanged, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, deleteDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, deleteDoc, increment, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { User, PlanInvestment, Transaction, Trade, Notification } from './types';
 import { ReferralView } from './components/ReferralView';
 import { SupportView } from './components/SupportView';
@@ -132,6 +132,15 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
     return this.props.children;
   }
 }
+
+const parseDurationToMs = (durationStr: string): number => {
+  if (!durationStr) return 60 * 1000;
+  const match = durationStr.match(/\d+/);
+  if (!match) return 60 * 1000;
+  const num = parseInt(match[0]);
+  if (durationStr.includes('ساعة')) return num * 60 * 60 * 1000;
+  return num * 60 * 1000;
+};
 
 // --- Components ---
 
@@ -571,7 +580,7 @@ const MarketNewsTicker = () => {
 
 const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trades = [], botProfit = 0, isDemoOn, toggleDemoMode }: any) => {
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
-  const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
+  const currentBalance = isDemoOn ? (Number(user?.demoBalance) || 0) : (Number(user?.balance) || 0);
 
   const [currentPrice, setCurrentPrice] = useState<number | null>(null);
   const [kycDetailsOpen, setKycDetailsOpen] = useState(false);
@@ -666,7 +675,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
 
       await addDoc(collection(db, 'trades'), tradeData);
       
-      const totalInitialDeduction = Number(amount) + commission;
+      const totalInitialDeduction = Number(amount);
 
       await addDoc(collection(db, 'notifications'), {
         userId: auth.currentUser?.uid,
@@ -1053,7 +1062,7 @@ const DashboardView = ({ user, btcPrice, ethPrice, setActiveTab, showToast, trad
             <div className="space-y-2">
               <div className="flex justify-between px-1">
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">مبلغ الاستثمار</label>
-                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase">الرصيد: ${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
+                <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase">الرصيد: ${currentBalance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -1825,8 +1834,8 @@ const WithdrawView = ({ user, onBack, showToast, isDemoOn }: { user: User, onBac
               />
             </div>
             <div className="flex justify-between text-xs mt-1">
-              <span className="text-gray-500">الرصيد المتاح: ${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
-              <button type="button" onClick={() => setAmount(user.balance.toString())} className="text-blue-500 font-bold hover:underline">سحب الكل</button>
+              <span className="text-gray-500">الرصيد المتاح: ${currentBalance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
+              <button type="button" onClick={() => setAmount(currentBalance.toString())} className="text-blue-500 font-bold hover:underline">سحب الكل</button>
             </div>
           </div>
 
@@ -2679,7 +2688,7 @@ const AdminSubscriptionsView = () => {
       setInvestments(docs);
       setLoading(false);
     }, (err) => {
-      console.error("Admin view error:", err);
+      console.error("Admin view error:", err instanceof Error ? err.message : String(err));
       setLoading(false);
     });
     return () => unsubscribe();
@@ -4800,7 +4809,7 @@ const AccountHistoryView = () => {
   );
 };
 
-const PerformanceHistoryView = ({ trades, globalSettings }: { trades: Trade[], globalSettings: any }) => {
+const PerformanceHistoryView = ({ trades, globalSettings, showToast, closingTradesRef, user, isDemoOn }: { trades: Trade[], globalSettings: any, showToast?: (m: string, t?: any) => void, closingTradesRef: React.MutableRefObject<Set<string>>, user: User, isDemoOn: boolean }) => {
   const [filter, setFilter] = useState('all');
 
   const filteredTrades = trades.filter(trade => {
@@ -4934,38 +4943,94 @@ const PerformanceHistoryView = ({ trades, globalSettings }: { trades: Trade[], g
                     {trade.status === 'PENDING' && (
                       <button 
                         onClick={async () => {
+                          if (closingTradesRef.current.has(trade.id)) return;
+                          closingTradesRef.current.add(trade.id);
+                          
                           try {
                             const tradeRef = doc(db, 'trades', trade.id);
+                            const userRefDoc = doc(db, 'users', auth.currentUser!.uid);
                             
-                            let finalStatus = trade.profit >= 0 ? 'WIN' : 'LOSE';
-                            let finalProfit = trade.profit;
+                            let finalStatus = (Number(trade.profit) || 0) >= 0 ? 'WIN' : 'LOSE';
+                            let finalProfit = Number(trade.profit) || 0;
 
                             if (globalSettings.autoControl === 'win') {
                               finalStatus = 'WIN';
-                              if (finalProfit <= 0) finalProfit = Math.max(1, trade.amount * 0.1);
+                              if (finalProfit <= 0) finalProfit = Math.max(1, Number(trade.amount) * 0.1);
                             } else if (globalSettings.autoControl === 'loss') {
                               finalStatus = 'LOSE';
-                              if (finalProfit >= 0) finalProfit = -Math.max(1, trade.amount * 0.4); // Increased manual loss to 40%
+                              if (finalProfit >= 0) finalProfit = -Math.max(1, Number(trade.amount) * 0.4);
                             }
 
-                            await updateDoc(tradeRef, {
-                              status: finalStatus,
-                              profit: finalProfit,
-                              exitPrice: trade.entryPrice // Simplification for manual close
+                            const amountToReturn = Number((Number(trade.amount) + finalProfit).toFixed(2));
+                            
+                            console.log('Closing trade:', trade.id, 'Amount:', trade.amount, 'Profit:', finalProfit, 'Returning:', amountToReturn);
+
+                            await runTransaction(db, async (transaction) => {
+                              const tradeSnap = await transaction.get(tradeRef);
+                              const userSnap = await transaction.get(userRefDoc);
+                              
+                              if (!tradeSnap.exists()) throw new Error("الصفقة غير موجودة!");
+                              if (!userSnap.exists()) throw new Error("المستخدم غير موجود!");
+                              
+                              const tradeData = tradeSnap.data() as Trade;
+                              const userData = userSnap.data() as User;
+                              
+                              if (tradeData.status !== 'PENDING') throw new Error("الصفقة مغلقة بالفعل!");
+
+                              const amountNum = Number(tradeData.amount) || 0;
+                              const profitValue = Number(finalProfit.toFixed(2));
+                              const returnAmt = Number((amountNum + profitValue).toFixed(2));
+                              
+                              const isDemo = tradeData.isDemo === true;
+                              const currentBal = isDemo ? (Number(userData.demoBalance) || 0) : (Number(userData.balance) || 0);
+                              const newBal = Number((currentBal + returnAmt).toFixed(2));
+
+                              // Calculate exit price from profit for manual close
+                              let pipMultiplier = 10000;
+                              if (tradeData.asset.includes('XAU') || tradeData.asset.includes('Gold')) pipMultiplier = 100;
+                              else if (tradeData.asset.includes('JPY')) pipMultiplier = 100;
+                              else if (tradeData.asset.includes('BTC') || tradeData.asset.includes('ETH') || tradeData.asset.includes('Crypto')) pipMultiplier = 1;
+
+                              const pips = profitValue / ((tradeData.lotSize || 0.01) * 10);
+                              const priceDiff = pips / pipMultiplier;
+                              const calculatedExitPrice = tradeData.entryPrice + (tradeData.type === 'Buy' ? priceDiff : -priceDiff);
+
+                              // 1. Update Trade
+                              transaction.update(tradeRef, {
+                                status: finalStatus,
+                                profit: profitValue,
+                                exitPrice: Number(calculatedExitPrice.toFixed(5)),
+                                closedAt: new Date().toISOString()
+                              });
+
+                              // 2. Update User Balance
+                              if (isDemo) {
+                                transaction.update(userRefDoc, {
+                                  demoBalance: newBal
+                                });
+                              } else {
+                                transaction.update(userRefDoc, {
+                                  balance: newBal
+                                });
+                              }
                             });
                             
-                            const userRefDoc = doc(db, 'users', auth.currentUser!.uid);
-                            if (trade.isDemo) {
-                              await updateDoc(userRefDoc, {
-                                demoBalance: increment(trade.amount + finalProfit)
-                              });
-                            } else {
-                              await updateDoc(userRefDoc, {
-                                balance: increment(trade.amount + finalProfit)
-                              });
-                            }
+                            // Add notification for manual closure
+                            await addDoc(collection(db, 'notifications'), {
+                              userId: auth.currentUser!.uid,
+                              title: finalStatus === 'WIN' ? 'إغلاق يدوي (ربح)' : 'إغلاق يدوي (خسارة)',
+                              message: `تم إغلاق صفقتك على ${trade.asset} يدوياً. النتيجة: ${finalStatus === 'WIN' ? 'ربح' : 'خسارة'} $${Math.abs(finalProfit).toFixed(2)}`,
+                              type: finalStatus === 'WIN' ? 'success' : 'error',
+                              read: false,
+                              timestamp: new Date().toISOString()
+                            });
+                            
+                            showToast?.('تم إغلاق الصفقة وتحديث الرصيد بنجاح', 'success');
                           } catch (error) {
-                            console.error("Error closing trade:", error instanceof Error ? error.message : String(error));
+                            console.error("Trade Closure Error:", error instanceof Error ? error.message : String(error));
+                            const msg = error instanceof Error ? error.message : String(error);
+                            showToast?.('خطأ في إغلاق الصفقة: ' + msg, 'error');
+                            closingTradesRef.current.delete(trade.id);
                           }
                         }}
                         className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors"
@@ -5228,7 +5293,7 @@ const CopyExpertsView = ({ setActiveTab, user, showToast, isDemoOn }: { setActiv
   const [selectedExpert, setSelectedExpert] = useState<any>(null);
   const [copyAmount, setCopyAmount] = useState('');
   const [isCopying, setIsCopying] = useState(false);
-  const currentBalance = isDemoOn ? (user.demoBalance || 0) : user.balance;
+  const currentBalance = isDemoOn ? (Number(user?.demoBalance) || 0) : (Number(user?.balance) || 0);
 
   const handleStartCopy = async () => {
     if (!selectedExpert || !copyAmount || isNaN(Number(copyAmount))) {
@@ -5520,6 +5585,7 @@ export default function App() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [isDemoOn, setIsDemoOn] = useState(false);
+  const currentBalance = user ? (isDemoOn ? (user.demoBalance || 0) : user.balance) : 0;
 
   const toggleDemoMode = async () => {
     if (!user) return;
@@ -5533,7 +5599,7 @@ export default function App() {
         });
         showToast('تم تفعيل الحساب التجريبي برصيد $50,000', 'success');
       } catch (err) {
-        console.error('Error seeding demo balance:', err);
+        console.error('Error seeding demo balance:', err instanceof Error ? err.message : String(err));
       }
     }
     
@@ -5713,7 +5779,19 @@ export default function App() {
           }
 
           // Automatic closing logic
-          if (trade.stopLoss && trade.stopLoss > 0) {
+          
+          // 1. Time-based automatic closing
+          if (trade.duration && status === 'PENDING') {
+            const durationMs = parseDurationToMs(trade.duration);
+            const tradeStartTime = new Date(trade.timestamp).getTime();
+            if (Date.now() >= tradeStartTime + durationMs) {
+              status = profit >= 0 ? 'WIN' : 'LOSE';
+              console.log('Trade expired, closing by duration:', trade.id);
+            }
+          }
+
+          // 2. Stop Loss logic
+          if (status === 'PENDING' && trade.stopLoss && trade.stopLoss > 0) {
             // If profit is less than or equal to negative stopLoss amount, close it
             if (profit <= -trade.stopLoss) {
               status = 'LOSE';
@@ -5742,41 +5820,54 @@ export default function App() {
 
           if (status !== 'PENDING' && !closingTradesRef.current.has(trade.id)) {
             closingTradesRef.current.add(trade.id);
+            console.log('Auto-closing trade:', trade.id, 'Profit:', profit);
+            
             try {
               const tradeRef = doc(db, 'trades', trade.id);
-              await updateDoc(tradeRef, {
-                profit: Number(profit.toFixed(2)),
-                status,
-                exitPrice: simulatedCurrentPrice,
-                closedAt: new Date().toISOString()
-              });
+              const targetUserId = trade.userId || auth.currentUser!.uid;
+              const userRefDoc = doc(db, 'users', targetUserId);
+              const finalProfit = Number(profit.toFixed(2));
 
-              const userRefDoc = doc(db, 'users', auth.currentUser!.uid);
-              const isLiquidation = profit <= -currentUserBalance;
-              
-              if (isLiquidation) {
-                if (trade.isDemo) {
-                  await updateDoc(userRefDoc, { demoBalance: 0 });
+              await runTransaction(db, async (transaction) => {
+                const trSnap = await transaction.get(tradeRef);
+                const uSnap = await transaction.get(userRefDoc);
+                
+                if (!trSnap.exists() || trSnap.data().status !== 'PENDING') return;
+                if (!uSnap.exists()) return;
+
+                const trData = trSnap.data() as Trade;
+                const userData = uSnap.data() as User;
+                
+                const isDemo = trData.isDemo === true;
+                const currentBal = isDemo ? (Number(userData.demoBalance) || 0) : (Number(userData.balance) || 0);
+                const isLiq = finalProfit <= -currentBal;
+
+                // 1. Update Trade
+                transaction.update(tradeRef, {
+                  profit: finalProfit,
+                  status,
+                  exitPrice: simulatedCurrentPrice,
+                  closedAt: new Date().toISOString()
+                });
+
+                // 2. Update Balance
+                if (isLiq) {
+                  transaction.update(userRefDoc, { [isDemo ? 'demoBalance' : 'balance']: 0 });
                 } else {
-                  await updateDoc(userRefDoc, { balance: 0 });
-                }
-              } else {
-                if (trade.isDemo) {
-                  await updateDoc(userRefDoc, {
-                    demoBalance: increment(trade.amount + profit)
-                  });
-                } else {
-                  await updateDoc(userRefDoc, {
-                    balance: increment(trade.amount + profit)
+                  const amountNum = Number(trData.amount) || 0;
+                  const amountToReturn = Number((amountNum + finalProfit).toFixed(2));
+                  const newBal = Number((currentBal + amountToReturn).toFixed(2));
+                  transaction.update(userRefDoc, {
+                    [isDemo ? 'demoBalance' : 'balance']: newBal
                   });
                 }
-              }
+              });
 
               // Create notification for auto-close
               await addDoc(collection(db, 'notifications'), {
-                userId: auth.currentUser!.uid,
+                userId: targetUserId,
                 title: status === 'WIN' ? 'صفقة رابحة' : 'صفقة خاسرة',
-                message: isLiquidation 
+                message: profit <= -currentUserBalance
                   ? `تم إغلاق صفقتك على ${trade.asset} تلقائياً بسبب تصفير الرصيد (Liquidation).`
                   : `تم إغلاق صفقتك على ${trade.asset} تلقائياً ${status === 'LOSE' ? 'عند بلوغ وقف الخسارة' : ''}. النتيجة: ${status === 'WIN' ? 'ربح' : 'خسارة'} $${Math.abs(profit).toFixed(2)}`,
                 type: status === 'WIN' ? 'success' : 'error',
@@ -5784,21 +5875,14 @@ export default function App() {
                 timestamp: new Date().toISOString()
               });
             } catch (error) {
-              console.error("Error updating trade:", error instanceof Error ? error.message : String(error));
+              console.error("Auto-close Error:", error instanceof Error ? error.message : String(error));
               closingTradesRef.current.delete(trade.id);
             }
           } else if (status === 'PENDING') {
-            try {
-              const tradeRef = doc(db, 'trades', trade.id);
-              await updateDoc(tradeRef, {
-                profit: Number(profit.toFixed(2))
-              });
-            } catch (error) {
-              console.error("Error updating trade profit:", error instanceof Error ? error.message : String(error));
-            }
+            trade.profit = Number(profit.toFixed(2));
           }
         });
-        return currentTrades;
+        return [...currentTrades];
       });
     }, 1000);
 
@@ -6395,7 +6479,7 @@ export default function App() {
               {/* Balance Display (Desktop) */}
               <div className="hidden xl:flex flex-col items-end px-4 border-r border-gray-100 dark:border-gray-800">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">رصيدك الحالي</span>
-                <span className="text-sm font-black text-gray-900 dark:text-white">${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
+                <span className="text-sm font-black text-gray-900 dark:text-white">${currentBalance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</span>
               </div>
 
               {/* Quick Actions */}
@@ -6590,7 +6674,7 @@ export default function App() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className="text-xs font-bold text-blue-600 dark:text-blue-400">${user.balance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</div>
+                              <div className="text-xs font-bold text-blue-600 dark:text-blue-400">${currentBalance.toLocaleString()}{!user.isAccountReal && ' (تجريبي)'}</div>
                               <div className="text-[10px] font-black text-amber-600 dark:text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-1">
                                 <Star className="w-2.5 h-2.5 fill-amber-500" />
                                 {user.points || 0}
@@ -6664,7 +6748,7 @@ export default function App() {
               </div>
               <div className="bg-white dark:bg-gray-800/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-700/50 shadow-sm backdrop-blur-sm">
                 <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">رصيد الحساب</div>
-                <div className="text-xl font-black text-gray-900 dark:text-white tabular-nums">${user.balance.toLocaleString()}{!user.isAccountReal && <span className="text-xs ml-1 opacity-50">(تجريبي)</span>}</div>
+                <div className="text-xl font-black text-gray-900 dark:text-white tabular-nums">${currentBalance.toLocaleString()}{!user.isAccountReal && <span className="text-xs ml-1 opacity-50">(تجريبي)</span>}</div>
               </div>
             </div>
 
@@ -6793,12 +6877,12 @@ export default function App() {
                   />
                 )}
                 {activeTab === 'history' && <AccountHistoryView key="history" />}
-                {(activeTab === 'wallet' || activeTab === 'deposit' || activeTab === 'withdraw') && <WalletView key="wallet" user={user} activeTab={activeTab} showToast={showToast} />}
+                {(activeTab === 'wallet' || activeTab === 'deposit' || activeTab === 'withdraw') && <WalletView key="wallet" user={user} activeTab={activeTab} showToast={showToast} isDemoOn={isDemoOn} />}
                 {activeTab === 'kyc' && <KYCView key="kyc" user={user} showToast={showToast} />}
                 {activeTab === 'bots' && <BotsView key="bots" onSubscribe={subscribeToBot} isSubscribing={isSubscribing} />}
                 {activeTab === 'plans' && <PlansView key="plans" onSubscribe={subscribeToPlan} isSubscribing={isSubscribing} />}
                 {activeTab === 'portfolio' && <MyPortfolioView key="portfolio" investments={planInvestments} />}
-                {activeTab === 'performance' && <PerformanceHistoryView key="performance" trades={trades} globalSettings={globalSettings} />}
+                {activeTab === 'performance' && <PerformanceHistoryView key="performance" trades={trades} globalSettings={globalSettings} showToast={showToast} closingTradesRef={closingTradesRef} user={user} isDemoOn={isDemoOn} />}
                 {activeTab === 'markets' && <MarketsView key="markets" setActiveTab={setActiveTab} />}
                 {activeTab === 'copy' && <CopyTradingView key="copy" setActiveTab={setActiveTab} user={user} />}
                 {activeTab === 'copy-experts' && <CopyExpertsView key="copy-experts" setActiveTab={setActiveTab} user={user} showToast={showToast} isDemoOn={isDemoOn} />}

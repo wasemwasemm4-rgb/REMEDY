@@ -96,9 +96,23 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   // Log simple versions to avoid circular structure issues in bridge environments
   console.error('Firestore Error:', errorMessage, operationType, path);
   
+  // Safe stringify helper for bridge environments that might have issues with circular structures
+  const safeStringify = (obj: any) => {
+    const seen = new WeakSet();
+    return JSON.stringify(obj, (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return "[Circular]";
+        }
+        seen.add(value);
+      }
+      return value;
+    });
+  };
+
   if (isPermissionError) {
     // Throw as JSON string as required by the instructions
-    throw new Error(JSON.stringify(errInfo));
+    throw new Error(safeStringify(errInfo));
   }
   
   // Throw a simple error message for other errors

@@ -108,6 +108,7 @@ export interface Trade {
   leverage?: string;
   stopLoss?: number;
   status: 'WIN' | 'LOSE' | 'PENDING';
+  duration?: string;
   profit: number;
   commission?: number;
   closedAt?: string;
