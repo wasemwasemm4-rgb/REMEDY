@@ -6985,6 +6985,10 @@ export default function App() {
             )}
           </AnimatePresence>
 
+        </div>
+
+        {/* Global Floating Elements (Visible on Mobile and Desktop) */}
+        <div className="fixed inset-0 pointer-events-none z-[60]">
           {/* Rexconal AI Floating Button */}
           <button
             onClick={() => {
@@ -6992,7 +6996,7 @@ export default function App() {
               setActiveTab('ai-trading');
             }}
             className={cn(
-              "fixed bottom-[230px] sm:bottom-24 right-6 sm:right-auto sm:left-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              "fixed bottom-[230px] md:bottom-24 right-6 md:right-auto md:left-[300px] pointer-events-auto p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
               user.aiTrialExpires ? "bg-gradient-to-r from-blue-600 to-indigo-600" : "bg-gradient-to-r from-orange-500 to-amber-500"
             )}
           >
@@ -7012,7 +7016,7 @@ export default function App() {
               setActiveTab('ai-trading');
             }}
             className={cn(
-              "fixed bottom-[170px] sm:bottom-24 right-6 z-[60] p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
+              "fixed bottom-[170px] md:bottom-24 right-6 pointer-events-auto p-0.5 rounded-full shadow-2xl transition-all hover:scale-110 active:scale-95 group",
               user.aegisTrialExpires ? "bg-gradient-to-r from-emerald-600 to-teal-600" : "bg-gradient-to-r from-blue-500 to-cyan-500"
             )}
           >
@@ -7025,29 +7029,32 @@ export default function App() {
             </div>
           </button>
 
-          {/* Toast Notification */}
-          <AnimatePresence>
-            {toast && (
-              <motion.div
-                initial={{ opacity: 0, y: 50, x: '-50%' }}
-                animate={{ opacity: 1, y: 0, x: '-50%' }}
-                exit={{ opacity: 0, y: 20, x: '-50%' }}
-                className={cn(
-                  "fixed bottom-24 left-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm min-w-[300px]",
-                  toast.type === 'success' ? "bg-emerald-500 text-white" : 
-                  toast.type === 'error' ? "bg-red-500 text-white" : 
-                  "bg-blue-500 text-white"
-                )}
-              >
-                {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
-                 toast.type === 'error' ? <AlertCircle className="w-5 h-5" /> : 
-                 <Info className="w-5 h-5" />}
-                {toast.message}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Toast Notification Container */}
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <AnimatePresence>
+              {toast && (
+                <motion.div
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className={cn(
+                    "flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm min-w-[300px]",
+                    toast.type === 'success' ? "bg-emerald-500 text-white" : 
+                    toast.type === 'error' ? "bg-red-500 text-white" : 
+                    "bg-blue-500 text-white"
+                  )}
+                >
+                  {toast.type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
+                   toast.type === 'error' ? <AlertCircle className="w-5 h-5" /> : 
+                   <Info className="w-5 h-5" />}
+                  {toast.message}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
+
     </ErrorBoundary>
   );
 }
