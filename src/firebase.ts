@@ -93,6 +93,11 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     }
   };
 
+  if (errorMessage.toLowerCase().includes('quota')) {
+    console.warn("Firebase Quota Exceeded. Some features will be unavailable.");
+    return;
+  }
+
   // Log simple versions to avoid circular structure issues in bridge environments
   console.error('Firestore Error:', errorMessage, operationType, path);
   
@@ -129,6 +134,8 @@ export async function testConnection() {
     const msg = error instanceof Error ? error.message : String(error);
     if(msg.includes('the client is offline') || msg.includes('Could not reach Cloud Firestore backend') || msg.includes('network-request-failed')) {
       console.warn("Firestore is operating in offline mode. Changes will sync when connection is restored.");
+    } else if (msg.toLowerCase().includes('quota')) {
+      console.warn("Firestore connection test: Quota exceeded. Offline mode might be partly active.");
     } else {
       console.error("Firestore connection unexpected error:", msg);
     }

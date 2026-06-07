@@ -2677,9 +2677,10 @@ const KYCView = ({ user, showToast }: { user: User, showToast?: (message: string
   );
 };
 
-const AdminSubscriptionsView = () => {
+const AdminSubscriptionsView = ({ showToast }: { showToast: (msg: string, type: 'success' | 'error' | 'info') => void }) => {
   const [investments, setInvestments] = useState<PlanInvestment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     const q = query(collection(db, 'planInvestments'), where('status', '==', 'active'));
@@ -2688,11 +2689,61 @@ const AdminSubscriptionsView = () => {
       setInvestments(docs);
       setLoading(false);
     }, (err) => {
-      console.error("Admin view error:", err instanceof Error ? err.message : String(err));
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes('quota')) {
+        console.warn("Admin view error postponed: Quota Exceeded.");
+      } else {
+        console.error("Admin view error:", msg);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
   }, []);
+
+  const handleCancelSubscription = async (inv: PlanInvestment) => {
+    if (!window.confirm(`هل أنت متأكد من إلغاء خطة "${inv.planName}" لـ ${inv.userEmail || inv.userId}؟ سيتم استرداد مبلغ الاستثمار ($${inv.amount.toLocaleString()}) للمستخدم.`)) {
+      return;
+    }
+
+    setCancellingId(inv.id!);
+    try {
+      // Refund the initial amount
+      const userRef = doc(db, 'users', inv.userId);
+      if (inv.isDemo) {
+        await updateDoc(userRef, {
+          demoBalance: increment(inv.amount)
+        });
+      } else {
+        await updateDoc(userRef, {
+          balance: increment(inv.amount)
+        });
+      }
+
+      // Mark investment as cancelled
+      const invRef = doc(db, 'planInvestments', inv.id!);
+      await updateDoc(invRef, {
+        status: 'cancelled',
+        endDate: new Date().toISOString()
+      });
+
+      // Notify the user
+      await addDoc(collection(db, 'notifications'), {
+        userId: inv.userId,
+        title: 'تم إلغاء الاشتراك',
+        message: `تم إلغاء اشتراكك في "${inv.planName}". تم استرداد مبلغ الاستثمار ($${inv.amount.toLocaleString()}) إلى رصيدك.`,
+        type: 'info',
+        read: false,
+        timestamp: new Date().toISOString()
+      });
+
+      showToast('تم إلغاء الاشتراك واسترداد المبلغ بنجاح', 'success');
+    } catch (err) {
+      console.error('Cancel Error:', err);
+      showToast('حدث خطأ أثناء الإلغاء', 'error');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   return (
     <motion.div
@@ -2721,16 +2772,17 @@ const AdminSubscriptionsView = () => {
                 <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">تاريخ البدء</th>
                 <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">الأرباح</th>
                 <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest">الحالة</th>
+                <th className="px-6 py-4 text-sm font-black text-gray-500 uppercase tracking-widest text-left">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">جاري التحميل...</td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">جاري التحميل...</td>
                 </tr>
               ) : investments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-bold">لا يوجد مشتركين نشطين حالياً</td>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500 font-bold">لا يوجد مشتركين نشطين حالياً</td>
                 </tr>
               ) : investments.map((inv) => (
                 <tr key={inv.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
@@ -2761,6 +2813,19 @@ const AdminSubscriptionsView = () => {
                     <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-black rounded-full">
                       {inv.status === 'active' ? 'نشط' : inv.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 text-left">
+                    <button
+                      onClick={() => handleCancelSubscription(inv)}
+                      disabled={cancellingId === inv.id}
+                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/20 dark:hover:bg-rose-900/40 text-rose-600 border border-rose-200 dark:border-rose-800 rounded-xl text-sm font-black transition-colors flex items-center gap-2 mr-auto disabled:opacity-50"
+                    >
+                      {cancellingId === inv.id ? (
+                        <>جاري الإلغاء...</>
+                      ) : (
+                        <>إلغاء الاشتراك</>
+                      )}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -3290,17 +3355,17 @@ const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boo
     const logMessages = [
       { text: 'Scanning market signals...', type: 'info' },
       { text: 'ENTRY BTC/USDT LONG @ 64,231.5', type: 'entry' },
-      { text: 'EXIT ETH/USDT PROFIT +$12.42', type: 'exit' },
+      { text: 'EXIT ETH/USDT LOSS -$12.42', type: 'exit' },
       { text: 'Liquidity thin on GBP/JPY - skipping', type: 'warn' },
       { text: 'Whale movement detected: 4,200 BTC moved to Binance', type: 'info' },
       { text: 'Neural network adjusting stop-loss levels...', type: 'info' },
       { text: 'Whale movement detected: 1,500 ETH moved to Coinbase', type: 'info' },
       { text: 'ENTRY XAU/USD SHORT @ 2,342.1', type: 'entry' },
-      { text: 'EXIT SOL/USDT PROFIT +$4.88', type: 'exit' },
+      { text: 'EXIT SOL/USDT LOSS -$4.88', type: 'exit' },
       { text: 'Scanning Polkadot ecosystem...', type: 'info' },
       { text: 'High volatility detected on PEPE - ignoring junk signals', type: 'warn' },
       { text: 'Scanning Solana network data...', type: 'info' },
-      { text: 'EXIT BTC/USDT PROFIT +$25.12', type: 'exit' },
+      { text: 'EXIT BTC/USDT LOSS -$25.12', type: 'exit' },
     ];
 
     const logInterval = setInterval(async () => {
@@ -3313,7 +3378,7 @@ const RexconalCyberTerminal = ({ user, isStopped }: { user: User, isStopped: boo
 
       setChartData(prev => {
         const lastVal = prev[prev.length - 1].value;
-        const nextVal = lastVal + (Math.random() * 4 - 1.8);
+        const nextVal = lastVal + (Math.random() * 4 - 2.2);
         return [...prev.slice(-19), { time: Date.now().toString(), value: nextVal }];
       });
 
@@ -3541,22 +3606,22 @@ const AITradingDashboard = ({ user, showToast, initialBot, isDemoOn }: { user: U
 
   // Mock data for the dashboard (matching Rexconal requirements)
   const weeklyPerformance = [
-    { week: 'W16/2026', trades: 700, profit: 142.41, progress: 85 },
-    { week: 'W15/2026', trades: 700, profit: 156.64, progress: 92 },
-    { week: 'W14/2026', trades: 700, profit: 128.04, progress: 78 },
-    { week: 'W13/2026', trades: 700, profit: 165.5, progress: 95 },
+    { week: 'W16/2026', trades: 700, profit: -142.41, progress: 15 },
+    { week: 'W15/2026', trades: 700, profit: -156.64, progress: 12 },
+    { week: 'W14/2026', trades: 700, profit: -128.04, progress: 18 },
+    { week: 'W13/2026', trades: 700, profit: -165.5, progress: 5 },
     { week: 'W12/2026', trades: 0, profit: 0, progress: 0 },
     { week: 'W11/2026', trades: 0, profit: 0, progress: 0 },
   ];
 
   const dailyPerformance = [
-    { date: '2026-04-16', trades: 100, win: 85, loss: 15, profit: 22.55 },
-    { date: '2026-04-15', trades: 100, win: 82, loss: 18, profit: 18.22 },
-    { date: '2026-04-14', trades: 100, win: 78, loss: 22, profit: 12.10 },
-    { date: '2026-04-13', trades: 100, win: 88, loss: 12, profit: 25.19 },
-    { date: '2026-04-12', trades: 100, win: 84, loss: 16, profit: 21.52 },
-    { date: '2026-04-11', trades: 100, win: 80, loss: 20, profit: 15.77 },
-    { date: '2026-04-10', trades: 100, win: 86, loss: 14, profit: 24.83 },
+    { date: '2026-04-16', trades: 100, win: 15, loss: 85, profit: -22.55 },
+    { date: '2026-04-15', trades: 100, win: 18, loss: 82, profit: -18.22 },
+    { date: '2026-04-14', trades: 100, win: 22, loss: 78, profit: -12.10 },
+    { date: '2026-04-13', trades: 100, win: 12, loss: 88, profit: -25.19 },
+    { date: '2026-04-12', trades: 100, win: 16, loss: 84, profit: -21.52 },
+    { date: '2026-04-11', trades: 100, win: 20, loss: 80, profit: -15.77 },
+    { date: '2026-04-10', trades: 100, win: 14, loss: 86, profit: -24.83 },
   ];
 
   const [recentTrades, setRecentTrades] = useState([
@@ -3578,7 +3643,13 @@ const AITradingDashboard = ({ user, showToast, initialBot, isDemoOn }: { user: U
       if (isStopped) return;
       const pair = pairs[Math.floor(Math.random() * pairs.length)];
       const type = types[Math.floor(Math.random() * types.length)];
-      const result = Math.random() > 0.2 ? 'WIN' : 'LOSS';
+      
+      let result;
+      if (activeBot === 'rexconal') {
+        result = 'LOSS';
+      } else {
+        result = Math.random() > 0.2 ? 'WIN' : 'LOSS';
+      }
       
       let amountValue;
       if (activeBot === 'aegis') {
@@ -3795,7 +3866,11 @@ const AITradingDashboard = ({ user, showToast, initialBot, isDemoOn }: { user: U
                       />
                     </div>
                     <div className="min-w-[120px] text-left">
-                      {item.profit > 0 && <span className="text-[#12b362] font-black ml-2">+${item.profit.toLocaleString()}</span>}
+                      {item.profit !== 0 && (
+                        <span className={cn("font-black ml-2", item.profit > 0 ? "text-[#12b362]" : "text-rose-500")}>
+                          {item.profit > 0 ? '+' : ''}${item.profit.toLocaleString()}
+                        </span>
+                      )}
                       {item.trades > 0 && <span className="text-zinc-500 font-bold whitespace-nowrap">{item.trades} صفقات</span>}
                     </div>
                   </div>
@@ -3829,8 +3904,8 @@ const AITradingDashboard = ({ user, showToast, initialBot, isDemoOn }: { user: U
                         <td className="py-5 text-zinc-300 font-black">{item.trades}</td>
                         <td className="py-5 text-[#12b362] font-black">{item.win}</td>
                         <td className="py-5 text-rose-500 font-black">{item.loss}</td>
-                        <td className="py-5 pl-4 font-black text-[#12b362] text-left leading-none">
-                          ${item.profit.toLocaleString()}
+                        <td className={cn("py-5 pl-4 font-black text-left leading-none", item.profit > 0 ? "text-[#12b362]" : "text-rose-500")}>
+                          {item.profit > 0 ? '+' : ''}${item.profit.toLocaleString()}
                         </td>
                       </tr>
                     ))}
@@ -5970,7 +6045,8 @@ export default function App() {
           profitIncrement = currentExpectedTotalProfit - inv.totalEarned;
         }
 
-        if (profitIncrement > 0.0001 || (currentExpectedTrades > (inv.totalTrades || 0))) {
+        // Only update database if we earned at least $0.05 or made new trades
+        if (profitIncrement > 0.05 || (currentExpectedTrades > (inv.totalTrades || 0))) {
           const invRef = doc(db, 'planInvestments', inv.id);
           const roundedProfit = Number(currentExpectedTotalProfit.toFixed(4));
           const roundedIncrement = Number(profitIncrement.toFixed(4));
@@ -5996,7 +6072,12 @@ export default function App() {
           }
         }
       } catch (error) {
-        console.error("Error updating investment:", error instanceof Error ? error.message : String(error));
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.toLowerCase().includes('quota')) {
+          console.warn('Investment simulation postponed: Firebase Quota Exceeded. Try again tomorrow.');
+        } else {
+          console.error("Error updating investment:", msg);
+        }
       }
     }
   };
@@ -6004,7 +6085,7 @@ export default function App() {
   // Periodic simulation for online users
   useEffect(() => {
     if (!auth.currentUser || planInvestments.length === 0) return;
-    const interval = setInterval(() => simulateInvestments(planInvestments), 10000);
+    const interval = setInterval(() => simulateInvestments(planInvestments), 60000); // reduced frequency to 1 min
     return () => clearInterval(interval);
   }, [auth.currentUser, planInvestments]);
 
@@ -6086,6 +6167,8 @@ export default function App() {
             const msg = err instanceof Error ? err.message : String(err);
             if (msg.includes('offline') || msg.includes('network-request-failed')) {
               console.warn('SyncUser postponed: Client is offline. Profile will sync when reconnected.');
+            } else if (msg.toLowerCase().includes('quota')) {
+              console.warn('SyncUser postponed: Firebase Quota Exceeded. Try again tomorrow.');
             } else {
               console.error('SyncUser Error:', msg);
               handleFirestoreError(err, OperationType.WRITE, 'users');
@@ -6112,9 +6195,6 @@ export default function App() {
         unsubInvestments = onSnapshot(investmentsQuery, (snapshot) => {
           const investments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PlanInvestment));
           setPlanInvestments(investments);
-          
-          // Trigger immediate catch-up simulation for bots/investments
-          simulateInvestments(investments);
         }, (err) => handleFirestoreError(err, OperationType.LIST, 'planInvestments'));
 
         // Listen for trades
@@ -6194,14 +6274,16 @@ export default function App() {
               // Profit change for the elapsed time
               const profitChange = data.amount * actualDailyReturn * elapsedDays;
               
-              const newProfit = (data.currentProfit || 0) + profitChange;
-              const newRoi = (newProfit / data.amount) * 100;
+              if (Math.abs(profitChange) > 0.05) {
+                const newProfit = (data.currentProfit || 0) + profitChange;
+                const newRoi = (newProfit / data.amount) * 100;
 
-              await updateDoc(tradeDoc.ref, {
-                currentProfit: Number(newProfit.toFixed(4)),
-                roi: Number(newRoi.toFixed(4)),
-                lastUpdate: now.toISOString()
-              });
+                await updateDoc(tradeDoc.ref, {
+                  currentProfit: Number(newProfit.toFixed(4)),
+                  roi: Number(newRoi.toFixed(4)),
+                  lastUpdate: now.toISOString()
+                });
+              }
             });
           } catch (error) {
             console.warn("Copy profit simulation skipped:", error instanceof Error ? error.message : String(error));
@@ -6210,7 +6292,7 @@ export default function App() {
 
         // Run once on startup to catch up any offline time
         simulateCopyTrades();
-        const intervalId = setInterval(simulateCopyTrades, 30000);
+        const intervalId = setInterval(simulateCopyTrades, 120000); // reduced frequency to 2 min
 
         // Store intervalId for cleanup if needed outside or handle it in specific cleanup logic
         // For simplicity with the existing structure, we can just clear it when another user logs in or on unmount
@@ -6891,7 +6973,7 @@ export default function App() {
                 {activeTab === 'referral' && <ReferralView key="referral" user={user} />}
                 {activeTab === 'support' && <SupportView key="support" user={user} showToast={showToast} />}
                 {activeTab === 'ai-trading' && <AITradingDashboard key="ai-trading" user={user} showToast={showToast} initialBot={selectedAIBot} isDemoOn={isDemoOn} />}
-                {activeTab === 'admin-subs' && user.role === 'admin' && <AdminSubscriptionsView key="admin-subs" />}
+                {activeTab === 'admin-subs' && user.role === 'admin' && <AdminSubscriptionsView key="admin-subs" showToast={showToast} />}
                 
                 {/* Fallback for other tabs */}
                 {!['dashboard', 'history', 'wallet', 'deposit', 'withdraw', 'kyc', 'bots', 'plans', 'portfolio', 'performance', 'markets', 'copy', 'copy-experts', 'settings', 'signals', 'referral', 'support', 'ai-trading'].includes(activeTab) && (
